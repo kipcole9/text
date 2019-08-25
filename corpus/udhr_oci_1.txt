@@ -1,0 +1,221 @@
+Universal Declaration of Human Rights - Occitan (Francoprovençal, Fribourg)
+© 1996 – 2009 The Office of the High Commissioner for Human Rights
+This plain text version prepared by the “UDHR in Unicode”
+project, https://www.unicode.org/udhr.
+---
+
+Dèhyarahyon univèrthèle di drê dè l’Omo
+      Translation: Anne-Marie Yerly
+   
+      D’a premi
+      Konchidèrin ke la rèkonyechanthe dè la dinyitâ ke bayè drê a ti lè minbro dè la famiye umêna è dè ti lou drê parê è inkontèchtâbyo, l’è le fondèmin dè la libèrtâ, dè la djuchtiche è dè la pé din le mondo,
+      Konchidèrin ke la mèkonyechanthe è le mèpri di drê dè l’Omo l’an menâ a di j’akchyon pindâbyè dè barbari ke rèbrekon la konhyinthe dè l’umanitâ, è ke l’arouvâye d’on mondo yô lè dzin cheron libro dè dèvejâ è dè krêre, ètsapo dè la pouêre è dè la mijére, l’è j’ou proklamâ kemin le pye hôta èchpèranthe dè l’Omo,
+      Konchidèrin ke l’è fêrmo inportin ke lè drê dè l’Omo chêyan inparâ par on drê po ke l’omo chi pâ d’obedji par on dêri rèkoua dè chè rèbrekâ kontre la tirani è la choudzihyon
+      Konchidèrin ke fô chuto inkoradji la tsèvanthe di rapouâ d’amihyâ intrè nachyon.
+      Konchidèrin ke, din la « Charte » lè poupyo di Nachyon-j’Unyè l’an a rè proklamâ lou fê din lè drê dè fon dè l’omo, din la dinyitâ è la vayà dè la pèrchena umêna, din l’ègalitâ di drê di j’omo è di fèmalè, è ke ch’è chon promè dè ch’ ingadji a inkoradji le pourgrè por ti, è a inchtâlâ di mèyou kondihyon dè ya din la libèrtâ la pye granta,
+      Konchidèrin ke lè j’Ètha Minbro chè chon ingadji a achurâ, in boun’akouâ avui l’Organijachyon di Nachyon j’Unyè, le rèchpè univèrthèle è vertâbyo di drê dè l’Omo è di libèrtâ fondamintalè,
+      Konchidèrin k’on idé kemouna dè hou drê è libèrtâ l’è dè la pye hôta
+inporthinthe por inpyâ tot’a fé adrê chi l’ingadzèmin,
+      L’Achinbyâye gènèrale
+      Di bin fêrmo ke laDèhyarahyon univèrthèle di drê dè l’Omo l’è kemin la mèyou tsouja a avê pê ti lè poupyo è totè lè nachyon po ke totè lè dzin è ti lè minbro dè la chochyètâ ke l’an ha Dèhyarachyon a l’èchpri, l’ôchan a kà, pê l’inchènyèmin è l’èdukachyon, dè tsèvanhyi le rèchpè dè hou drê è libèrtâ, è d’in achurâ, pê di mèjerè dè tsèvanthe d’oâdre nachyonal è intèrnachyonal, la rèkonyechanthe è l’aplikachyon univèrthèle è vertâbya, atan parmi lè populachyon di j’Ètha Minbro lou-mimo tyè parmi hou di tèritéro in pyathe, a lou choudzihyon.
+   
+      Artike yon (1)
+      Totè lè dzin vinyon ou mondo libro è parê in dinyitâ è in drê. Chon dotâ dè réjon è dè konhyinthe è dêvon chè konportâ lè j’on-lè j’ôtro din on èchpri dè fratèrnitâ.
+   
+      Artikle dou (2)
+      Tsakon pou chè prèvayê dè ti lè drê è dè totè lè libèrtâ prohyamâ din la prèjinte Dèhyarahyon, chin rèjêrva, ke chêyè dè rache, omo ou fèmala, dè kolà, dè linvoua, dè rèlidzyon, d’idé politike è dè tot’ôtro j’idé, d’orijine nachyonale ou « sociale », dè fortena, dè vinyête ou mondo è dè to’t’ôtra chituachyon.
+      In dèpye, chè farè rin dè yite fondâye chu le chtatu politike, juridike ou bin intèrnachyonal dou payi ou bin dou tèritéro du yô la pèrchena i chô, ke chi payi ou chi tèritéro chi indèpindin, dèjo tutêla, pâ libro dè chè j’akchyon ou bin choudzè a kotyè j’inkupiyo a cha libra volontâ.
+  
+      Artikle trè (3)
+      Tota dzin l’a drê a la ya, a la libèrtâ è a la churètâ dè cha pèrchena.
+   
+      Artikle katro (4)
+      Nyon cherè tunyu in èhyavâdzo nè a choudzihyon, l’èhyavâdzo è l’ingadzèmin di j’èhyâvo chon intêrdi din totè lè fouârmè.
+   
+      Artikle thin (5)
+      Nyon cherè betâ a la tortura, nè a di pênè ou di krouyo trêtèmin , pâ umin ou dègradin.
+   
+      Artikle chê (6)
+      Tsakon l’a drê a la rèkonyechanthe din ti lè yu dè cha pèrchenalitâ juridike.
+   
+      Artikle chate (7)
+      Ti chon parê dèvan la lê è l’an drê chin rèjêrva a tota la protèkchyon de la lê. Ti l’an drê a ithre inparâ kontre totè lè tsoujè ke tindron pâ dou konto dè ha Dèhyarahyon è kontre totè provokachyon.
+   
+      Artikle vouète (8)
+      Tota dzin l’a drê a on rèkoua vayâbyo dèvan lè rèprèjintin di djuchtichè nachyonalè konpètintè kontre di j’akte rèchpèktin pâ lè drê dè fon ke l’i chon rèkonyu, pê la konchtituchyon ou bin pê la lê.
+   
+      Artikle nà (9)
+      Nyon pou ithre arbitrérèrmin arèthâ, dètinyê nè bani.
+   
+      Artikle dji (10)
+      Tota dzin l’a drê, in pyêna ègalitâ, ke cha kouja chi intindya in tota djuchtiche è in publike pê on tribunal indèpindin è neutre, ke dèchidèrè, ke chêyè dè chè drê è obligachyon, ke chêyè dè l’utilitâ dè tot’akujachyon in djuchtiche diridjia kontre li.
+   
+      Artikle ondzè (11)
+      
+         
+            Tota dzin akujâye de n’akchyon kondanâbya l’è chupojâye inochinta tantyè ke cha kulpabilitâ chêyè aprovâye pê la lê din on prothè publike, yô totè lè garanti nèchechérè a cha dèfincha l’i cheron achurâyè.
+         
+         
+            Nyon cherè kondanâ po di j’akchyon ou bin di mankèmin adon ke chu le momin n’iran pâ on akte ke mertâvè na punihyon. Parê, nyon cherè punê fêrmo, tyè ou momin yô la krouy’akchyon irè j’ou fête.
+         
+      
+   
+      Artikle dodzè (12)
+      Nyon porè ithre choudzè a di j’intrèfetsichè arbitrérè din cha ya poupra, intye-li, cha famiye, chon tinyèmin ou bin cha korèchpondanthe, nè a di j’atintè a che n’anà è a chon rènon. Tota dzin l’a le drê d’ithre inparâye pê la lê kontre hou j’intrèfetsichè è di j’afére dinche krouyè.
+   
+      Artikle trèdzè (13)
+      
+         
+            Tota dzin l’a le drê d’alâ chéve è léva in tota libèrtâ è dè rèyi chon tinyèmin din on Ètha , n’inpouârtè le tyin.
+         
+         
+            Tota pèrchena l’a le drê dè tyithâ ti lè payi, mimamin le chyo, pu dè rèvinyi din chon payi.
+         
+      
+   
+      Artikle katouârdzè (14)
+      
+         
+            Dèvan la pèrchèkuchyon, tota dzin l’a le drê dè tsêrtyi on a-chokrê in churètâ è dè ithre èbèrdji din di j’ôtro payi.
+         
+         
+            Chi drê pou pâ ithre vayâbyo kan i chon in pourchuitè, vertâbyamin fondâyè chu on krimo dè drê kemon, ou bin di manêrè kontrérè i rêyèmin di Nachyon j’Unyè.
+         
+      
+   
+      Artikle tyindzè (15)
+      
+         
+            Tota dzin l’a drê a chon poupro payi.
+         
+         
+            Nyon pou ithre indjuchtamin dèporvi dè cha nachyonalitâ, nè dou drê dè tsandji dè nachyonalitâ.
+         
+      
+   
+      Artikle chèdzè(16)
+      
+         
+            Achtou ke chon in âdzo è kopâbyo dè prokrèâ, l’omo è la fèmala, chin limita ke chêyè dè rache, dè nachyonalitâ ou bin dè rèlidzyon, l’an le drê dè lou maryâ è dè fondâ na famiye. L’an di drê parê din le maryâdzo, dou tin dou maryâdzo è achebin kan le maryâdzo l’è abouli.
+         
+         
+            Le maryâdzo pou ithre hyou rintyè avui le libro konchintèmin di j’èpà ke chon ingadji.
+         
+         
+            La famiye l’è le fondèmin naturèle è chêrtin de la chochyètâ, l’a drê a ithre inparâye pê la chochyètâ è l’ Ètha.
+         
+      
+   
+      Artikle djij’è chate (17)
+      
+         
+            Tota dzin, atan cholèta tyè dè binda, l’a drê d’ithre propriètéro.
+         
+         
+            Nyon pou ithre indjuchtamin dèporvi dè cha propriètâ.
+         
+      
+   
+      Artikle djij’è vouète (18)
+      Tota dzin l’a drê a moujâ kemin i và, in konhyinthe è in rèlidzyon; chi drê konpouârtè l’èpâhyo dè tsandji dè rèlidzyon ou bin dè fathon dè moujâ, l’a achebin la libèrtâ dè fére konyèthre chè j’idé in rèlidzyon ou bin achebin dre chin ke n’in moujè, li-mima ou avu di j’ôtro, atan in publiko tyè intrè-là, pê l’inchènyèmin, lè pratikè, le kulte è la fathon dè pratikâ.
+   
+      Artikle djij’è nà (19)
+      Tota dzin l’a drê libramin dè moujâ è dè dre, chin l’i bayè le drê d’è pâ ithre inkupiyi a kouja dè chin ke moujè è le drê dè tsêrtchi, dè rèchuêdre è rèparti, chin konchidèrachyon dè frontêrè, lè novi è lè j’idé dè tyinta fathon è avu tyin moyin ke chêyè.
+   
+      Artikle vin (20)
+      
+          
+            Tota dzin l’a drê a la libèrtâ d’achinbyâyè è dè chochyètâ ke volon travayi po la pé.
+         
+         
+            Nyon pou ithre d’obedji dè fére partya de n’achochyachyon.
+         
+     
+   
+      Artikle vint’yon (21)
+      
+         
+            Tota dzin l’a drê a prindre pâ a la dirèkchyon di j’afére publikè dè chon payi, ke chêyè dirèktamin, ou bin in pachin pê di rèprèjintin ke l’a libramin rèyi.
+         
+         
+            Tota dzin l’a drê d’arouvâ, din di kondihyon d’égalitâ, y fonkchyon publikè dè chon payi.
+         
+         
+            La volontâ dou poupyo l’è le fondèmin dè l’otoritâ di povê publiko ; chta volontâ dê chè rèalijâ pê di j’èlèkchyon onithè ke dêvon avi yu din di tin prèyu, ou vôte chèkrè dè ti, ou bin d’apri na prothatâye a parêre, achurin la libèrtâ dou vôte.
+         
+      
+   
+      Artikle vint’è dou (22)
+      Tota dzin, in tin ke minbro dè la chochyètâ, l’a drê a vivre trantyilo din la chochyètâ. L’è j’ou fondâye po chatifyâ lè drê èkonomike, kulturèle è nèchèchéro a cha dinyitâ è po fére a tsèvanhyi cha pèrchenalitâ, grâthe a l’èfouâ dou payi è a la boun’intinta intrè ti lè payi, in kontin l’organijachyon è chè moyin dè vivre.
+   
+      Artikle vint’è trè (23)
+      
+         
+            Tota dzin l’a drê ou travô , libro a li dè rèyi le tâtso ke l’i konvin, a di rèjenâbyè è djuchtè kondihyon, a cha chatichfakchyon, l’a drê achebin a ithre inparâ kontre le tsômyâdzo.
+         
+         
+            Ti l’an drê, chin j’indjuchtiche, a on tô kovin por on tô travô.
+         
+         
+            Chi ke travayè l’a drê a on djuchto kovin, in tota djuchtiche è a che n’èchyin, por achurâ, achebin a cha famiye ouna ya din la dinyitâ umêna, è in dèpye, che fô, ti lè j’ôtro moyin dè protèkchyon.
+         
+         
+            Tota dzin l’a drê dè fondâ di chindika avu di j’ôtro, achebin dè ch’ingadji din di chindika po dèfindre chè j’intèrè.
+         
+      
+   
+      Artikle vint’è katro (24)
+      Tota dzin l’a drê ou rèpou è i dichtrakchyon dè totè chouârtè, bin chur din on tin rèjenâbyo intrè lè tin dè travô è hou dè kondji payi, prèyu po chin.
+   
+      Artikle vint’è thin (25)
+      
+         
+            Tota dzinl’a drê a on trin dè ya chufijin a cha ya, por achurâ cha chindâ, chon bin’ithre è chi dè cha famiye, notamin po le medji, lè vithirè, le tinyèmin, lè chouin dè mêdzo, achebin po lè chêrvucho ke dèmandè na famiye ke l’a drê a la chèkuritâ , kan l’i a dou tsômâdzo, la maladi, l’invaliditâ, le vèvâdzo, la viyèthe, din le ka dè pêrda dè chè moyin a kouja dè krouyè chyâyè ; fro dè cha volontâ.
+         
+         
+            La matèrnitâ è l’infanthe l’an drê a on’éde è oun’achichtanthe rèyiè. Ti lè j’infan, ke chêyan vinyê ou mondo din le maryâdzo ou bin in dèfro, l’an la dzoyechanthe dè la mima protèkchyon.
+         
+      
+   
+      Artikle vint’è chê (26)
+      
+         
+            Tota dzin l’a drê a l’èdukachyon. L’èdukachyon dê ithre gratiche, ou mintè po l’inchènyèmin d’èmoda. Le premi l’inchènyèmin l’è obligatéro. L’inchènyèmin dè la tèknike, è l’aprintechâdzo d’on mihyi, dê ithre ouvê a ti ; l’intrâye i hôtè j’ètudè dê ithre achebin ouvêrta in pyên’ègalitâ a ti, d’apri lou merto.
+         
+         
+            L’èdukachyon dê vijâ a la pyêna ravuchête dè la pèrchenalitâ umêna è achebin ou rèinforhyèmin dou rèchpè di drê dè l’omo è di libèrtâ premirè. I dê favorijâ l’intindèmin, la tolèranthe è l’amihyâ intrè totè lè nachyon è totè lè chouârtè dè rachè ou dè rèlidziyon, achebin po chyêdre l’èvoluchyon di j’aktivitâ di Nachyon j’Unyè po le mantin de la pé.
+         
+         
+            Lè parin l’an, pê prioritâ, le drê dè rèyi la chouârta dè l’èdukachyon a bayi a lou j’infan.
+         
+      
+   
+      Artikle vint’è chate (27)
+      
+         
+            Tota dzin l’a le drê dè prindre pâ libramin a la ya kulturèle dè la chochyètâ kemouna, dè prindre pyiéji di moudè è kothemè è dè partichipâ ou pourgrè de la hyinthe è a to le bin ke n’in rètirè.
+         
+         
+            Tsakon l’a drê a l’inparâye dè ti lè j’intêrè ke vinyon dè chin ke l’a pu kréâ, tan po fére tsèvanhyi la hyinthe ou chè dèmorâ.
+         
+      
+   
+      Artikle vint’è vouète (28)
+      Tota dzin l’a drê, ke chê betâ in pyathe in piti è in grô, on ouâdre, po ke lè libèrtâ èkritè din ha Dèklarahyon, puéchan trovâ on èfè vayin.
+   
+      Artikle vint’è nà (29)
+      
+         
+            L’individu l’a di dèvê a inpyâ po la chochyètâ kemouna yô i chè tin, ke cha pèrchenalitâ puéchè chè tsèvanhyi on pye pri dè chè và.
+         
+         
+            Kan i fâ a vayê chè drê è din la dzoyichanthe dè chè libèrtâ, tsakon l’è achtrin, ma tantyè i limitè kemandâyè pê la lê, rintyè por achurâ la rèkonyechanthe è le rèchpè di drê è libèrtâ di j’ôtro, pu achebin dè chatifyâ i djuchtè kondihyon dè la chejinthe, dè l’ouâdre publiko è dou bin’ithre dè ti, din na chochyètâ dèmokratike.
+         
+         
+            Chtou drê è libèrtâ ne poron djamé chè fére ou kontréro di prèkchripchyon di Nachyon j’Unyè.
+         
+      
+   
+      Artikle trinta (30)
+      Pâ ouna cheule dichkpojichyon dè chta Dèhyarahyon porê ithre konprêcha è inpyèyia, por on Ètha, on groupèmin ou bin on individu, on drê ou on’ôtro, dè chè bayi a oun’aktivitâ ou bin dè fére ôtyè kontre l’avutrâye di drê è libèrtâ ke l’i chon inchkri.
+   

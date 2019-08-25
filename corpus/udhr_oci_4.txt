@@ -1,0 +1,220 @@
+Universal Declaration of Human Rights - Occitan (Francoprovençal, Valais)
+© 1996 – 2009 The Office of the High Commissioner for Human Rights
+This plain text version prepared by the “UDHR in Unicode”
+project, https://www.unicode.org/udhr.
+---
+
+Dèclarachion di drouê dè l’ómó por tui lè pa-i dou moundo.
+      Document traduit en patois d’Hérémence par Alphonse Dayer avec la collaboration de Narcisse Seppey.
+      Hérémence février 2014
+   
+      Introdouc-chion
+      In tenien countó ke le rèspè dè la degnetâ dè l’ómó apartïn à to lo moundo chou la tèrra, avoué lè mémo drouê, è ke pouon pâ êthre sèdâ, fé la fondachion dè la libèrtâ, dè la jiosteuce è dè la pé dou moundo.
+      In tenien countó ke le mèconièchance è le façon dè mefrijieu lè drouê dè l’ómó i’an menâ à dè j’acto dè barbaric ke reboúzon la counchieince di moundó è ke le néchanse d’oun moundo ánvoueu lè zin charin libró dè cothèrjieu è dè creire, libèrâ dè la pouire è dè la mijére, i’a eithâ anounchia comin le pló âta aspirachion dè l’ómó.
+      In tenien countó ke i’è th’importan ke lè drouê dè l’ómó fóchan protèjia pèr oun réjime dè drouê pórke l’ómó chei pâ countrin à la fïn, à chè rèvoltâ countre la tiranic è l’oprèchion.
+      In tenien countó ke i’è th’importan d’incorajieu lo dèvelopèmin di relachion amicale intre nachion.
+      In tenien countó ke din la louê dè fondachion (charte), lè zin di Nachion Rèóneite i’an proclamâ à nóé lóou fouê in lè drouê prinsepâ dè l’ómó, in la degnetâ è la valóou dè la pèrchon-na, din l’égalitâ di drouê di j’ómó é di fèmale, è ke chè chon dèclarâ fermó a favorijieu lo progrès social è a instalâ dè mi bóne coundichion dè via in pèr óna mi graucha libèrtâ.
+      In tenien countó ke lè j’Eta counchô chè chon ingajia à achiourieu in coopèrin aoú l’organizachion di Nachion Rèóneite, lo rèspè coumplè di drouê dè l’ómó è di libèrtâ foundamentâle.
+      In tenien countó k’óna counsepchion cómóna dè hlóou drouê è libértâ i’è dè la pló âta importance por impli plein-namin ché ingazèmin
+      L’assemblée gènèrala proclianme la prèjinta Dèclarachion di drouê dè l’ómó por tui lè pa-i dou moundó comin étan le mèillóou tsauja à fére pèr tui lè pópló è tóte lè nachion pórke tóte lè zin è tóte lè société óchan sta Dèclarachion tolon in l’espric, fajichan l’infô, pèr l’insènièmin é l’edócachion, dè dèveloppâ lo rèspè dè hlóou drouê è libèrtâ è d’achiourieu, pè dè mejóre dè progrê d’ordre nachional è intèrnachional, la rèconièchanse è l’aplecachion coumplèta è veretâbla, tan premieu lè pópólachion di j’Eta mimbro lóou mémó kè premieu hleu ke chon rêjieite pèr lóouc.
+   
+      Artecló premieu 1
+      Tui lè jêtre humain néchon libro è pary in degnetâ é in drouê. Chon reijonâbló è dè counchieince è deivouon âzic lè j’oun vi j’avi di j’âtró in pèr oun espri dè fratèrnitâ
+   
+      Artecló dau 2
+      Tsecoun poú chè prèvâli dè tui lè drouê è dè tóte lè libèrtâ proclamâ in sta Déclarachion, chin ócóna distinchion, dè rache, dè cólóou, dè sèxe, dè linvoua, dè relijion, d’opinion poleteca ou bïn dè tóte j’âtre j’opinion d’orejena nachionala ou sociala, dè fórtóna, dè nèchance ou bïn dè tóte j’âtre setoachion
+      In pló charè pâ fé dè distinchion fondâye chou lo statu poletecó, zóredecó ou internachional dou pa-ic ou dè l’indrei don óna pèrchon-na i’è rechortechinta, ke ché pa-ic ou ché indrei indépendan, chou tótèlla, pâ libró ou bïn choumetou a óna lemetachion dè souverènètâ.
+  
+      Artecló tre 3
+      Tsecoun i’a drouê à la via, à la libèrtâ è à la proteichion dè cha pèrchon-na.
+   
+      Artecló katró 4
+      Nioun charè tenou in esclave ni in oblegachion ; l’èsclavâzo è le profiè di j’èsclâve i’è dèfindouc in tóte chè fórme.
+   
+      Artecló sïn 5
+      Nioun charè choumetou à la tortóra, ni à dè pein-ne ou dè trêtèmin mèchien, inhumin ou dègradin.
+   
+      Artecló chiche 6
+      Tsecoun i’a lo drouê à la rèconièchance pèrtot dè cha pèrsonalité ke relive dou drouê.
+   
+      Artecló chat 7
+      Tui ch’on pary dèan la louê è i’an lo drouê chin distinchion à la méma proteichion dè la louê. Tui i’an drouê à la méma proteichion countre tóte discriminachion ke violèrei la prèjinta Dèclarachion è topary countre tóte provocachion à óna tèlla descremenachion.
+   
+      Artecló ouèt 8
+      Tóta pèrchon-na i’a lo drouê dè chè plindre dèan la zóredichion nachionala compétante countre lè j’actó ke violon lè drouê dè fon ke li chon recoúgnoú pè la constetóchion è pèr la louê.
+   
+      Artecló noú 9
+      Nioun poú êthre arèthâ, impreijonâ, tsachia dou pa-ic, arbitrêramin.
+   
+      Artecló jieu 10
+      Tota pèrchon-na i’a drouê in tota ègalitâ, a kè cha cauja chei avouicha d’óna façon jiósta è poublic pèr oun trebónal indépendant è impartchiâbló, ke decedèrè, chei dè chè drouê è óblegachion, chei dè la conformitâ ou drouê dè tóte acoujachion in matire pénale dirijieite coutre lieic.
+   
+      Artecló ounze 11
+      
+         
+            Tata pèrchon-na acaujâye d’oun acto pónecheibló iè sensée êthre chin fauta por autan ke i’è pâ proâ pè la louê, dou tin d’oun prossê poubleuco ânvoueu tóte lè garantie po cha dèfinse li en eithâye grinteite.
+         
+         
+            Nioun charè coundanâ po dè j’achion ou bïn dè j’omechion ke, ou moman ke i’an eithâ coumetoueu, iran pâ pónecheible d’apré lo drouê nachional ou intèrnachional. Topary, charè pâ inflejia dè pein-ne mi forte ke hleu k’iran aplecâye ou moman ke le fauta i’a eithâye comètoua.
+         
+      
+   
+      Artecló doze 12
+      I’è dèfindou d’allâ ch’in-mèlâ chin reijon dè la via dè tsecoun, dè cha fameuille, dè ânvoueu eithe, di leutre ke rechei ou bïn k’invauye. I’è dèfindou dè mètre a mâ à choun onóou è à cha repótachion. Tota pèrchon-na ia drouê à la proteichion dè la louê countre tóte hleu maude.
+   
+      Artecló trèze 13
+      
+         
+            Tota pèrchon-na ia lo drouê dè voyajieu libramin è dè choeiji choun indrei por eithâ in pèr oun Eta.
+         
+         
+            Tota pèrchon-na ia lo drouê dè kitâ to pa-ic, topary lo chió, è dè tornâ in choun pa-ic.
+         
+      
+   
+      Artecló katôje 14
+      
+         
+            In ca dè persecochion, tota pèrchon-na ia lo drouê dè tsercâ oun recoeic è dè póei chè retóoudic in pèr oun àtre pa-ic.
+         
+         
+            Ché drouê poú pâ êthre dèmandâ in ca dè poursuite réèlamin fondâye chou r’oun mâ dè drouê comoun ou bïn chou dè coumportèmin countrêro ou but è i principe di Nachion Rèóneite.
+         
+      
+   
+      Artecló kïnze 15
+      
+         
+            Tsecoun ia drouê à óna nachionalitâ
+         
+         
+            Oun poú pâ prevâ nioun dè cha nachionalitâ, ni dou drouê dè tsanjieu dè nachionalitâ
+         
+      
+   
+      Artecló chèze 16
+      
+         
+            A bécau ke i’an l’âjió, l’ómó è le fèmala, chin ócona restrichion dè rache, dè nachionalitâ ou dè relijion, i’an drouê dè chè mariâ è dè fondâ óna fameuille. I’an lè mémó drouê vi j’ a vi dou mariâzó, dou tin dou mariâzó ou bïn dou divorce.
+         
+         
+            Le mariâzó poú pâ èthre fé, chin lo libro é plin counchintèmin di j’èffóouc.
+         
+         
+            Le fameuille i’è le veretâblo fondèmin dè la société è i’a drouê à la proteichion dè la société è dè l’Etat.
+         
+      
+   
+      Artecló dijèchat 17
+      
+         
+            Tota pèrchon-na ke fóche dèperliei ou bïn in comunauté i’a drouê à la propriété
+         
+         
+            Oun poú pâ prindre à nioun, lo bïn chin bonna reijon.
+         
+      
+   
+      Artecló dijèouèt 18
+      Tsecoun i’a lo drouê à la libèrtâ dè mójâ, dè counchieince è dè relijion ; ché drouê i’oú dere ke i’a lo drouê dè tsanjieu dè relijion ou bïn dè counvichion è la libèrtâ dè manifèstâ cha relijion è chè j’idé, cholèt ou bïn in comoun, chei in public ou in privé, pè l’insènièmin, lè prateke, lo culte è la façon dè fére lè sérémounie.
+   
+      Artecló dijenoú 19
+      Tsecoun i’a drouê à la libèrtâ d’opinion è d’ exprèchion. Chin i’oú dere ke i’a lo drouê dè pâ êthre cancanâ à cauja dè chè j’opinion è lo drouê topary dè tsèrcâ, dè rechèei è d’invouâ, chin parlâ dè frontire, lè jinformachion è lè j’idé pèr tui lè moyin d’exprèchion ke chè chei.
+   
+      Artecló vïn 20
+      
+          
+            Tota pèrchon-na i’a la libèrtâ dè ch’associeu po la bonna cauja.
+         
+         
+            Nioun i’è th’oublijia dè fére partie d’óna associachion.
+         
+     
+   
+      Artecló vïntchi’oun 21
+      
+         
+            Tota pèrchon-na i’a lo drouê dè partesepâ à la dereichion di j’afére póbleuke dè choun pa-ic, chei directamin, chei pè l’intèrmédiêre d’oun représentan libramin choeijeic.
+         
+         
+            Tóte pèrchon-ne i’an lo drouê d’assèdâ, din lè coundichion d’ègalètâ, i founchion pobleke dè choun pa-ic.
+         
+         
+            Le volontâ dou pópló i’è le fondèmin dè l’autorité di poei poublic ; hla volontâ dei ch’expremâ pè dè j’éleichion ónéthe ke deivouon chè tini périodicamin à la majorité di vouê chei pèr on vôtô chècrei, ou o n’ âtra façon d’achourieu la libèrtâ dè vôtô.
+         
+      
+   
+      Artecló vïntedau 22
+      Tota pèrchon-na, in tin kè mimbro dè la société, poú prètindre à la sécurité sociala ; è poú aei la satisfachion d’obteni dè la société to chin ke i’a bèjoin po vivre counvenâblamin, po teni choun ran, po chè cóltevâ dè manière à vouardâ tota cha deniètâ d’ómó, è fére libramin vâlic chè prôpre capacitâ. Po chin, dei póei countâ chou l’èffô nachional è à la copèrachion intèrnachionala, in tenien countó dè l’organizachion è di moyen dè tseke pa-ic.
+   
+      Artecló vïntètreu 23
+      
+         
+            Tota pèrcho-na ia drouê ou tra-au, dè choeiji choun tra-au, à dè coundichion jióste è counvenâble dè tra-au, è à la proteichion countre lo chômâje.
+         
+         
+            Tui i’an drouê, chin difèrince, à óna pâye pary po lo mémó tra-au.
+         
+         
+            Ché ke trâille i’a drouê à óna pâye jiósta ke li achioúriche à luic è à cha fameuille óna via counforma à la deniètâ dè l’ ómó, è coumplètâye che fau pè d’âtro moyen dè proteichion sociala.
+         
+         
+            Tota pèrchon-na i’a lo drouê, po dèfindre chè j’interé à fondâ ou bïn dè ch’afiliyeu à dè syndica.
+         
+      
+   
+      Artecló vïntèkatró 24
+      Tota pèrchon-na i’a drouê ou repoú è y pâchatin è topary à óna lemetachion reijonâbla di j’óoure dè tra-au, è dè conjé paya regóillè.
+   
+      Artecló vïntsïn 25
+      
+         
+            Tota pèrchon-na i’a drouê à oun nivau dè via ke pouiche achiouriyeu la santé, lo benéje à luic è à cha fameuille, in chin ke counsèrne lo vivre, lè j’âillon, lo lozèmin, lè freu dè medesïn è i chervechió sociau nesesêró ; i’a drouê d’êthre achouria in ca dè chômâje, dè maladic, d’invalidètâ, dè vevâzó, dè vièilleusse ou din d’âtro ca dè pèrda dè chè moyen dè vivre, suite à dè tsauje ke dèpindon pa dè cha volontâ.
+         
+         
+            Le mâre è le popoun i’an drouê à êthre eijia spécialamin. Tui lè j’infan ke fóchan néhouc din oun mariâzó ou bïn in foúra dou mariâzo, deivouon aei la méma proteichion sociala.
+         
+      
+   
+      Artecló vïntchiche 26
+      
+         
+            Tota pèrchon-na i’a drouê à l’edócachion. L’edócachion dei rin cothâ dou moin in chin ke counserne l’insènièmin chïmpló è lè bâje dou chaeic. Oun è th’oublijia d’insènieu lè premieure bâje dou chaeic. L’insènièmin tècnic è profèchionel dei êthre jènèralijia ; l’acsê i âte j’étude dei êthre ouvouê in plin-ne ègalitâ à tuic in founchion dè lóou meretó.
+         
+         
+            L’edocachion dei eijieu ou plin èpanouissèmin dè la pèrchon-na è ou rèspè di drouê dè l’ómó è di libèrtâ foundamentâle. Dei favorijieu la coumpréenchion, la tolerance è l’amitié intre lè nachion è tui lè groupe dè rache ou dè relijion, è topary lo dèvelopèmin di tra-au di Nachion Rèóneite po manteni la pé.
+         
+         
+            Ch’on lè parin ke chon lè premieu à aei lo drouê dè choeiji lo janre d’edocachion ke i’ólon bailleu à lóou j’infan.
+         
+      
+   
+      Artecló vïntèchat 27
+      
+         
+            Tóta pèrchon-na i’a lo drouê dè prindre pâ libramin à la via cóltórèla dè la comunauté, dè ch’implêre di beule tsauje è dè partesepâ ou progrê dè la science, è i bienfé ke chin lóou porte.
+         
+         
+            Lè cha-in, lè j’artiste è lè scientefecó, i’an drouê à la proteichion dè lóou j’interé morau è matérièl ke rechórton dè lóou tra-au.
+         
+      
+   
+      Artecló vïntèouèt 28
+      Tota pèrchon-na i’a drouê ke i’óche chou lo plan social è intèrnachional, oun ordre tel ke le drouê è le libèrtâ, ehric in la prèjinta Dèclarachion pouiche fére choun èffè.
+   
+      Artecló vïntenoú 29
+      
+         
+            Lè moundó i’an dè dèvouê in vèr la cómunauté, rin ke che le libro è plin dèvelopèmin dè cha pèrsonalitâ iè pouchibló.
+         
+         
+            In exersin chè drouê è in dispojin dè chè libèrtâ, tsecoun i’è choumetouc rin ke i lemetachion ètableite pè la louê, in yaua d’achioúrieu dè réconièthre è dè rèspèctâ lè drouê è lè libèrtâ di j’âtro, po chantrefére chin k’exije le morala, l’ordre poublic è le benéje jènèral in pèr ona société gouèrnâyepè lo pópló.
+         
+         
+            Hlóou drouê è libèrtâ, porin in okoun ka ch’egzerchieu dè façon coutrêre i principe è i but di Nachion Rèoneite.
+         
+      
+   
+      Artecló trinta 30
+      Ocóna despoujichion dè la prèjinta Dèclarachion poú êthre intèrprètâye comin implekin por oun Eta, oun groupèmin, ou oun individu, oun drouê dè chè levrâ à óna activitâ ou bïn d’akoumpli oun acto ke vise à la destrouchion di drouê è di libèrtâ ke chon expremâ.
+   

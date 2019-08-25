@@ -1,0 +1,217 @@
+Universal Declaration of Human Rights - Romansch (Grischun)
+© 1996 – 2009 The Office of the High Commissioner for Human Rights
+This plain text version prepared by the “UDHR in Unicode”
+project, https://www.unicode.org/udhr.
+---
+
+Decleraziun universala dals dretgs umans
+      Preambel da la decleraziun
+      Considerond che la reconuschientscha da la dignitad da tut ils members da la famiglia umana e da lur dretgs eguals ed inalienabels furma il fundament da la libertad, da la giustia e da la pasch en il mund;
+      considerond che la sconuschientscha ed il spretsch dals dretgs umans han manà ad acts da barbaria ch’offendan la conscienza da l’umanitad e che la creaziun d’in mund, en il qual ils umans han la libertad da discurrer e da crair libers da terrur e miseria, è vegnida proclamada sco l’aspiraziun suprema da l’uman;
+      considerond ch’igl è essenzial da proteger ils dretgs umans cun leschas per ch’il carstgaun na saja betg sfurzà d’applitgar sco davos med la revolta cunter la tirannia e l’oppressiun;
+      considerond ch’igl è essenzial da promover las relaziuns amicablas tranter las naziuns;
+      considerond ch’ils pievels da las Naziuns Unidas han proclamà danovamain en il statut lur cardientscha en ils dretgs fundamentals dal carstgaun, en la dignitad ed en la valita da la persuna umana, en l’egualitad dals dretgs dad um e dunna, e ch’els èn sa declerads decis da favurisar il progress social e d’instituir meglras cundiziuns da viver en ina libertad pli vasta;
+      considerond ch’ils stadis commembers èn s’obligads da segirar, en cooperaziun cun l’Organisaziun da las Naziuns Unidas, il respect universal ed effectiv dals dretgs umans e da las libertads fundamentalas;
+      considerond ch’ina concepziun communabla da quests dretgs e da questas libertads è d’impurtanza suprema per ademplir cumplainamain quest engaschament,
+      proclamescha l’Assamblea generala la preschenta decleraziun universala dals dretgs umans sco ideal ch’è da cuntanscher communablamain da tut ils pievels e da tut las naziuns, per che tut ils carstgauns e tut ils organs da la societad hajan adina preschent questa Decleraziun, e sa stentian da promover en l’instrucziun ed en l’educaziun il respect da quests dretgs e da questas libertads e da segirar a quels cun mesiras progressivas sin plaun naziunal ed internaziunal reconuschientscha ed applicaziun universala ed effectiva, tant tranter las populaziuns dals stadis commembers sezs sco tranter ils territoris suttamess a lur giurisdicziun.
+   
+      Art. 1:
+      Tut ils umans naschan libers ed eguals en dignitad ed en dretgs. Els èn dotads cun raschun e conscienza e duain agir in vers l’auter en spiert da fraternitad.
+   
+      Art. 2:
+      Mintga persuna po far valair tut ils dretgs e tut las libertads proclamads en la Decleraziun preschenta senza distincziun, particularmain da razza, da colur, da schlattaina, da religiun, d’opiniun politica u autra, d’origin naziunal u social, da possess, da naschientscha u d’autras circumstanzas.
+      Plinavant na vegni fatg nagina distincziun fundada sin il statut politic, giuridic u internaziunal dals pajais u da territori, dal qual ina persuna deriva, che quest pajais u territori saja independent, sut tutela, nun-autonom u suttamess ad in’autra limitaziun da suveranitad.
+  
+      Art. 3:
+      Mintga uman ha il dretg da vita, da libertad e da segirtad da la persuna.
+   
+      Art. 4:
+      Nagin na dastga vegnir tegnì en sclavaria u en servitid; la sclavaria ed il commerzi da sclavs èn scumandads en tut lur furmas.
+   
+      Art. 5:
+      Nagin na dastga vegnir suttamess a la tortura, ni a painas ni a tractaments crudaivels, inumans u degradants.
+   
+      Art. 6:
+      Mintga uman ha il dretg da vegnir renconuschì dapertut sco persunalitad giuridica.
+   
+      Art. 7:
+      Tut ils umans èn eguals avant la lescha ed han senza distincziun il dretg da protecziun eguala cunter tutta discriminaziun che violass la Decleraziun preschenta e cunter tutta provocaziun ad ina tala discriminaziun.
+   
+      Art. 8:
+      Mintga persuna ha il dretg da protecziun legala avant las giurisdicziuns naziunalas cumpetentas cunter acts che violeschan ils dretgs fundamentals garantids en la constituziun u en la lescha.
+   
+      Art. 9:
+      Nagin na dastga vegnir arrestà, detegnì u exilià arbitrariamain.
+   
+      Art. 10:
+      Mintga persuna ha il dretg, en egualitad cumplaina, che ses cas vegnia tractà gistamain e publicamain d’in tribunal independent ed imparzial, il qual decida davart ses dretgs e sias obligaziuns u davart la validitad da tutta atgisa penala drizzada cunter ella.
+   
+      Art. 11:
+      
+         
+            Mintga persuna atgisada d’in act punibel è innocenta fin che sia culpa e cumprovada legalmain en in process public, nua che tut las garanzias necessarias per sia defensiun èn vegnidas segiradas ad ella.
+         
+         
+            Nagin na vegn condemnà per acziuns u omissiuns che na valevan al mument ch’ellas èn vegnidas commessas betg sco act punibel tenor il dretg naziunal ed internaziunal. Medemamain na dastga la paina betg esser pli gronda che quella applitgabla al mument che l’act punibel è vegnì commess.
+         
+      
+   
+      Art. 12:
+      Nagin na dastga daventar l’object d’intervenziuns arbitraras en sia vita privata, sia famiglia, ses domicil u sia correspundenza, ni d’attatgas cunter sia onur e sia reputaziun. Mintga uman ha il dretg da protecziun legala cunter talas intervenziuns u talas attatgas.
+   
+      Art. 13:
+      
+         
+            Mintga persuna ha il dretg da circular libramain e d’eleger ses domicil en l’intern d’in stadi.
+         
+         
+            Mintga persuna ha il dretg da bandunar mintga pajais, era ses agen, e da returnar en ses pajais.
+         
+      
+   
+      Art. 14:
+      
+         
+            En cas da persecuziun ha mintga persuna il dretg da tschertgar asil e da survegnir asil en auters pajais.
+         
+         
+            Quest dretg na po betg esser invocà en cas da persecuziun pervi da delicts na-politics u pervi d’acziuns che cuntrafan a las miras ed als principis da las Naziuns Unidas.
+         
+      
+   
+      Art. 15:
+      
+         
+            Mintga uman ha il dretg d’ina naziunalitad.
+         
+         
+            Nagin na dastga vegnir privà arbitrarmain da sia naziunalitad u dal dretg da midar naziunalitad.
+         
+      
+   
+      Art. 16:
+      
+         
+            Um e dunna cun vegliadetgna adattada han il dretg da maridar e da fundar ina famiglia senza restricziuns concernent la razza, la naziunalitad u la religiun. Els han ils medems dretgs areguard il matrimoni, durant il matrimoni e tar sia dissoluziun.
+         
+         
+            Il matrimoni po esser conclus sulettamain cun il consentiment liber e cumplain dals conjugals futurs.
+         
+         
+            La famiglia è l’element natiral e fundamental da la societad e sto vegnir protegida da la societad e dal stadi.
+         
+      
+   
+      Art. 17:
+      
+         
+            Mintga persuna ha il dretg d’avair ina proprietad atgna u communabla cun auters.
+         
+         
+            Nagin na dastga vegnir privà arbitrarmain da sia proprietad.
+         
+      
+   
+      Art. 18:
+      Mintga persuna ha il dretg da la libertad da patratg, da conscienza e da religiun; quest dretg cumpiglia la libertad da midar religiun u persvasiun sco era da manifestar l’atgna religiun u l’atgna persvasiun sulet u en communitad, publicamain u privat, en l’instrucziun, en la pratica, en il cult ed en l’execuziun da ritus.
+   
+      Art. 19:
+      Mintga persuna ha il dretg da la libertad d’opiniun e d’expressiun, quai che cumpiglia il dretg da betg vegnir mulestà pervi da l’atgna opiniun sco era il dretg da tschertgar, retschaiver, derasar, senza resguardar cunfins, las infurmaziuns e las ideas cun tut ils meds d’expressiun.
+   
+      Art. 20:
+      
+          
+            Mintga persuna ha il dretg da la libertad da reuniun e d’associaziun paschaivla.
+         
+         
+            Nagin na dastga vegnir obligà da far part d’ina associaziun.
+         
+     
+   
+      Art. 21:
+      
+         
+            Mintga persuna ha il dretg da participar al guvern da l’agen pajais, directamain u cun l’intermediaziun da represchentants elegids libramain.
+         
+         
+            Mintga persuna ha sut cundiziuns egualas il dretg d’access a las funcziuns publicas da ses agen pajais.
+         
+         
+            La voluntad dal pievel è il fundament da l’autoritad da las pussanzas publicas; questa voluntad duai s’exprimer en elecziuns periodicas ed onestas cun dretg d’elecziun general ed egual en votaziun secreta u tenor ina procedura equivalenta che garantescha la libertad da votar.
+         
+      
+   
+      Art. 22:
+      Mintga persuna ha sco commembra da la societad il dretg da segirtad sociala; ella po pretender d’obtegnair ils dretgs economics, socials e culturals indispensabels per sia dignitad e per il svilup liber da sia persunalitad, quai tras sforzs interns dal stadi ed en la cooperaziun internaziunala, resguardond l’organisaziun e las resursas da mintga pajais.
+   
+      Art. 23:
+      
+         
+            Mintga persuna ha il dretg da lavur, da tscherna libra da sia lavur, da cundiziuns da lavur gistas e cunvegnentas e da la protecziun cunter dischoccupaziun.
+         
+         
+            Tuts han il dretg, senza discriminaziun, d’in salari egual per lavur eguala.
+         
+         
+            Tgi che lavura ha il dretg d’ina remuneraziun gista e commensurada che segirescha ad el ed a sia famiglia in’existenza confurma a la dignitad umana e che vegn cumplettada, sche necessari, cun auters meds da protecziun sociala.
+         
+         
+            Mintga persuna ha il dretg da fundar ensemen cun auters sindicats e da s’affiliar a sindicats per defender ses interess.
+         
+      
+   
+      Art. 24:
+      Mintga persuna ha il dretg da repaus, particularmain d’ina limitaziun raschunaivla dal temp da lavur, e da vacanzas periodicas pajadas.
+   
+      Art. 25:
+      
+         
+            Mintga uman ha il dretg d’in standard da viver suffizient per segirar la sanadad ed il bainesser da sasez e da sia famiglia. Quai concerna particularmain l’alimentaziun, la vestgadira, l’abitaziun, la tgira medicinala sco era ils servetschs socials necessaris. El ha il dretg da segirtad en cas da dischoccupaziun, da malsogna, d’invaliditad, da vaivanza, da vegliadetgna u en ils auters cas da perdita da meds da subsistenza tras circumstanzas independentas da sia voluntad.
+         
+         
+            Mamma ed uffant han il dretg d’agid e d’assistenza speziala. Tut ils uffants, ch’els sajan naschids en il matrimoni u ordaifer il matrimoni, giaudan la medema protecziun sociala.
+         
+      
+   
+      Art. 26:
+      
+         
+            Mintga persuna ha il dretg d’instrucziun. L’instrucziun sto esser gratuita, almain quai che concerna l’instrucziun elementara e fundamentala. L’instrucziun elementara è obligatorica. L’instrucziun tecnica e professiunala sto esser accessibla a tuts; l’access als studis superiurs sto esser liber a tuts en cumplaina egualitad tenor lur merits.
+         
+         
+            L’instrucziun duai avair en mira il svilup cumplain da la persunalitad umana e rinforzar il respect dals dretgs umans e da las libertads fundamentalas. Ella duai promover la chapientscha, la toleranza e l’amicizia tranter tut las naziuns e tut las gruppas da razza u da religiun sco era sustegnair las activitads da las Naziuns Unidas per il mantegniment da la pasch.
+         
+         
+            Ils geniturs han da prioritad il dretg d’eleger il gener da l’instrucziun per lur uffants.
+         
+      
+   
+      Art. 27:
+      
+         
+            Mintga uman ha il dretg da prender part libramain a la vita culturala da la communitad, da giudair ils arts e da participar al progress scientific ed als benefizis che resultan da quel.
+         
+         
+            Mintga uman ha il dretg da protecziun dals interess morals e materials derivants da tutta producziun scientifica, litterara u artistica, da la quala el è l’autur.
+         
+      
+   
+      Art. 28:
+      Mintga persuna ha il dretg ch’i regia sin il champ social e sin il champ internaziun in urden, en il qual ils dretgs e las libertads menziunads en la preschenta Decleraziun possian cuntanscher in effect cumplain.
+   
+      Art. 29:
+      
+         
+            Mintga uman ha duairs envers la communitad, en la quala suletta è pussaivel il svilup liber e cumplain da sia persunalitad.
+         
+         
+            En la realisaziun dals dretgs e da las libertads è mintga uman suttamess sulettamain a las limitas stabilidas tras la lescha per segirar la renconuschientscha ed il respect dals dretgs e da las libertads dals auters e per satisfar a las exigenzas da la morala, da l’urden public e dal bainesser general en ina societad democratica.
+         
+         
+            Quests dretgs e questas libertads na dastgan en nagin cas vegnir realisads cunter las miras ed ils principis da las Naziuns Unidas.
+         
+      
+   
+      Art. 30:
+      Nagina disposiziun da la preschenta Decleraziun na dastga vegnir interpretada uschia ch’in stadi, ina gruppa u ina persuna haja il dretg da sviluppar in’activitad u d’accumplir in act che ha en mira la destrucziun dals dretgs e da las libertads menziunads en questa Decleraziun.
+   
