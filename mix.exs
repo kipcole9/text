@@ -60,7 +60,8 @@ defmodule Text.MixProject do
   defp deps do
     [
       {:sweet_xml, "~> 0.6"},
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:ex_doc, "~> 0.21", only: [:dev, :release]}
     ]
   end
 
