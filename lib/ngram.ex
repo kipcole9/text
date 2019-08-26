@@ -1,4 +1,4 @@
-defmodule Ngram do
+defmodule Text.Ngram do
   @moduledoc """
   Compute ngrams and their counts from a given UTF8 string.
 
@@ -6,6 +6,7 @@ defmodule Ngram do
 
   """
 
+  @spec ngram(String.t(), 2..4) :: %{list() => integer}
   def ngram(string, n \\ 2) when is_binary(string) and n in 2..4 do
     string
     |> String.normalize(:nfc)
