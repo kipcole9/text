@@ -4,6 +4,6 @@ defmodule Text do
   """
 
   defdelegate ngram(text, n), to: Text.Ngram
-  defdelegate detect_language(text), to: Text.DetectLanguage
+  defdelegate detect_language(text), to: Text.Language, as: :detect
 
 end

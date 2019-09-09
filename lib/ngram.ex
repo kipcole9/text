@@ -9,7 +9,7 @@ defmodule Text.Ngram do
   @spec ngram(String.t(), 2..4) :: %{list() => integer}
   def ngram(string, n \\ 2) when is_binary(string) and n in 2..4 do
     string
-    |> String.normalize(:nfc)
+    |> :unicode.characters_to_nfc_binary
     |> ngram(n, %{})
   end
 
