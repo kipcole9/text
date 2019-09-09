@@ -1,6 +1,6 @@
 defmodule Text.Vocabulary.Quadgram do
-  alias Text.Ngram
   import Text.Language
+  import Text.Vocabulary
   import Text.Language.Udhr
 
   @default_ngram 4
@@ -8,7 +8,7 @@ defmodule Text.Vocabulary.Quadgram do
   def build_vocabulary do
     vocabulary =
       udhr_corpus()
-      |> Task.async_stream(__MODULE__, :calculate_ngrams, [@default_ngram], async_options())
+      |> Task.async_stream(__MODULE__, :calculate_ngrams, [@default_ngram..@default_ngram], async_options())
       |> Enum.map(&elem(&1, 1))
       |> Map.new
 
@@ -25,19 +25,18 @@ defmodule Text.Vocabulary.Quadgram do
     Path.join(:code.priv_dir(:text), "vocabulary/udhr_quadgram.etf")
   end
 
-  def calculate_ngrams({language, entry}, n) do
+  def calculate_ngrams({language, entry}, range) do
     ngrams =
       entry
       |> udhr_corpus_content
-      |> IO.inspect
-      |> calculate_ngrams(n)
+      |> calculate_ngrams(range)
 
     {language, ngrams}
   end
 
-  def calculate_ngrams(content, n) when is_binary(content) do
+  def calculate_ngrams(content, range) when is_binary(content) do
     content
-    |> Ngram.ngram(n)
+    |> get_ngrams(range)
     |> convert_to_probabilities()
     |> Enum.sort(fn {_ngram1, prob1}, {_ngram2, prob2} -> prob1 > prob2 end)
     |> Enum.with_index
@@ -45,15 +44,4 @@ defmodule Text.Vocabulary.Quadgram do
     |> Map.new
   end
 
-  def convert_to_probabilities(ngrams) do
-    sum =
-      ngrams
-      |> Enum.map(&elem(&1, 1))
-      |> Enum.sum
-
-    ngrams
-    |> Enum.map(fn {ngram, count} ->
-      {ngram, :math.log(count / sum)}
-    end)
-  end
 end

@@ -23,5 +23,5 @@ erl_crash.dump
 .tool-versions
 
 # Ignore .etf files
-/priv/vocabulary
+/priv/vocabulary/*
 
