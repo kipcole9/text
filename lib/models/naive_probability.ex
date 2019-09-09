@@ -19,7 +19,7 @@ defmodule Text.Language.Model.NaiveProbability do
     score =
       text_ngrams
       |> Enum.reduce(0, fn {ngram, _count}, acc ->
-        language = :persistent_term.get({vocabulary, language})
+        language = vocabulary.get_vocabulary(language)
         [_index, probability] = Map.get(language, ngram) || @no_entry
         acc + probability
       end)

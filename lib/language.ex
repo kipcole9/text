@@ -1,7 +1,7 @@
 defmodule Text.Language do
 
   def detect(text, model \\ Text.Language.Model.NaiveProbability, vocabulary \\ Text.Vocabulary.Quadgram) do
-    model.detect(text, vocabulary.get_vocabulary())
+    model.detect(text, vocabulary)
   end
 
   @doc false
