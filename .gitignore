@@ -21,3 +21,7 @@ erl_crash.dump
 
 # asdf
 .tool-versions
+
+# Ignore .etf files
+/priv/vocabulary
+
