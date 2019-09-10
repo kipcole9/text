@@ -1,6 +1,6 @@
 defmodule Text.Vocabulary.Quadgram do
+  alias Text.Vocabulary
   import Text.Language
-  import Text.Vocabulary
   import Text.Language.Udhr
 
   @default_ngram 4
@@ -8,40 +8,33 @@ defmodule Text.Vocabulary.Quadgram do
   def build_vocabulary do
     vocabulary =
       udhr_corpus()
-      |> Task.async_stream(__MODULE__, :calculate_ngrams, [@default_ngram..@default_ngram], async_options())
+      |> Task.async_stream(Vocabulary, :calculate_ngrams, [ngram_range()], async_options())
       |> Enum.map(&elem(&1, 1))
       |> Map.new
 
     binary = :erlang.term_to_binary(vocabulary)
-    :ok = File.write!(udhr_corpus_quadgram_file(), binary)
+    :ok = File.write!(file(), binary)
     vocabulary
   end
 
-  def get_vocabulary(language) do
-    Text.Vocabulary.get_vocabulary(language, __MODULE__, udhr_corpus_quadgram_file())
+  def load_vocabulary! do
+    Vocabulary.load_vocabulary!(__MODULE__)
   end
 
-  def udhr_corpus_quadgram_file do
+  def ngram_range do
+    @default_ngram..@default_ngram
+  end
+
+  def get_vocabulary(language) do
+    Vocabulary.get_vocabulary(language, __MODULE__)
+  end
+
+  def file do
     Path.join(:code.priv_dir(:text), "vocabulary/udhr_quadgram.etf")
   end
 
-  def calculate_ngrams({language, entry}, range) do
-    ngrams =
-      entry
-      |> udhr_corpus_content
-      |> calculate_ngrams(range)
-
-    {language, ngrams}
-  end
-
-  def calculate_ngrams(content, range) when is_binary(content) do
-    content
-    |> get_ngrams(range)
-    |> convert_to_probabilities()
-    |> Enum.sort(fn {_ngram1, prob1}, {_ngram2, prob2} -> prob1 > prob2 end)
-    |> Enum.with_index
-    |> Enum.map(fn {{ngram, probability}, index} -> {ngram, [index, probability]} end)
-    |> Map.new
+  def calculate_ngrams(text) do
+    Vocabulary.calculate_ngrams(text, ngram_range())
   end
 
 end

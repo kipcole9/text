@@ -1,7 +1,15 @@
 defmodule Text.Language do
 
-  def detect(text, model \\ Text.Language.Model.NaiveProbability, vocabulary \\ Text.Vocabulary.Quadgram) do
-    model.detect(text, vocabulary)
+  def detect(text,
+      model \\ Text.Language.Model.NaiveProbability,
+      vocabulary \\ Text.Vocabulary.Quadgram,
+      target_languages \\  Text.Language.Udhr.known_languages()) do
+    text_ngrams = vocabulary.calculate_ngrams(text)
+
+    target_languages
+    |> Task.async_stream(model, :score_one_language, [text_ngrams, vocabulary], async_options())
+    |> Enum.map(&elem(&1, 1))
+    |> model.order_scores
   end
 
   @doc false
