@@ -1,4 +1,13 @@
 defmodule Text.Vocabulary.Multigram do
+  @moduledoc """
+  An n-gram vocabulary composed
+  of n-grams ranging from 2 to 4
+  characters in length
+
+  """
+
+  @behaviour Text.Vocabulary
+
   alias Text.Vocabulary
   import Text.Language
   import Text.Language.Udhr

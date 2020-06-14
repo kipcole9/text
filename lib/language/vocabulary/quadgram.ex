@@ -1,4 +1,12 @@
 defmodule Text.Vocabulary.Quadgram do
+  @moduledoc """
+  An n-gram vocabulary composed
+  of quad-grams
+
+  """
+
+  @behaviour Text.Vocabulary
+
   alias Text.Vocabulary
   import Text.Language
   import Text.Language.Udhr

@@ -1,4 +1,12 @@
 defmodule Text.Vocabulary.Bigram do
+  @moduledoc """
+  An n-gram vocabulary composed
+  of bi-grams
+
+  """
+
+  @behaviour Text.Vocabulary
+
   alias Text.Vocabulary
   import Text.Language
   import Text.Language.Udhr
