@@ -5,7 +5,7 @@ defmodule Text.Inflect.En do
   to inflect english words from and to plural forms.
 
   """
-  @saved_data_path "priv/inflection/en.etf"
+  @saved_data_path "priv/inflection/en/en.etf"
   @inflections File.read!(@saved_data_path)
   |> :erlang.binary_to_term
 
@@ -63,24 +63,14 @@ defmodule Text.Inflect.En do
   #         or suffix(-itis) or category(-,-),
   #                 return the original noun
 
-  @non_inflecting_suffix ["fish", "ois", "sheep", "deer", "pox", "itis"]
-
-  @non_inflecting_words @inflections
-  |> Map.take(["a2", "a3"])
-  |> Map.values
-  |> List.flatten
-
-  defp is_non_inflecting(word, _mode) when is_binary(word) do
-    non_inflecting? =
-      Enum.any?(@non_inflecting_suffix, &String.ends_with?(word, &1)) ||
-      (String.ends_with?(word, "ese") && starts_with_upper?(word)) ||
-      word in @non_inflecting_words
-
-    if non_inflecting?, do: word, else: nil
+  defp is_non_inflecting(word, mode) when is_binary(word) do
+    cond do
+      category?(word, "herd", mode) -> word
+      category?(word, "nationalities", mode) -> word
+      category?(word, "-", "-", mode) -> word
+      true -> nil
+    end
   end
-
-  defp starts_with_upper?(<< char :: utf8, _rest :: binary >>) when char in ?A..?Z, do: true
-  defp starts_with_upper?(_word), do: false
 
   # Handle pronouns in the nominative, accusative, and dative (see Tables A.5), as well as
   # prepositional phrases...
@@ -90,28 +80,10 @@ defmodule Text.Inflect.En do
   #         if the word is of the form: "<preposition> <pronoun>",
   #                 return "<preposition> <specified plural of pronoun>"
 
-  @pronouns @inflections
-  |> Map.get("a5")
-  |> Enum.drop(3)
-  |> Enum.reject(&(&1 == "->"))
-  |> Enum.map(&String.replace_trailing(&1, " ->", ""))
-  |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
-  |> Enum.chunk_every(2)
-  |> Map.new(&List.to_tuple/1)
-
-  defp is_pronoun(word, :modern) do
-    case Map.get(@pronouns, word) do
-      nil -> nil
-      [modern, _classical] -> modern
-      other -> other
-    end
-  end
-
-  defp is_pronoun(word, :classical) do
-    case Map.get(@pronouns, word) do
-      nil -> nil
-      [_modern, classical] -> classical
-      other -> other
+  defp is_pronoun(word, mode) do
+    cond do
+      category?(word, "pronoun", mode) -> pronoun(word, mode)
+      true -> nil
     end
   end
 
@@ -119,24 +91,11 @@ defmodule Text.Inflect.En do
   #         if the word has an irregular plural,
   #                 return the specified plural
 
-  @irregular @inflections
-  |> Map.get("a1")
-  |> Enum.drop(3)
-  |> Enum.map(fn x -> if x == "(none)", do: nil, else: x end)
-  |> Enum.chunk_every(3)
-  |> Enum.map(fn
-    [word, nil, plural] -> [word, plural, plural]
-    [word, plural, nil] -> [word, plural, plural]
-    other -> other
-  end)
-  |> Map.new(fn [word, english, classical] -> {word, [english, classical]} end)
-
-  defp is_irregular(word, :modern) do
-    if plural = Map.get(@irregular, word), do: hd(plural), else: plural
-  end
-
-  defp is_irregular(word, :classical) do
-    if plural = Map.get(@irregular, word), do: tl(plural), else: plural
+  defp is_irregular(word, mode) do
+    cond do
+      category?(word, "irregular", mode) -> irregular(word, mode)
+      true -> nil
+    end
   end
 
   # Handle irregular inflections for common suffixes (synopses, mice and men, etc.)...
@@ -150,16 +109,16 @@ defmodule Text.Inflect.En do
 
   defp is_irregular_suffix(word, _mode) do
     cond do
-      String.ends_with?(word, "man") -> String.replace_trailing(word, "man", "men")
-      String.ends_with?(word, "louse") -> String.replace_trailing(word, "louse", "lice")
-      String.ends_with?(word, "mouse") -> String.replace_trailing(word, "mouse", "mice")
-      String.ends_with?(word, "tooth") -> String.replace_trailing(word, "tooth", "teeth")
-      String.ends_with?(word, "goose") -> String.replace_trailing(word, "goose", "geese")
-      String.ends_with?(word, "foot") -> String.replace_trailing(word, "foot", "feet")
-      String.ends_with?(word, "zoon") -> String.replace_trailing(word, "zoon", "zoa")
-      String.ends_with?(word, "cis") -> String.replace_trailing(word, "cis", "ces")
-      String.ends_with?(word, "sis") -> String.replace_trailing(word, "sis", "ses")
-      String.ends_with?(word, "xis") -> String.replace_trailing(word, "xis", "xes")
+      suffix?(word, "man") -> replace_suffix(word, "man", "men")
+      suffix?(word, "louse") -> replace_suffix(word, "louse", "lice")
+      suffix?(word, "mouse") -> replace_suffix(word, "mouse", "mice")
+      suffix?(word, "tooth") -> replace_suffix(word, "tooth", "teeth")
+      suffix?(word, "goose") -> replace_suffix(word, "goose", "geese")
+      suffix?(word, "foot") -> replace_suffix(word, "foot", "feet")
+      suffix?(word, "zoon") -> replace_suffix(word, "zoon", "zoa")
+      suffix?(word, "cis") -> replace_suffix(word, "cis", "ces")
+      suffix?(word, "sis") -> replace_suffix(word, "sis", "ses")
+      suffix?(word, "xis") -> replace_suffix(word, "xis", "xes")
       true -> nil
     end
   end
@@ -171,34 +130,12 @@ defmodule Text.Inflect.En do
   #         if category(-on,-a),    return inflection(-on,-a)
   #         if category(-a,-ae),    return inflection(-a,-ae)
 
-  @assimilated_modern_mode @inflections
-  |> Map.take(["a10", "a14", "a19", "a20"])
-  |> Map.values
-  |> List.flatten
-
-  defp is_assimilated_classical(word, :modern) when word in @assimilated_modern_mode do
-    do_assimilated_classical(word)
-  end
-
-  @assimilated_classical_mode @inflections
-  |> Map.take(["a10", "a14", "a19", "a20", "a11", "a15", "a21"])
-  |> Map.values
-  |> List.flatten
-
-  defp is_assimilated_classical(word, :classical) when word in @assimilated_classical_mode do
-    do_assimilated_classical(word)
-  end
-
-  defp is_assimilated_classical(_word, _mode) do
-    nil
-  end
-
-  defp do_assimilated_classical(word) do
+  defp is_assimilated_classical(word, mode) do
     cond do
-      String.ends_with?(word, "ex") -> String.replace_trailing(word, "ex", "ices")
-      String.ends_with?(word, "um") -> String.replace_trailing(word, "um", "a")
-      String.ends_with?(word, "on") -> String.replace_trailing(word, "on", "a")
-      String.ends_with?(word, "a") -> String.replace_trailing(word, "a", "ae")
+      category?(word, "-ex", "-ices", mode) -> replace_suffix(word, "ex", "ices")
+      category?(word, "-um", "-a", mode) -> replace_suffix(word, "um", "a")
+      category?(word, "-on", "-a", mode) -> replace_suffix(word, "on", "a")
+      category?(word, "-a", "-ae", mode) -> replace_suffix(word, "a", "ae")
       true -> nil
     end
   end
@@ -219,29 +156,25 @@ defmodule Text.Inflect.En do
   #                 if category(-,-i),      return inflection(-,-i)
   #                 if category(-,-im),     return inflection(-,-im)
 
-  @classical @inflections
-  |> Map.take(["a11", "a13", "a15", "a16", "a18", "a21", "a22"])
-  |> Map.values
-  |> List.flatten
-
-  defp is_classical(word, _mode) when word in @classical do
+  defp is_classical(word, :classical = mode) do
     cond do
-      String.ends_with?(word, "trix") -> String.replace_trailing(word, "trix", "trices")
-      String.ends_with?(word, "eau") -> word <> "x"
-      String.ends_with?(word, "ieu") -> word <> "x"
+      suffix?(word, "trix") -> replace_suffix(word, "trix", "trices")
+      suffix?(word, "eau") -> word <> "x"
+      suffix?(word, "ieu") -> word <> "x"
 
-      String.ends_with?(word, "inx") -> String.replace_trailing(word, "nx", "nges")
-      String.ends_with?(word, "anx") -> String.replace_trailing(word, "nx", "nges")
-      String.ends_with?(word, "ynx") -> String.replace_trailing(word, "nx", "nges")
+      suffix?(word, "inx") -> replace_suffix(word, "nx", "nges")
+      suffix?(word, "anx") -> replace_suffix(word, "nx", "nges")
+      suffix?(word, "ynx") -> replace_suffix(word, "nx", "nges")
 
-      String.ends_with?(word, "en") -> String.replace_trailing(word, "en", "ina")
-      String.ends_with?(word, "a") -> word <> "ta"
-      String.ends_with?(word, "is") -> String.replace_trailing(word, "is", "ides")
-      String.ends_with?(word, "us") -> word
-      String.ends_with?(word, "o") -> String.replace_trailing(word, "o", "i")
+      category?(word, "-en", "-ina", mode) -> replace_suffix(word, "en", "ina")
+      category?(word, "-a", "-ata", mode) -> word <> "ta"
+      category?(word, "-is","-ides", mode) -> replace_suffix(word, "is", "ides")
+      category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "i")
+      category?(word, "-us", "-us", mode) -> word
+      category?(word, "-o", "-i", mode) -> replace_suffix(word, "o", "i")
 
-      String.ends_with?(word, "im") -> word
-      String.ends_with?(word, "i") -> word
+      category?(word, "-", "-i", mode) -> word <> "i"
+      category?(word, "-", "-im", mode) -> word <> "im"
 
       true -> nil
     end
@@ -257,9 +190,9 @@ defmodule Text.Inflect.En do
 
   defp is_compound_plural(word, _mode) do
     cond do
-      String.ends_with?(word, "ch") -> String.replace_trailing(word, "h", "hes")
-      String.ends_with?(word, "sh") -> String.replace_trailing(word, "h", "hes")
-      String.ends_with?(word, "ss") -> String.replace_trailing(word, "h", "sses")
+      suffix?(word, "ch") -> replace_suffix(word, "h", "hes")
+      suffix?(word, "sh") -> replace_suffix(word, "h", "hes")
+      suffix?(word, "ss") -> replace_suffix(word, "h", "sses")
       true -> nil
     end
   end
@@ -270,19 +203,20 @@ defmodule Text.Inflect.En do
   #
   #         if suffix(-[nlw]ife),
   #                 return inflection(-fe,-ves)
+
   defp is_ves_plural(word, _mode) do
     cond do
-      String.ends_with?(word, "alf") -> String.replace_trailing(word, "f", "ves")
-      String.ends_with?(word, "elf") -> String.replace_trailing(word, "f", "ves")
-      String.ends_with?(word, "olf") -> String.replace_trailing(word, "f", "ves")
-      String.ends_with?(word, "arf") -> String.replace_trailing(word, "f", "ves")
+      suffix?(word, "alf") -> replace_suffix(word, "f", "ves")
+      suffix?(word, "elf") -> replace_suffix(word, "f", "ves")
+      suffix?(word, "olf") -> replace_suffix(word, "f", "ves")
+      suffix?(word, "arf") -> replace_suffix(word, "f", "ves")
 
-      String.ends_with?(word, "nife") -> String.replace_trailing(word, "fe", "ves")
-      String.ends_with?(word, "life") -> String.replace_trailing(word, "fe", "ves")
-      String.ends_with?(word, "wife") -> String.replace_trailing(word, "fe", "ves")
+      suffix?(word, "nife") -> replace_suffix(word, "fe", "ves")
+      suffix?(word, "life") -> replace_suffix(word, "fe", "ves")
+      suffix?(word, "wife") -> replace_suffix(word, "fe", "ves")
 
-      String.ends_with?(word, "eaf") ->
-        if String.at(word, -4) == "d", do: nil, else: String.replace_trailing(word, "f", "ves")
+      suffix?(word, "eaf") ->
+        if String.at(word, -4) == "d", do: nil, else: replace_suffix(word, "f", "ves")
 
       true -> nil
     end
@@ -294,17 +228,16 @@ defmodule Text.Inflect.En do
   #         if suffix(-[A-Z].*y), return inflection(-y,-ys)
   #         if suffix(-y),        return inflection(-y,-ies)
 
-  @vowels ["a", "e", "i", "o", "u"]
   defp is_word_ending_in_y(word, _mode) do
     cond do
-      String.ends_with?(word, "y") && :erlang.binary_part(word, -2, 1) in @vowels ->
+      suffix?(word, "y") && vowel?(word, -2) ->
         word <> "s"
 
-      String.ends_with?(word, "y") && starts_with_upper?(word)->
+      suffix?(word, "y") && starts_with_upper?(word)->
         word <> "s"
 
-      String.ends_with?(word, "y") ->
-        String.replace_trailing(word, "y", "ies")
+      suffix?(word, "y") ->
+        replace_suffix(word, "y", "ies")
 
       true -> nil
     end
@@ -318,18 +251,29 @@ defmodule Text.Inflect.En do
   #
   #         if suffix(-o), return inflection(-o,-oes)
 
-  @o_words @inflections
-  |> Map.take(["a17", "a18"])
-  |> Map.values
-  |> List.flatten
-
-  defp is_o_suffix(word, _mode) do
-    is_vowel_and_o? =
-      String.ends_with?(word, "o") && :erlang.binary_part(word, -2, 1) in @vowels
-
+  defp is_o_suffix(word, :modern = mode) do
     cond do
-      (word in @o_words) || is_vowel_and_o? -> word <> "s"
-      String.ends_with?(word, "o") -> word <> "es"
+      category?(word, "-o", "-os", mode)  ->
+        word <> "s"
+
+      suffix?(word, "o") && vowel?(word, -2) ->
+        word <> "s"
+
+      suffix?(word, "o") ->
+        word <> "es"
+
+      true -> nil
+    end
+  end
+
+  defp is_o_suffix(word, :classical = mode) do
+    cond do
+      category?(word, "-o", "-os", mode) ->
+        replace_suffix(word, "o", "i")
+
+      suffix?(word, "o") ->
+        word <> "es"
+
       true -> nil
     end
   end
@@ -351,7 +295,7 @@ defmodule Text.Inflect.En do
   for general <- @generals do
     defp is_general(unquote(general) <> suffix, _mode) do
       cond do
-        String.ends_with?(suffix, "l") -> unquote(general) <> suffix <> "s"
+        suffix?(suffix, "l") -> unquote(general) <> suffix <> "s"
         true -> nil
       end
     end
@@ -367,4 +311,224 @@ defmodule Text.Inflect.En do
     word <> "s"
   end
 
+  ##########################################
+
+  # Category definitions
+
+  ##########################################
+
+  @non_inflecting_words @inflections
+  |> Map.take(["a2", "a3"])
+  |> Map.values
+  |> List.flatten
+
+  @a_ae_modern @inflections
+  |> Map.get("a10")
+
+  @a_ae_classical @inflections
+  |> Map.take(["a10", "a11"])
+  |> Map.values
+  |> List.flatten
+
+  @a_ata @inflections
+  |> Map.get("a12")
+
+  @en_ina @inflections
+  |> Map.get("a13")
+
+  @ex_ices_modern @inflections
+  |> Map.get("a14")
+
+  @ex_ices_classical @inflections
+  |> Map.take(["a14", "a15"])
+  |> Map.values
+  |> List.flatten
+
+  @is_ides @inflections
+  |> Map.get("a16")
+
+  @o_i @inflections
+  |> Map.get("a18")
+
+  @o_words_modern @inflections
+  |> Map.take(["a17", "a18"])
+  |> Map.values
+  |> List.flatten
+
+  @o_words_classical @inflections
+  |> Map.get("a17")
+
+  @on_a @inflections
+  |> Map.get("a19")
+
+  @um_a_modern @inflections
+  |> Map.get("a20")
+
+  @um_a_classical @inflections
+  |> Map.take(["a20", "a21"])
+  |> Map.values
+  |> List.flatten
+
+  @us_i @inflections
+  |> Map.get("a22")
+
+  @us_us @inflections
+  |> Map.get("a23")
+
+  @any_i @inflections
+  |> Map.get("a24")
+
+  @any_im @inflections
+  |> Map.get("a25")
+
+  @pronouns @inflections
+  |> Map.get("a5")
+  |> Enum.drop(3)
+  |> Enum.reject(&(&1 == "->"))
+  |> Enum.map(&String.replace(&1, " ->", ""))
+  |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
+  |> Enum.chunk_every(2)
+  |> Map.new(&List.to_tuple/1)
+
+  @irregular @inflections
+  |> Map.get("a1")
+  |> Enum.drop(3)
+  |> Enum.map(fn x -> if x == "(none)", do: nil, else: x end)
+  |> Enum.chunk_every(3)
+  |> Enum.map(fn
+    [word, nil, plural] -> [word, plural, plural]
+    [word, plural, nil] -> [word, plural, plural]
+    other -> other
+  end)
+  |> Map.new(fn [word, modern, classical] -> {word, [modern, classical]} end)
+
+  def category?(word, "irregular", _mode) do
+    word in @irregular
+  end
+
+  def category?(word, "pronoun", _mode) do
+    word in @pronouns
+  end
+
+  @non_inflecting_suffix ["fish", "ois", "sheep", "deer", "pox", "itis"]
+  def category?(word, "herd", _mode) do
+    Enum.any?(@non_inflecting_suffix, &suffix?(word, &1))
+  end
+
+  def category?(word, "nationalities", _mode) do
+    suffix?(word, "ese") && starts_with_upper?(word)
+  end
+
+  def category?(word, "-", "-", _) do
+    word in @non_inflecting_words
+  end
+
+  def category?(word, "-o", "-os", :classical) do
+    word in @o_words_classical
+  end
+
+  def category?(word, "-o", "-os", :modern) do
+    word in @o_words_modern
+  end
+
+  def category?(word, "-ex", "-ices", :modern) do
+    word in @ex_ices_modern
+  end
+
+  def category?(word, "-ex", "-ices", :classical) do
+    word in @ex_ices_classical
+  end
+
+  def category?(word, "-um", "-a", :modern) do
+    word in @um_a_modern
+  end
+
+  def category?(word, "-um", "-a", :classical) do
+    word in @um_a_classical
+  end
+
+  def category?(word, "-on", "-a", :modern) do
+    word in @on_a
+  end
+
+  # In the Perl code but not the tables
+  def category?(word, "-on", "-a", :classical) do
+    word in ["oxymoron" | @on_a]
+  end
+
+  def category?(word, "-a", "-ae", :modern) do
+    word in @a_ae_modern
+  end
+
+  def category?(word, "-a", "-ae", :classical) do
+    word in @a_ae_classical
+  end
+
+  def category?(word, "-en", "-ina", :classical) do
+    word in @en_ina
+  end
+
+  def category?(word, "-a", "-ata", _mode) do
+    word in @a_ata
+  end
+
+  def category?(word, "-is","-ides", _mode) do
+    word in @is_ides
+  end
+
+  def category?(word, "-us", "-i", _mode) do
+    word in @us_i
+  end
+
+  def category?(word, "-us", "-us", _mode) do
+    word in @us_us
+  end
+
+  def category?(word, "-o", "-i", _mode) do
+    word in @o_i
+  end
+
+  def category?(word, "-", "-i", _mode) do
+    word in @any_i
+  end
+
+  def category?(word, "-", "-im", _mode) do
+    word in @any_im
+  end
+
+  ##########################################
+
+  # Helpers
+
+  ##########################################
+
+  defp suffix?(word, suffix) do
+    String.ends_with?(word, suffix)
+  end
+
+  defp replace_suffix(word, suffix, replacement) do
+    String.replace_trailing(word, suffix, replacement)
+  end
+
+  @vowels ["a", "e", "i", "o", "u"]
+  defp vowel?(word, pos) when pos >= 0 do
+    :erlang.binary_part(word, pos, 1) in @vowels
+  end
+
+  defp vowel?(word, pos) when pos < 0 do
+    :erlang.binary_part(word, byte_size(word) + pos, 1) in @vowels
+  end
+
+  defp irregular(word, mode) do
+    [modern, classical] = Map.fetch!(@irregular, word)
+    if mode == :modern, do: modern, else: classical
+  end
+
+  defp pronoun(word, mode) do
+    [modern, classical] = Map.fetch!(@pronouns, word)
+    if mode == :modern, do: modern, else: classical
+  end
+
+  defp starts_with_upper?(<< char :: utf8, _rest :: binary >>) when char in ?A..?Z, do: true
+  defp starts_with_upper?(_word), do: false
 end

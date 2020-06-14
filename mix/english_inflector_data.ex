@@ -7,7 +7,7 @@ defmodule Text.Inflect.Data.En do
   end
 
   def saved_path do
-    "priv/inflection/en.etf"
+    "priv/inflection//en/en.etf"
   end
 
   def data do
