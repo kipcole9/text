@@ -1,18 +1,40 @@
 defmodule Text.Word do
 
-  def parallel_count(path) when is_binary(path) do
+  def file_word_count(path) when is_binary(path) do
     path
     |> File.stream!
-    |> parallel_count
+    |> word_count
   end
 
-  def parallel_count(%File.Stream{} = stream) do
-    table = :ets.new(:words, [{:write_concurrency, true}, :public])
-    pattern = :binary.compile_pattern([" ", "\n"])
+  def file_total_word_count(path) do
+    path
+    |> word_count()
+    |> Enum.reduce(0, fn {_, count}, acc -> acc + count end)
+  end
 
+  def word_count(text) when is_binary(text) do
+    text
+    |> String.split
+    |> word_count
+  end
+
+  def word_count(list) when is_list(list) do
+    list
+    |> Flow.from_enumerable()
+    |> word_count
+  end
+
+  def word_count(%File.Stream{} = stream) do
     stream
     |> Flow.from_enumerable()
-    |> Flow.flat_map(&String.split(&1, pattern))
+    |> word_count
+  end
+
+  def word_count(%Flow{} = stream) do
+    table = :ets.new(:words, [{:write_concurrency, true}, :public])
+
+    stream
+    |> Flow.flat_map(&String.split(&1))
     |> Flow.each(fn word ->
       :ets.update_counter(table, word, {2, 1}, {word, 0})
     end)
@@ -21,22 +43,4 @@ defmodule Text.Word do
     :ets.tab2list(table)
   end
 
-  def count(path) when is_binary(path) do
-    path
-    |> File.stream!([], 102400)
-    |> count
-  end
-
-  def count(%File.Stream{} = stream) do
-    table = :ets.new(:words, [])
-    pattern = :binary.compile_pattern([" ", "\n"])
-
-    stream
-    |> Enum.to_list()
-    |> :binary.list_to_bin()
-    |> String.split(pattern)
-    |> Enum.each(fn word -> :ets.update_counter(table, word, {2, 1}, {word, 0}) end)
-
-    :ets.tab2list(table)
-  end
 end

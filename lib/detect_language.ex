@@ -1,121 +1,127 @@
-defmodule Text.DetectLanguage do
+defmodule Text.Detect do
   alias Text.Ngram
+
+# http://practicalcryptography.com/miscellaneous/machine-learning/tutorial-automatic-language-identification-ngram-b/
 
   @ngram 4
   @no_entry :math.log(5.0e-6)
+  @persistent_key :detect_language
+  @max_ngrams 300
 
-  def detect_language(text, model \\ corpus_model()) do
-    text_ngrams = Ngram.ngram(text, @ngram)
-    language_candidates = Enum.map(corpus(), &(elem(&1, 0)))
-
-    language_candidates
-    |> Task.async_stream(__MODULE__, :detect_one_language, [model, text_ngrams], async_options())
-    |> Enum.map(&elem(&1, 1))
-    |> Enum.sort_by(fn {_, {score, _, _}} -> score end)
-    |> Enum.reverse
+  @doc false
+  def max_ngrams do
+    @max_ngrams
   end
 
-  def detect_one_language(language, model, text_ngrams) do
-    language_model = Map.get(model, language)
+  @doc false
+  def ngram_max_size do
+    @ngram
+  end
+
+  def detect_language(text, options \\ []) when is_binary(text) do
+    language_candidates = Keyword.get(options, :only)
+
+    text
+    |> detect_languages(language_candidates)
+    |> process_return(options)
+  end
+
+  def process_return({:error, _} = error, _) do
+    error
+  end
+
+  def process_return(result, options) do
+    if options[:alpha2] do
+      {language, _} = Enum.find(result, &Text.Iso639.to_iso639_two(elem(&1, 0)))
+      Text.Iso639.to_iso639_two(language)
+    else
+      [{language, _} | _rest] = result
+      language
+    end
+  end
+
+  @doc false
+  def detect_languages(text, language_candidates \\ nil)
+
+  def detect_languages(text, nil) when is_binary(text) do
+    ensure_model_is_initialized!()
+    language_candidates = :persistent_term.get({@persistent_key, :languages})
+    do_detect_language(text, language_candidates)
+  end
+
+  @doc false
+  def detect_languages(text, language_candidates)
+      when is_binary(text) and is_list(language_candidates) do
+
+    language_candidates = Enum.map(language_candidates,
+      &(Text.Iso639.to_iso639_three(&1) || &1))
+
+    ensure_model_is_initialized!()
+    all_languages = :persistent_term.get({@persistent_key, :languages})
+    not_known = Enum.filter(language_candidates, &(&1 not in all_languages)) |> IO.inspect
+
+    if not_known == [] do
+      do_detect_language(text, language_candidates)
+    else
+      {:error, {ArgumentError, "Language candidates #{inspect not_known} are not known"}}
+    end
+  end
+
+  defp do_detect_language(text, language_candidates) do
+    text_ngrams = ngrams(text, 2..ngram_max_size())
+
+    language_candidates
+    |> Task.async_stream(__MODULE__, :detect_one_language, [text_ngrams], async_options())
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.sort(fn {_, {score1, _, _}}, {_, {score2, _, _}} -> score1 >= score2 end)
+  end
+
+  @doc false
+  def detect_one_language(language, text_ngrams) do
+    language_model = :persistent_term.get({@persistent_key, language})
 
     score =
       text_ngrams
       |> Enum.reduce({0, 0, 0}, fn {ngram, _count}, {acc, found, not_found} ->
-        p1 = if Map.get(language_model, ngram), do: 1, else: 0
-        p2 = if p1 == 0, do: 1, else: 0
-        probability = Map.get(language_model, ngram) || @no_entry
+        probability = Map.get(language_model, ngram)
+        {p1, p2} = if probability, do: {1, 0}, else: {0, 1}
+        probability = probability || @no_entry
         {acc + probability, found + p1, not_found + p2}
       end)
 
     {language, score}
   end
 
-  def async_options do
+  defp ngrams(text, range) do
+    Enum.flat_map(range, &Ngram.ngram(text, &1))
+    |> Enum.sort(fn {_, weight1}, {_, weight2} -> weight1 >= weight2 end)
+    |> Enum.take(@max_ngrams)
+  end
+
+  defp async_options do
     [max_concurrency: System.schedulers_online() * 2, ordered: false]
   end
 
-  def build_model do
+  defp ensure_model_is_initialized! do
+    :persistent_term.get({@persistent_key, :languages}, nil) || load_corpus_model()
+  end
+
+  @doc false
+  def load_corpus_model do
     model =
-      corpus()
-      |> Task.async_stream(__MODULE__, :process_corpus_entry, [], async_options())
-      |> Enum.map(&elem(&1, 1))
-      |> Map.new
-      |> :erlang.term_to_binary
-
-    File.write!(corpus_model_file(), model)
-  end
-
-  def corpus_model do
-    corpus_model_file()
-    |> File.read!
-    |> :erlang.binary_to_term
-  end
-
-  def corpus_model_file do
-    Path.join(:code.priv_dir(:text), "detect_language/udhr_ngrams.etf")
-  end
-
-  def process_corpus_entry({language, entry}, n \\ @ngram) do
-    ngrams =
-      corpus_dir()
-      |> Path.join(corpus_file(entry))
+      corpus_model_file()
       |> File.read!
-      |> String.split("---")
-      |> Enum.at(1)
-      |> String.trim
-      |> String.normalize(:nfc)
-      |> Ngram.ngram(n)
-      |> convert_to_probabilities()
+      |> :erlang.binary_to_term
 
-    {language, ngrams}
-  end
-
-  def convert_to_probabilities(ngrams) do
-    sum =
-      ngrams
-      |> Enum.map(&elem(&1, 1))
-      |> Enum.sum
-
-    ngrams
-    |> Enum.map(fn {ngram, count} ->
-      {ngram, :math.log(count / sum)}
+    Enum.each(model, fn {language, ngrams} ->
+      :persistent_term.put({@persistent_key, language}, ngrams)
     end)
-    |> Map.new
+
+    languages = Map.keys(model)
+    :persistent_term.put({@persistent_key, :languages}, languages)
   end
 
-  def corpus_file(%{file: file}) do
-    "udhr/udhr_" <> file <> ".txt"
-  end
-
-  def corpus_dir do
-    "./corpus"
-  end
-
-  def corpus do
-    import SweetXml
-
-    corpus_dir()
-    |> Path.join(["udhr/index.xml"])
-    |> File.read!()
-    |> xpath(~x"//udhrs/udhr"l,
-      iso639: ~x"./@iso639-3"s,
-      bcp47: ~x"./@bcp47"s,
-      script: ~x"./@iso15924"s,
-      stage: ~x"./@stage"I,
-      name: ~x"./@n"s,
-      file: ~x"./@f"s
-    )
-    |> Enum.map(&Map.pop(&1, :iso639))
-    |> Enum.filter(fn {_k, v} -> v[:stage] >= 4 end)
-    |> Map.new
-  end
-
-  def language_codes do
-    corpus_dir()
-    |> Path.join(["language-codes-3b2.json"])
-    |> File.read!()
-    |> Jason.decode!
-    |> Enum.map(fn l -> {l["alpha3-b"], Map.get(l, "alpha2")} end)
-    |> Map.new
+  defp corpus_model_file do
+    Path.join(:code.priv_dir(:text), "detect_language/udhr_ngrams.etf")
   end
 end

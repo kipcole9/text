@@ -1,14 +1,14 @@
 defmodule Text.MixProject do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
 
   def project do
     [
       app: :text,
       version: @version,
       docs: docs(),
-      elixir: "~> 1.5",
+      elixir: "~> 1.8",
       name: "Text",
       source_url: "https://github.com/kipcole9/text",
       description: description(),
@@ -59,10 +59,11 @@ defmodule Text.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:sweet_xml, "~> 0.6"},
-      {:jason, "~> 1.0"},
       {:flow, "~> 0.14"},
-      {:ex_doc, "~> 0.21", only: [:dev, :release]}
+      {:sweet_xml, "~> 0.6", only: [:dev, :release], optional: true},
+      {:jason, "~> 1.0", only: [:dev, :release]},
+      {:meeseeks, "~> 0.15.1", only: [:dev, :release], optional: true},
+      {:ex_doc, "~> 0.21", only: [:dev, :release], optional: true}
     ]
   end
 
@@ -74,7 +75,7 @@ defmodule Text.MixProject do
     }
   end
 
-  defp elixirc_paths(:test), do: ["lib", "test"]
-  defp elixirc_paths(:dev), do: ["lib"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(:test), do: ["lib", "src", "test"]
+  defp elixirc_paths(:dev), do: ["lib", "mix", "bench"]
+  defp elixirc_paths(_), do: ["lib", "src"]
 end
