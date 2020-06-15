@@ -30,14 +30,34 @@ defmodule Text.Vocabulary do
     @known_vocabularies
   end
 
-  @doc """
-  Builds the vocabulary for
-  all known vocabulary modules
+  if Code.ensure_loaded?(Text.Language.Udhr) do
+    @doc """
+    Builds the vocabulary for
+    all known vocabulary modules
 
-  """
-  def build_vocabularies do
-    @known_vocabularies
-    |> Enum.each(&(&1.build_vocabulary/0))
+    """
+    def build_vocabularies do
+      @known_vocabularies
+      |> Enum.each(&(build_vocabulary/1))
+    end
+
+    def build_vocabulary(vocabulary_module) do
+      import Text.Language.Udhr
+
+      ngram_range = vocabulary_module.ngram_range()
+      file = vocabulary_module.file()
+      async_options = Text.Language.async_options()
+
+      vocabulary =
+        udhr_corpus()
+        |> Task.async_stream(__MODULE__, :calculate_ngrams, [ngram_range], async_options)
+        |> Enum.map(&elem(&1, 1))
+        |> Map.new
+
+      binary = :erlang.term_to_binary(vocabulary)
+      :ok = File.write!(file, binary)
+      vocabulary
+    end
   end
 
   @doc """
