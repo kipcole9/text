@@ -2,8 +2,9 @@
 
 Text & language processing for Elixir.  First focus is:
 
-* ngram generation from text
-* language detection using pluggable detection backends.  Includes a naive Bayesian classifier.
+* n-gram generation from text
+* pluralization of english words
+* language detection using pluggable classifier backends.
 
 Second phase will focus on:
 
@@ -16,7 +17,7 @@ Second phase will focus on:
 ```elixir
 def deps do
   [
-    {:text, "~> 0.1.0"}
+    {:text, "~> 0.2.0"}
   ]
 end
 ```

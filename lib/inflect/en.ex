@@ -6,39 +6,58 @@ defmodule Text.Inflect.En do
 
   """
   @saved_data_path "priv/inflection/en/en.etf"
+  @external_resource @saved_data_path
+
   @inflections File.read!(@saved_data_path)
   |> :erlang.binary_to_term
+
+  @doc false
+  def inflections do
+    @inflections
+  end
 
   @doc """
   Pluralize an english word.
 
   ## Arguments
 
-  * `word` is any english word
+  * `word` is any English word.
 
-  * `mode` is `:modern` or `:classical`
-
-  `mode` when `:classical` applies pluralization
-  on latin words used in english but with latin
-  suffixes.
+  * `mode` is `:modern` or `:classical`. The
+    default is `:modern`.
 
   ## Returns
 
   * a `String` representing the pluralized word
+
+  ## Notes
+
+  `mode` when `:classical` applies pluralization
+  on latin words used in english but with latin
+  suffixes.
 
   ## Examples
 
       iex> Text.Inflect.En.pluralize "Major general"
       "Major generals"
 
-      iex> Text.Inflect.En.pluralize "person"
-      "persons"
-
       iex> Text.Inflect.En.pluralize "fish"
       "fish"
 
       iex> Text.Inflect.En.pluralize "soliloquy"
       "soliloquies"
+
+      iex> Text.Inflect.En.pluralize "genius", :classical
+      "genii"
+
+      iex> Text.Inflect.En.pluralize "genius"
+      "geniuses"
+
+      iex> Text.Inflect.En.pluralize "platypus", :classical
+      "platypodes"
+
+      iex> Text.Inflect.En.pluralize "platypus"
+      "platypuses"
 
   """
   def pluralize(word, mode \\ :modern) do
@@ -180,8 +199,12 @@ defmodule Text.Inflect.En do
     end
   end
 
-  defp is_classical(_word, _mode) do
-    nil
+  defp is_classical(word, :modern = mode) do
+    cond do
+      category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "uses")
+
+      true -> nil
+    end
   end
 
   # The suffixes -ch, -sh, and -ss all take -es in the plural (churches, classes, etc)...
@@ -392,22 +415,23 @@ defmodule Text.Inflect.En do
 
   @irregular @inflections
   |> Map.get("a1")
-  |> Enum.drop(3)
-  |> Enum.map(fn x -> if x == "(none)", do: nil, else: x end)
   |> Enum.chunk_every(3)
+  |> Enum.drop(1)
   |> Enum.map(fn
-    [word, nil, plural] -> [word, plural, plural]
-    [word, plural, nil] -> [word, plural, plural]
-    other -> other
+    [word, "(none)", plural] -> {word, [plural, plural]}
+    [word, plural, "(none)"] -> {word, [plural, plural]}
+    [word, modern, classical] -> {word, [modern, classical]}
+    [a, b] -> {a, [b, b]}
   end)
-  |> Map.new(fn [word, modern, classical] -> {word, [modern, classical]} end)
+  |> Map.new
 
+  @doc false
   def category?(word, "irregular", _mode) do
-    word in @irregular
+    Map.has_key?(@irregular, word)
   end
 
   def category?(word, "pronoun", _mode) do
-    word in @pronouns
+    Map.has_key?(@pronouns, word)
   end
 
   @non_inflecting_suffix ["fish", "ois", "sheep", "deer", "pox", "itis"]
@@ -451,9 +475,8 @@ defmodule Text.Inflect.En do
     word in @on_a
   end
 
-  # In the Perl code but not the tables
   def category?(word, "-on", "-a", :classical) do
-    word in ["oxymoron" | @on_a]
+    word in @on_a
   end
 
   def category?(word, "-a", "-ae", :modern) do
@@ -519,7 +542,7 @@ defmodule Text.Inflect.En do
     :erlang.binary_part(word, byte_size(word) + pos, 1) in @vowels
   end
 
-  defp irregular(word, mode) do
+  def irregular(word, mode) do
     [modern, classical] = Map.fetch!(@irregular, word)
     if mode == :modern, do: modern, else: classical
   end

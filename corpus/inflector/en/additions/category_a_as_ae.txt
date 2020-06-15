@@ -1,0 +1,8 @@
+# Corresponds to table A10 at http://users.monash.edu/~damian/papers/HTML/Plurals_AppendixA.html
+# Data is in support of the paper "An Algorithmic Approach to English Pluralization"
+# which is found at http://users.monash.edu/~damian/papers/HTML/Plurals.html
+#
+# Add additional words here that will be incorporated into the library at *build* time
+# of the library.
+
+minutia
