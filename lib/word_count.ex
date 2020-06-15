@@ -1,8 +1,7 @@
 defmodule Text.Word do
-
   def file_word_count(path) when is_binary(path) do
     path
-    |> File.stream!
+    |> File.stream!()
     |> word_count
   end
 
@@ -14,7 +13,7 @@ defmodule Text.Word do
 
   def word_count(text) when is_binary(text) do
     text
-    |> String.split
+    |> String.split()
     |> word_count
   end
 
@@ -42,5 +41,4 @@ defmodule Text.Word do
 
     :ets.tab2list(table)
   end
-
 end

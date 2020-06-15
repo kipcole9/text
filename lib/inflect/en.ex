@@ -1,15 +1,14 @@
 defmodule Text.Inflect.En do
   @moduledoc """
-  Implementation based on the paper
-  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html)
-  to inflect english words from singular to plural.
+  Pluralisation for the English language based on the paper
+  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html).
 
   """
   @saved_data_path "priv/inflection/en/en.etf"
   @external_resource @saved_data_path
 
   @inflections File.read!(@saved_data_path)
-  |> :erlang.binary_to_term
+               |> :erlang.binary_to_term()
 
   @doc false
   def inflections do
@@ -62,17 +61,17 @@ defmodule Text.Inflect.En do
   """
   def pluralize(word, mode \\ :modern) do
     is_non_inflecting(word, mode) ||
-    is_pronoun(word, mode) ||
-    is_irregular(word, mode) ||
-    is_irregular_suffix(word, mode) ||
-    is_assimilated_classical(word, mode) ||
-    is_classical(word, mode) ||
-    is_compound_plural(word, mode) ||
-    is_ves_plural(word, mode) ||
-    is_word_ending_in_y(word, mode) ||
-    is_o_suffix(word, mode) ||
-    is_general(word, mode) ||
-    is_regular(word, mode)
+      is_pronoun(word, mode) ||
+      is_irregular(word, mode) ||
+      is_irregular_suffix(word, mode) ||
+      is_assimilated_classical(word, mode) ||
+      is_classical(word, mode) ||
+      is_compound_plural(word, mode) ||
+      is_ves_plural(word, mode) ||
+      is_word_ending_in_y(word, mode) ||
+      is_o_suffix(word, mode) ||
+      is_general(word, mode) ||
+      is_regular(word, mode)
   end
 
   # Handle words that do not inflect in the plural (such as fish, travois, chassis, nationalities
@@ -180,21 +179,17 @@ defmodule Text.Inflect.En do
       suffix?(word, "trix") -> replace_suffix(word, "trix", "trices")
       suffix?(word, "eau") -> word <> "x"
       suffix?(word, "ieu") -> word <> "x"
-
       suffix?(word, "inx") -> replace_suffix(word, "nx", "nges")
       suffix?(word, "anx") -> replace_suffix(word, "nx", "nges")
       suffix?(word, "ynx") -> replace_suffix(word, "nx", "nges")
-
       category?(word, "-en", "-ina", mode) -> replace_suffix(word, "en", "ina")
       category?(word, "-a", "-ata", mode) -> word <> "ta"
-      category?(word, "-is","-ides", mode) -> replace_suffix(word, "is", "ides")
+      category?(word, "-is", "-ides", mode) -> replace_suffix(word, "is", "ides")
       category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "i")
       category?(word, "-us", "-us", mode) -> word
       category?(word, "-o", "-i", mode) -> replace_suffix(word, "o", "i")
-
       category?(word, "-", "-i", mode) -> word <> "i"
       category?(word, "-", "-im", mode) -> word <> "im"
-
       true -> nil
     end
   end
@@ -202,7 +197,6 @@ defmodule Text.Inflect.En do
   defp is_classical(word, :modern = mode) do
     cond do
       category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "uses")
-
       true -> nil
     end
   end
@@ -229,19 +223,32 @@ defmodule Text.Inflect.En do
 
   defp is_ves_plural(word, _mode) do
     cond do
-      suffix?(word, "alf") -> replace_suffix(word, "f", "ves")
-      suffix?(word, "elf") -> replace_suffix(word, "f", "ves")
-      suffix?(word, "olf") -> replace_suffix(word, "f", "ves")
-      suffix?(word, "arf") -> replace_suffix(word, "f", "ves")
+      suffix?(word, "alf") ->
+        replace_suffix(word, "f", "ves")
 
-      suffix?(word, "nife") -> replace_suffix(word, "fe", "ves")
-      suffix?(word, "life") -> replace_suffix(word, "fe", "ves")
-      suffix?(word, "wife") -> replace_suffix(word, "fe", "ves")
+      suffix?(word, "elf") ->
+        replace_suffix(word, "f", "ves")
+
+      suffix?(word, "olf") ->
+        replace_suffix(word, "f", "ves")
+
+      suffix?(word, "arf") ->
+        replace_suffix(word, "f", "ves")
+
+      suffix?(word, "nife") ->
+        replace_suffix(word, "fe", "ves")
+
+      suffix?(word, "life") ->
+        replace_suffix(word, "fe", "ves")
+
+      suffix?(word, "wife") ->
+        replace_suffix(word, "fe", "ves")
 
       suffix?(word, "eaf") ->
         if String.at(word, -4) == "d", do: nil, else: replace_suffix(word, "f", "ves")
 
-      true -> nil
+      true ->
+        nil
     end
   end
 
@@ -256,13 +263,14 @@ defmodule Text.Inflect.En do
       suffix?(word, "y") && vowel?(word, -2) ->
         word <> "s"
 
-      suffix?(word, "y") && starts_with_upper?(word)->
+      suffix?(word, "y") && starts_with_upper?(word) ->
         word <> "s"
 
       suffix?(word, "y") ->
         replace_suffix(word, "y", "ies")
 
-      true -> nil
+      true ->
+        nil
     end
   end
 
@@ -276,7 +284,7 @@ defmodule Text.Inflect.En do
 
   defp is_o_suffix(word, :modern = mode) do
     cond do
-      category?(word, "-o", "-os", mode)  ->
+      category?(word, "-o", "-os", mode) ->
         word <> "s"
 
       suffix?(word, "o") && vowel?(word, -2) ->
@@ -285,7 +293,8 @@ defmodule Text.Inflect.En do
       suffix?(word, "o") ->
         word <> "es"
 
-      true -> nil
+      true ->
+        nil
     end
   end
 
@@ -297,7 +306,8 @@ defmodule Text.Inflect.En do
       suffix?(word, "o") ->
         word <> "es"
 
-      true -> nil
+      true ->
+        nil
     end
   end
 
@@ -313,7 +323,7 @@ defmodule Text.Inflect.En do
   #                 return "<plural of word> <preposition> <words>"
 
   @generals @inflections
-  |> Map.get("a26")
+            |> Map.get("a26")
 
   for general <- @generals do
     defp is_general(unquote(general) <> suffix, _mode) do
@@ -341,89 +351,89 @@ defmodule Text.Inflect.En do
   ##########################################
 
   @non_inflecting_words @inflections
-  |> Map.take(["a2", "a3"])
-  |> Map.values
-  |> List.flatten
+                        |> Map.take(["a2", "a3"])
+                        |> Map.values()
+                        |> List.flatten()
 
   @a_ae_modern @inflections
-  |> Map.get("a10")
+               |> Map.get("a10")
 
   @a_ae_classical @inflections
-  |> Map.take(["a10", "a11"])
-  |> Map.values
-  |> List.flatten
+                  |> Map.take(["a10", "a11"])
+                  |> Map.values()
+                  |> List.flatten()
 
   @a_ata @inflections
-  |> Map.get("a12")
+         |> Map.get("a12")
 
   @en_ina @inflections
-  |> Map.get("a13")
+          |> Map.get("a13")
 
   @ex_ices_modern @inflections
-  |> Map.get("a14")
+                  |> Map.get("a14")
 
   @ex_ices_classical @inflections
-  |> Map.take(["a14", "a15"])
-  |> Map.values
-  |> List.flatten
+                     |> Map.take(["a14", "a15"])
+                     |> Map.values()
+                     |> List.flatten()
 
   @is_ides @inflections
-  |> Map.get("a16")
+           |> Map.get("a16")
 
   @o_i @inflections
-  |> Map.get("a18")
+       |> Map.get("a18")
 
   @o_words_modern @inflections
-  |> Map.take(["a17", "a18"])
-  |> Map.values
-  |> List.flatten
+                  |> Map.take(["a17", "a18"])
+                  |> Map.values()
+                  |> List.flatten()
 
   @o_words_classical @inflections
-  |> Map.get("a17")
+                     |> Map.get("a17")
 
   @on_a @inflections
-  |> Map.get("a19")
+        |> Map.get("a19")
 
   @um_a_modern @inflections
-  |> Map.get("a20")
+               |> Map.get("a20")
 
   @um_a_classical @inflections
-  |> Map.take(["a20", "a21"])
-  |> Map.values
-  |> List.flatten
+                  |> Map.take(["a20", "a21"])
+                  |> Map.values()
+                  |> List.flatten()
 
   @us_i @inflections
-  |> Map.get("a22")
+        |> Map.get("a22")
 
   @us_us @inflections
-  |> Map.get("a23")
+         |> Map.get("a23")
 
   @any_i @inflections
-  |> Map.get("a24")
+         |> Map.get("a24")
 
   @any_im @inflections
-  |> Map.get("a25")
+          |> Map.get("a25")
 
   @pronouns @inflections
-  |> Map.get("a5")
-  |> Enum.drop(3)
-  |> Enum.reject(&(&1 == "->"))
-  |> Enum.map(&String.replace(&1, " ->", ""))
-  |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
-  |> Enum.chunk_every(2)
-  |> Map.new(&List.to_tuple/1)
+            |> Map.get("a5")
+            |> Enum.drop(3)
+            |> Enum.reject(&(&1 == "->"))
+            |> Enum.map(&String.replace(&1, " ->", ""))
+            |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
+            |> Enum.chunk_every(2)
+            |> Map.new(&List.to_tuple/1)
 
   @irregular @inflections
-  |> Map.get("a1")
-  |> Enum.chunk_every(3)
-  |> Enum.drop(1)
-  |> Enum.map(fn
-    [word, "(none)", plural] -> {word, [plural, plural]}
-    [word, plural, "(none)"] -> {word, [plural, plural]}
-    [word, modern, classical] -> {word, [modern, classical]}
-    [a, b] -> {a, [b, b]}
-  end)
-  |> Map.new
+             |> Map.get("a1")
+             |> Enum.chunk_every(3)
+             |> Enum.drop(1)
+             |> Enum.map(fn
+               [word, "(none)", plural] -> {word, [plural, plural]}
+               [word, plural, "(none)"] -> {word, [plural, plural]}
+               [word, modern, classical] -> {word, [modern, classical]}
+               [a, b] -> {a, [b, b]}
+             end)
+             |> Map.new()
 
   @doc false
   def category?(word, "irregular", _mode) do
@@ -443,6 +453,7 @@ defmodule Text.Inflect.En do
     suffix?(word, "ese") && starts_with_upper?(word)
   end
 
+  @doc false
   def category?(word, "-", "-", _) do
     word in @non_inflecting_words
   end
@@ -495,7 +506,7 @@ defmodule Text.Inflect.En do
     word in @a_ata
   end
 
-  def category?(word, "-is","-ides", _mode) do
+  def category?(word, "-is", "-ides", _mode) do
     word in @is_ides
   end
 
@@ -542,7 +553,7 @@ defmodule Text.Inflect.En do
     :erlang.binary_part(word, byte_size(word) + pos, 1) in @vowels
   end
 
-  def irregular(word, mode) do
+  defp irregular(word, mode) do
     [modern, classical] = Map.fetch!(@irregular, word)
     if mode == :modern, do: modern, else: classical
   end
@@ -552,6 +563,6 @@ defmodule Text.Inflect.En do
     if mode == :modern, do: modern, else: classical
   end
 
-  defp starts_with_upper?(<< char :: utf8, _rest :: binary >>) when char in ?A..?Z, do: true
+  defp starts_with_upper?(<<char::utf8, _rest::binary>>) when char in ?A..?Z, do: true
   defp starts_with_upper?(_word), do: false
 end

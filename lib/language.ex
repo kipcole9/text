@@ -66,7 +66,6 @@ defmodule Text.Language do
     with {:ok, _} <- validate(:model, model),
          {:ok, _} <- validate(:vocabulary, vocabulary),
          {:ok, _} <- validate(:only, languages) do
-
       ensure_vocabulary_loaded!(vocabulary)
       text_ngrams = vocabulary.calculate_ngrams(text)
 
@@ -94,15 +93,15 @@ defmodule Text.Language do
   def normalise_text(text) do
     text
     # Downcase
-    |> String.downcase
-		# Make sure that there is letter before punctuation
-		|> String.replace(~r/\.\s*/u, "_")
-		# Discard all digits
-		|> String.replace(~r/[0-9]/u, "")
-		# Discard all punctuation except for apostrophe
-		|> String.replace(~r/[&\/\\#,+()$~%.":*?<>{}]/u,"")
-		# Remove duplicate spaces
-		|> String.replace(~r/\s+/u, " ")
+    |> String.downcase()
+    # Make sure that there is letter before punctuation
+    |> String.replace(~r/\.\s*/u, "_")
+    # Discard all digits
+    |> String.replace(~r/[0-9]/u, "")
+    # Discard all punctuation except for apostrophe
+    |> String.replace(~r/[&\/\\#,+()$~%.":*?<>{}]/u, "")
+    # Remove duplicate spaces
+    |> String.replace(~r/\s+/u, " ")
   end
 
   defp ensure_vocabulary_loaded!(vocabulary) do
@@ -115,10 +114,9 @@ defmodule Text.Language do
 
   defp validate(:model, model) do
     {:error,
-      {ArgumentError,
-        "Unknown model #{inspect model}. " <>
-        "Known models are #{inspect @known_models}."
-    }}
+     {ArgumentError,
+      "Unknown model #{inspect(model)}. " <>
+        "Known models are #{inspect(@known_models)}."}}
   end
 
   defp validate(:vocabulary, vocabulary) when vocabulary in @known_vocabularies do
@@ -127,23 +125,21 @@ defmodule Text.Language do
 
   defp validate(:vocabulary, vocabulary) do
     {:error,
-      {ArgumentError,
-        "Unknown vocabulary #{inspect vocabulary}. " <>
-        "Known vocabularies are #{inspect @known_vocabularies}."
-    }}
+     {ArgumentError,
+      "Unknown vocabulary #{inspect(vocabulary)}. " <>
+        "Known vocabularies are #{inspect(@known_vocabularies)}."}}
   end
 
   defp validate(:only, languages) do
     unknown_languages = Enum.filter(languages, &(&1 not in @known_languages))
+
     if unknown_languages == [] do
       {:ok, languages}
     else
       {:error,
-        {ArgumentError,
-          "Unknown languages #{inspect unknown_languages}. " <>
-          "Known languages are #{inspect @known_languages}."
-      }}
+       {ArgumentError,
+        "Unknown languages #{inspect(unknown_languages)}. " <>
+          "Known languages are #{inspect(@known_languages)}."}}
     end
   end
-
 end

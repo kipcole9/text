@@ -13,13 +13,13 @@ defmodule Text.MixProject do
       source_url: "https://github.com/kipcole9/text",
       description: description(),
       package: package(),
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore_warnings",
         plt_add_apps: ~w(inets jason mix)a
-      ],
+      ]
     ]
   end
 
@@ -42,7 +42,12 @@ defmodule Text.MixProject do
       licenses: ["Apache 2.0"],
       links: links(),
       files: [
-        "lib", "priv", "mix.exs", "README*", "CHANGELOG*", "LICENSE*"
+        "lib",
+        "priv",
+        "mix.exs",
+        "README*",
+        "CHANGELOG*",
+        "LICENSE*"
       ]
     ]
   end
@@ -66,8 +71,8 @@ defmodule Text.MixProject do
 
   def links do
     %{
-      "GitHub"    => "https://github.com/kipcole9/text",
-      "Readme"    => "https://github.com/kipcole9/text/blob/v#{@version}/README.md",
+      "GitHub" => "https://github.com/kipcole9/text",
+      "Readme" => "https://github.com/kipcole9/text/blob/v#{@version}/README.md",
       "Changelog" => "https://github.com/kipcole9/text/blob/v#{@version}/CHANGELOG.md"
     }
   end

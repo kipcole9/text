@@ -11,7 +11,7 @@ if Code.ensure_loaded?(Text.Inflect.Data.En) do
 
     @doc false
     def run(_) do
-      Text.Inflect.Data.En.save_data
+      Text.Inflect.Data.En.save_data()
     end
   end
 end

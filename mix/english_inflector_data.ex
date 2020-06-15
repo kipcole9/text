@@ -1,29 +1,55 @@
 defmodule Text.Inflect.Data.En do
-  # Imported from http://users.monash.edu/~damian/papers/HTML/Plurals_AppendixA.html
+  @moduledoc """
+  Functions to structure the data underpinning
+  the English language infelctor `Text.Inflect.En`.
+
+  The data is downloaded from
+  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals_AppendixA.html)
+
+  Additional data is stored in the files under `corpus/inflector/en/additions`.
+  Each data file corresponds to the one of the tables `A1` through `A3` and
+  `A11` through `A26`.
+
+  This data from these files is added to the downloaded data
+  set at library build time and can be rebuild by the library
+  maintainer with `mix text.create_english_plurals`.
+
+  """
+
   @tables Enum.to_list(1..26) |> Enum.map(&("a" <> to_string(&1)))
 
   @data_dir "corpus/inflector/en"
 
-  def data_dir do
+  defp data_dir do
     @data_dir
   end
 
-  def data_path do
+  defp data_path do
     Path.join(data_dir(), "en.html")
   end
 
-  def saved_path do
+  defp saved_path do
     Path.join("priv/inflection/en", "en.etf")
   end
 
-  def data do
+  defp data do
     File.read!(data_path())
   end
 
-  def parsed do
+  defp parsed do
     Meeseeks.parse(data())
   end
 
+  @doc """
+  Returns the map of all the tables
+  contained in the downlaoded data set.
+
+  This data is in a raw form and this
+  function is intended for internal
+  use for this module or debudding
+  purposes.
+
+  """
   def tables() do
     import Meeseeks.XPath
 
@@ -35,9 +61,22 @@ defmodule Text.Inflect.Data.En do
 
     @tables
     |> Enum.zip(tables)
-    |> Map.new
+    |> Map.new()
   end
 
+  @doc """
+  Returns the map of all one table
+  contained in the downlaoded data set.
+
+  The parameter is the name of one of
+  the tables from `a1` to `a26`.
+
+  This data is in a raw form and this
+  function is intended for internal
+  use for this module or debudding
+  purposes.
+
+  """
   def tables("a1" = key) do
     import Meeseeks.XPath
 
@@ -49,7 +88,7 @@ defmodule Text.Inflect.Data.En do
 
     @tables
     |> Enum.zip(tables)
-    |> Map.new
+    |> Map.new()
     |> Map.get(key)
   end
 
@@ -64,11 +103,11 @@ defmodule Text.Inflect.Data.En do
 
     @tables
     |> Enum.zip(tables)
-    |> Map.new
+    |> Map.new()
     |> Map.get(key)
   end
 
-  def extract_text(tt) do
+  defp extract_text(tt) do
     Enum.map(tt, &Meeseeks.text(&1))
   end
 
@@ -94,9 +133,18 @@ defmodule Text.Inflect.Data.En do
     "a26" => "category_general_generals.txt"
   }
 
+  @doc """
+  Saves the plural data set, including
+  additions, in an erlang term file
+  used at runtime and in the packaged
+  library.
+
+  This function is called from
+  `mix text.create_english_plurals`.
+
+  """
   def save_data do
-    a1 =
-      tables("a1")
+    a1 = tables("a1")
 
     all =
       tables()
@@ -113,40 +161,53 @@ defmodule Text.Inflect.Data.En do
               [single, plural] -> [single, plural, plural]
               [single, modern, classical] -> [single, modern, classical]
             end)
+
           {"a1", values ++ add_values}
 
         {table, values} ->
           {table, Enum.uniq(values ++ get_additions(table))}
       end)
-      |> Map.new
+      |> Map.new()
 
     File.write!(saved_path(), :erlang.term_to_binary(final))
   end
 
-  def additions_file(table) do
+  defp additions_file(table) do
     Map.fetch(@additions_file_mapping, table)
   end
 
+  @doc """
+  Returns the parsed contents
+  of the additions file for a
+  given table named `a1` ro `a16`.
+
+  """
   def get_additions(table) do
     case additions_file(table) do
       {:ok, file} ->
         path = Path.join(data_dir(), ["additions/", file])
         parse_file(path)
+
       _other ->
         []
     end
   end
 
+  @doc """
+  Creates the additions files
+  if they do not exist.
+
+  """
   def touch_additions_files do
     @additions_file_mapping
-    |> Map.values
+    |> Map.values()
     |> Enum.map(&Path.join(data_dir(), ["additions/", &1]))
     |> Enum.each(&File.touch/1)
   end
 
-  def parse_file(file) do
+  defp parse_file(file) do
     file
-    |> File.read!
+    |> File.read!()
     |> String.replace(~r/#.*\n/, "")
     |> String.split("\n")
     |> Enum.map(&String.trim/1)

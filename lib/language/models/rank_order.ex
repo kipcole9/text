@@ -13,7 +13,9 @@ defmodule Text.Language.Model.RankOrder do
     score =
       text_ngrams
       |> Enum.reduce(0, fn {ngram, [text_rank, _count, _frequency, _log_probability]}, score ->
-        [vocab_rank, _count, _frequency, _log_frequency] = Map.get(language_vocab, ngram, @no_entry)
+        [vocab_rank, _count, _frequency, _log_frequency] =
+          Map.get(language_vocab, ngram, @no_entry)
+
         score + abs(vocab_rank - text_rank)
       end)
 
@@ -26,5 +28,4 @@ defmodule Text.Language.Model.RankOrder do
       {_ngram1, score1}, {_ngram2, score2} -> score1 > score2
     end)
   end
-
 end

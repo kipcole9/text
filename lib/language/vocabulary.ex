@@ -10,10 +10,10 @@ defmodule Text.Vocabulary do
   """
   alias Text.Ngram
 
-  @callback get_vocabulary(String.t) :: map()
+  @callback get_vocabulary(String.t()) :: map()
   @callback file() :: String.t()
-  @callback calculate_ngrams(String.t) :: map()
-  @callback ngram_range() :: Range.t
+  @callback calculate_ngrams(String.t()) :: map()
+  @callback ngram_range() :: Range.t()
 
   @known_vocabularies [
     Text.Vocabulary.Quadgram,
@@ -38,7 +38,7 @@ defmodule Text.Vocabulary do
     """
     def build_vocabularies do
       @known_vocabularies
-      |> Enum.each(&(build_vocabulary/1))
+      |> Enum.each(&build_vocabulary/1)
     end
 
     def build_vocabulary(vocabulary_module) do
@@ -52,7 +52,7 @@ defmodule Text.Vocabulary do
         udhr_corpus()
         |> Task.async_stream(__MODULE__, :calculate_ngrams, [ngram_range], async_options)
         |> Enum.map(&elem(&1, 1))
-        |> Map.new
+        |> Map.new()
 
       binary = :erlang.term_to_binary(vocabulary)
       :ok = File.write!(file, binary)
@@ -81,8 +81,8 @@ defmodule Text.Vocabulary do
   def load_vocabulary!(vocabulary_module) do
     vocabulary =
       vocabulary_module.file
-      |> File.read!
-      |> :erlang.binary_to_term
+      |> File.read!()
+      |> :erlang.binary_to_term()
 
     for {language, ngrams} <- vocabulary do
       :persistent_term.put({vocabulary_module, language}, ngrams)
@@ -104,8 +104,8 @@ defmodule Text.Vocabulary do
   def top_n(vocabulary, language, n)
       when vocabulary in @known_vocabularies and language in @known_languages do
     vocabulary.file
-    |> File.read!
-    |> :erlang.binary_to_term
+    |> File.read!()
+    |> :erlang.binary_to_term()
     |> Map.fetch!(language)
     |> top_n(n)
   end
@@ -151,7 +151,7 @@ defmodule Text.Vocabulary do
     def calculate_corpus_ngrams({language, entry}, range) do
       ngrams =
         entry
-        |> Text.Language.Udhr.udhr_corpus_content
+        |> Text.Language.Udhr.udhr_corpus_content()
         |> calculate_ngrams(range)
 
       {language, ngrams}
@@ -176,7 +176,7 @@ defmodule Text.Vocabulary do
       {ngram, [rank, count, frequency, log_frequency]}
     end)
     |> top_n(top_n)
-    |> Map.new
+    |> Map.new()
   end
 
   @doc false
@@ -193,7 +193,7 @@ defmodule Text.Vocabulary do
     total_count =
       ngrams
       |> Enum.map(&elem(&1, 1))
-      |> Enum.sum
+      |> Enum.sum()
 
     ngrams
     |> Enum.map(fn {ngram, count} ->
@@ -201,5 +201,4 @@ defmodule Text.Vocabulary do
       {ngram, count, frequency, :math.log(frequency)}
     end)
   end
-
 end

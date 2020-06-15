@@ -10,25 +10,24 @@ defmodule Text.Language.Model.Spearman do
     vocab =
       language_vocab
       |> Enum.filter(fn {ngram, _} -> Map.get(ngrams, ngram) end)
-      |> Vocabulary.order_by_count
+      |> Vocabulary.order_by_count()
       |> Enum.with_index(1)
       |> Enum.map(fn {{ngram, [_rank, count, frequency, log_frequency]}, index} ->
         {ngram, [index, count, frequency, log_frequency]}
       end)
-      |> Map.new
+      |> Map.new()
 
     text_ngrams =
       ngrams
       |> Enum.filter(fn {ngram, _} -> Map.get(vocab, ngram) end)
-      |> Vocabulary.order_by_count
+      |> Vocabulary.order_by_count()
       |> Enum.with_index(1)
       |> Enum.map(fn {{ngram, [_, count, frequency, log_fequency]}, index} ->
         {ngram, [index, count, frequency, log_fequency]}
       end)
-      |> Map.new
+      |> Map.new()
 
-    percentage_retained =
-      Enum.count(Map.keys(text_ngrams)) / Enum.count(Map.keys(ngrams))
+    percentage_retained = Enum.count(Map.keys(text_ngrams)) / Enum.count(Map.keys(ngrams))
 
     # Omit those languages where the number of target ngrams is very
     # low compared to the original ngrams -> means not a lot of overlap
@@ -37,14 +36,14 @@ defmodule Text.Language.Model.Spearman do
       squares =
         text_ngrams
         |> Enum.map(fn {ngram, [text_rank, _, _, _]} ->
-            [vocab_rank, _, _, _] = Map.get(vocab, ngram)
-            (vocab_rank - text_rank) * (vocab_rank - text_rank)
-          end)
+          [vocab_rank, _, _, _] = Map.get(vocab, ngram)
+          (vocab_rank - text_rank) * (vocab_rank - text_rank)
+        end)
 
       n = Enum.count(squares)
       sum_of_squares = Enum.sum(squares)
 
-      score = 1 - ((6 * sum_of_squares) / (n * ((n * n) - 1)))
+      score = 1 - 6 * sum_of_squares / (n * (n * n - 1))
       {language, score}
     else
       {language, :no_fit}

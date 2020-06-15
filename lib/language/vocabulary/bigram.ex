@@ -30,5 +30,4 @@ defmodule Text.Vocabulary.Bigram do
   def calculate_ngrams(text) do
     Vocabulary.calculate_ngrams(text, ngram_range())
   end
-
 end
