@@ -30,7 +30,6 @@ defmodule Text.MixProject do
     """
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
@@ -56,13 +55,11 @@ defmodule Text.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:flow, "~> 0.14"},
-      {:sweet_xml, "~> 0.6", only: [:dev, :release, :test], optional: true},
-      {:jason, "~> 1.0", only: [:dev, :test, :release]},
-      {:meeseeks, "~> 0.15.1", only: [:dev, :release], optional: true},
+      {:sweet_xml, "~> 0.6", only: [:dev, :test], optional: true},
+      {:meeseeks, "~> 0.15.1", only: [:dev], optional: true},
       {:ex_doc, "~> 0.21", only: [:dev, :release], optional: true}
     ]
   end

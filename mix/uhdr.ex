@@ -34,6 +34,11 @@ defmodule Text.Language.Udhr do
     @known_languages
   end
 
+  @language_file "priv/vocabulary/udhr_languages.etf"
+  def save_known_languages do
+    File.write!(@language_file, :erlang.term_to_binary(known_languages()))
+  end
+
   def udhr_corpus_content(entry) do
     udhr_corpus_dir()
     |> Path.join(udhr_corpus_file(entry))

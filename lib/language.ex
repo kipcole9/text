@@ -17,7 +17,8 @@ defmodule Text.Language do
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
 
-  @known_languages Text.Language.Udhr.known_languages()
+  @language_file "priv/vocabulary/udhr_languages.etf"
+  @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
 
   @doc """
   Detect the language of a given text.
@@ -60,7 +61,7 @@ defmodule Text.Language do
   def detect(text, options \\ []) when is_binary(text) do
     model = Keyword.get(options, :model, Text.Language.Model.NaiveProbability)
     vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Multigram)
-    languages = Keyword.get(options, :only, Text.Language.Udhr.known_languages())
+    languages = Keyword.get(options, :only, known_languages())
 
     with {:ok, _} <- validate(:model, model),
          {:ok, _} <- validate(:vocabulary, vocabulary),
@@ -74,6 +75,10 @@ defmodule Text.Language do
       |> Enum.map(&elem(&1, 1))
       |> model.order_scores
     end
+  end
+
+  def known_languages do
+    @known_languages
   end
 
   @doc false

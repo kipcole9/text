@@ -9,9 +9,7 @@ defmodule Text.Vocabulary do
 
   """
   alias Text.Ngram
-  alias Text.Language.Udhr
 
-  @callback build_vocabulary() :: map()
   @callback get_vocabulary(String.t) :: map()
   @callback file() :: String.t()
   @callback calculate_ngrams(String.t) :: map()
@@ -23,7 +21,8 @@ defmodule Text.Vocabulary do
     Text.Vocabulary.Multigram
   ]
 
-  @known_languages Text.Language.Udhr.known_languages()
+  @language_file "priv/vocabulary/udhr_languages.etf"
+  @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
 
   @max_ngrams 300
 
@@ -128,13 +127,15 @@ defmodule Text.Vocabulary do
     merge_maps([Map.merge(a, b) | rest])
   end
 
-  def calculate_ngrams({language, entry}, range) do
-    ngrams =
-      entry
-      |> Udhr.udhr_corpus_content
-      |> calculate_ngrams(range)
+  if Code.ensure_loaded?(Text.Language.Udhr) do
+    def calculate_corpus_ngrams({language, entry}, range) do
+      ngrams =
+        entry
+        |> Text.Language.Udhr.udhr_corpus_content
+        |> calculate_ngrams(range)
 
-    {language, ngrams}
+      {language, ngrams}
+    end
   end
 
   @doc """
