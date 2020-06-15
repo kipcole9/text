@@ -1,8 +1,8 @@
 defmodule Text.Inflect.En do
   @moduledoc """
-  Implementation of the paper
+  Implementation based on the paper
   [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html)
-  to inflect english words from and to plural forms.
+  to inflect english words from singular to plural.
 
   """
   @saved_data_path "priv/inflection/en/en.etf"
