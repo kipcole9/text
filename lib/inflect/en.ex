@@ -83,10 +83,17 @@ defmodule Text.Inflect.En do
 
   defp is_non_inflecting(word, mode) when is_binary(word) do
     cond do
-      category?(word, "herd", mode) -> word
-      category?(word, "nationalities", mode) -> word
-      category?(word, "-", "-", mode) -> word
-      true -> nil
+      category?(word, "herd", mode) ->
+        word
+
+      category?(word, "nationalities", mode) ->
+        word
+
+      category?(word, "-", "-", mode) ->
+        word
+
+      true ->
+        nil
     end
   end
 
@@ -100,8 +107,11 @@ defmodule Text.Inflect.En do
 
   defp is_pronoun(word, mode) do
     cond do
-      category?(word, "pronoun", mode) -> pronoun(word, mode)
-      true -> nil
+      category?(word, "pronoun", mode) ->
+        pronoun(word, mode)
+
+      true ->
+        nil
     end
   end
 
@@ -111,8 +121,11 @@ defmodule Text.Inflect.En do
 
   defp is_irregular(word, mode) do
     cond do
-      category?(word, "irregular", mode) -> irregular(word, mode)
-      true -> nil
+      category?(word, "irregular", mode) ->
+        irregular(word, mode)
+
+      true ->
+        nil
     end
   end
 
@@ -127,17 +140,38 @@ defmodule Text.Inflect.En do
 
   defp is_irregular_suffix(word, _mode) do
     cond do
-      suffix?(word, "man") -> replace_suffix(word, "man", "men")
-      suffix?(word, "louse") -> replace_suffix(word, "louse", "lice")
-      suffix?(word, "mouse") -> replace_suffix(word, "mouse", "mice")
-      suffix?(word, "tooth") -> replace_suffix(word, "tooth", "teeth")
-      suffix?(word, "goose") -> replace_suffix(word, "goose", "geese")
-      suffix?(word, "foot") -> replace_suffix(word, "foot", "feet")
-      suffix?(word, "zoon") -> replace_suffix(word, "zoon", "zoa")
-      suffix?(word, "cis") -> replace_suffix(word, "cis", "ces")
-      suffix?(word, "sis") -> replace_suffix(word, "sis", "ses")
-      suffix?(word, "xis") -> replace_suffix(word, "xis", "xes")
-      true -> nil
+      suffix?(word, "man") ->
+        replace_suffix(word, "man", "men")
+
+      suffix?(word, "louse") ->
+        replace_suffix(word, "louse", "lice")
+
+      suffix?(word, "mouse") ->
+        replace_suffix(word, "mouse", "mice")
+
+      suffix?(word, "tooth") ->
+        replace_suffix(word, "tooth", "teeth")
+
+      suffix?(word, "goose") ->
+        replace_suffix(word, "goose", "geese")
+
+      suffix?(word, "foot") ->
+        replace_suffix(word, "foot", "feet")
+
+      suffix?(word, "zoon") ->
+        replace_suffix(word, "zoon", "zoa")
+
+      suffix?(word, "cis") ->
+        replace_suffix(word, "cis", "ces")
+
+      suffix?(word, "sis") ->
+        replace_suffix(word, "sis", "ses")
+
+      suffix?(word, "xis") ->
+        replace_suffix(word, "xis", "xes")
+
+      true ->
+        nil
     end
   end
 
@@ -150,11 +184,20 @@ defmodule Text.Inflect.En do
 
   defp is_assimilated_classical(word, mode) do
     cond do
-      category?(word, "-ex", "-ices", mode) -> replace_suffix(word, "ex", "ices")
-      category?(word, "-um", "-a", mode) -> replace_suffix(word, "um", "a")
-      category?(word, "-on", "-a", mode) -> replace_suffix(word, "on", "a")
-      category?(word, "-a", "-ae", mode) -> replace_suffix(word, "a", "ae")
-      true -> nil
+      category?(word, "-ex", "-ices", mode) ->
+        replace_suffix(word, "ex", "ices")
+
+      category?(word, "-um", "-a", mode) ->
+        replace_suffix(word, "um", "a")
+
+      category?(word, "-on", "-a", mode) ->
+        replace_suffix(word, "on", "a")
+
+      category?(word, "-a", "-ae", mode) ->
+        replace_suffix(word, "a", "ae")
+
+      true ->
+        nil
     end
   end
 
@@ -176,28 +219,60 @@ defmodule Text.Inflect.En do
 
   defp is_classical(word, :classical = mode) do
     cond do
-      suffix?(word, "trix") -> replace_suffix(word, "trix", "trices")
-      suffix?(word, "eau") -> word <> "x"
-      suffix?(word, "ieu") -> word <> "x"
-      suffix?(word, "inx") -> replace_suffix(word, "nx", "nges")
-      suffix?(word, "anx") -> replace_suffix(word, "nx", "nges")
-      suffix?(word, "ynx") -> replace_suffix(word, "nx", "nges")
-      category?(word, "-en", "-ina", mode) -> replace_suffix(word, "en", "ina")
-      category?(word, "-a", "-ata", mode) -> word <> "ta"
-      category?(word, "-is", "-ides", mode) -> replace_suffix(word, "is", "ides")
-      category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "i")
-      category?(word, "-us", "-us", mode) -> word
-      category?(word, "-o", "-i", mode) -> replace_suffix(word, "o", "i")
-      category?(word, "-", "-i", mode) -> word <> "i"
-      category?(word, "-", "-im", mode) -> word <> "im"
-      true -> nil
+      suffix?(word, "trix") ->
+        replace_suffix(word, "trix", "trices")
+
+      suffix?(word, "eau") ->
+        word <> "x"
+
+      suffix?(word, "ieu") ->
+        word <> "x"
+
+      suffix?(word, "inx") ->
+        replace_suffix(word, "nx", "nges")
+
+      suffix?(word, "anx") ->
+        replace_suffix(word, "nx", "nges")
+
+      suffix?(word, "ynx") ->
+        replace_suffix(word, "nx", "nges")
+
+      category?(word, "-en", "-ina", mode) ->
+        replace_suffix(word, "en", "ina")
+
+      category?(word, "-a", "-ata", mode) ->
+        word <> "ta"
+
+      category?(word, "-is", "-ides", mode) ->
+        replace_suffix(word, "is", "ides")
+
+      category?(word, "-us", "-i", mode) ->
+        replace_suffix(word, "us", "i")
+
+      category?(word, "-us", "-us", mode) ->
+        word
+
+      category?(word, "-o", "-i", mode) ->
+        replace_suffix(word, "o", "i")
+
+      category?(word, "-", "-i", mode) ->
+        word <> "i"
+
+      category?(word, "-", "-im", mode) ->
+        word <> "im"
+
+      true ->
+        nil
     end
   end
 
   defp is_classical(word, :modern = mode) do
     cond do
-      category?(word, "-us", "-i", mode) -> replace_suffix(word, "us", "uses")
-      true -> nil
+      category?(word, "-us", "-i", mode) ->
+        replace_suffix(word, "us", "uses")
+
+      true ->
+        nil
     end
   end
 
@@ -207,10 +282,17 @@ defmodule Text.Inflect.En do
 
   defp is_compound_plural(word, _mode) do
     cond do
-      suffix?(word, "ch") -> replace_suffix(word, "h", "hes")
-      suffix?(word, "sh") -> replace_suffix(word, "h", "hes")
-      suffix?(word, "ss") -> replace_suffix(word, "h", "sses")
-      true -> nil
+      suffix?(word, "ch") ->
+        replace_suffix(word, "h", "hes")
+
+      suffix?(word, "sh") ->
+        replace_suffix(word, "h", "hes")
+
+      suffix?(word, "ss") ->
+        replace_suffix(word, "h", "sses")
+
+      true ->
+        nil
     end
   end
 
