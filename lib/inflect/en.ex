@@ -557,6 +557,109 @@ defmodule Text.Inflect.En do
     end
   end
 
+  @doc """
+  Pluralize an english adjective.
+
+  ## Arguments
+
+  * `word` is any English adjective.
+
+  ## Returns
+
+  * a `String` representing the pluralized
+    adjective
+
+  ## Examples
+
+      iex> Text.Inflect.En.pluralize_adjective "a"
+      "some"
+
+      iex> Text.Inflect.En.pluralize_adjective "my"
+      "our"
+
+      iex> Text.Inflect.En.pluralize_adjective "child's"
+      "children's"
+
+      iex> Text.Inflect.En.pluralize_adjective "Mary's"
+      "Marys'"
+
+  """
+  def pluralize_adjective(word) do
+    is_indefinite_article(word)  ||
+    is_possessive_pronoun(word) ||
+    is_genetive(word) ||
+    # In all other cases no inflection is required...
+    #         otherwise, return the adjective uninflected
+    word
+  end
+
+  # Handle indefinite articles and demonstratives...
+  #         if the word is "a" or "an", return "some"
+  #         if the word is "this",      return "these"
+  #         if the word is "that",      return "those"
+
+  def is_indefinite_article(word) do
+    cond do
+      word in ["a", "an"] ->
+        "some"
+      word == "this" ->
+        "these"
+      word == "that" ->
+        "those"
+      true ->
+        nil
+    end
+  end
+
+  # Handle possessive pronouns (my -> our, its -> their, etc - see Table A.7)...
+  #         if the word is a personal possessive,
+  #                 return the specified plural form
+
+  def is_possessive_pronoun(word) do
+    cond do
+      category?(word, "personal_possessive") ->
+        personal_possessive(word)
+
+      true ->
+        nil
+    end
+  end
+
+  # Handle genitives (dog's -> dogs', child's -> children's, Mary's -> Marys', etc). The general
+  # rule is: remove the apostrophe and any trailing -s, form the plural of the resultant noun, and
+  # then append an apostrophe (or -'s if the pluralized noun doesn't end in -s)...
+  #         if suffix(-'s) or suffix(-'),
+  #                 if suffix(-'), let the noun <owner> be inflection(-',-)
+  #                 otherwise,     let the noun <owner> be inflection(-'s,-)
+  #                 let the noun <owners> be the noun plural of <owner>
+  #                 if <owners> ends in -s, return "<owners>'"
+  #                 otherwise,              return "<owners>'s"
+  def is_genetive(word) do
+    cond do
+      suffix?(word, "'s") ->
+        do_genetive(word, "'s")
+
+      suffix?(word, "'") ->
+        do_genetive(word, "'")
+
+      true ->
+        nil
+    end
+  end
+
+  def do_genetive(word, suffix) do
+    plural_noun =
+      word
+      |> replace_suffix(suffix, "")
+      |> pluralize_noun()
+
+    if suffix?(plural_noun, "s") do
+      plural_noun <> "'"
+    else
+      plural_noun <> "'s"
+    end
+  end
+
   ##########################################
 
   # Category definitions
@@ -570,6 +673,15 @@ defmodule Text.Inflect.En do
 
   @ambiguous @inflections
     |> Map.get("a4")
+
+  @personal_possessive @inflections
+  |> Map.get("a7")
+  |> Enum.drop(3)
+  |> Enum.flat_map(&String.split(&1, " "))
+  |> Enum.reject(&(&1 == "->" || &1 == " "))
+  |> Enum.chunk_every(2)
+  |> Enum.map(&List.to_tuple/1)
+  |> Map.new
 
   @pluralize_auxillary_irregular @inflections
   |> Map.get("a8")
@@ -672,6 +784,10 @@ defmodule Text.Inflect.En do
 
   def category?(word, "non_inflecting_verb") do
     word in @non_inflecting_verbs
+  end
+
+  def category?(word, "personal_possessive") do
+    Map.has_key?(@personal_possessive, word)
   end
 
   @doc false
@@ -800,6 +916,10 @@ defmodule Text.Inflect.En do
   defp pronoun(word, mode) do
     [modern, classical] = Map.fetch!(@pronouns, word)
     if mode == :modern, do: modern, else: classical
+  end
+
+  defp personal_possessive(word) do
+    Map.fetch!(@personal_possessive, word)
   end
 
   defp starts_with_upper?(<<char::utf8, _rest::binary>>) when char in ?A..?Z, do: true
