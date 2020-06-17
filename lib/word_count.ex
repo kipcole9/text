@@ -34,7 +34,7 @@ defmodule Text.Word do
 
     stream
     |> Flow.flat_map(&String.split(&1))
-    |> Flow.each(fn word ->
+    |> Flow.map(fn word ->
       :ets.update_counter(table, word, {2, 1}, {word, 0})
     end)
     |> Flow.run()
