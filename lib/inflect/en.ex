@@ -74,7 +74,7 @@ defmodule Text.Inflect.En do
     is_non_inflecting_verb(word) ||
     is_irregular_verb(word) ||
     is_third_person_singular(word) ||
-    is_third_person_singular_s(word) ||
+    # is_third_person_singular_s(word) ||
 
     # Handle singular nouns ending in -s (ethos, axis, etc. - see Tables A.2, A.3, A.16, A.22, and A.23)...
     #         if word is a noun ending in -s,
