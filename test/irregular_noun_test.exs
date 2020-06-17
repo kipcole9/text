@@ -7,16 +7,16 @@ defmodule Text.Inflect.Noun.Test do
     test "irregular plural for #{single}" do
       case unquote(plurals) do
         [plural] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural
 
         [plural, alternate] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == alternate
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == alternate
 
         [plural, alternate, other] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == alternate ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == other
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == alternate ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == other
       end
     end
   end
@@ -27,16 +27,16 @@ defmodule Text.Inflect.Noun.Test do
     test "plural noun for #{single}" do
       case unquote(plurals) do
         [plural] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural
 
         [plural, alternate] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == alternate
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == alternate
 
         [plural, alternate, other] ->
-          assert Text.Inflect.En.pluralize(unquote(single), :classical) == plural ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == alternate ||
-                   Text.Inflect.En.pluralize(unquote(single), :classical) == other
+          assert Text.Inflect.En.pluralize_noun(unquote(single), :classical) == plural ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == alternate ||
+                   Text.Inflect.En.pluralize_noun(unquote(single), :classical) == other
       end
     end
   end

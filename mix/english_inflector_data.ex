@@ -92,6 +92,21 @@ defmodule Text.Inflect.Data.En do
     |> Map.get(key)
   end
 
+  def tables("a8" = key) do
+    import Meeseeks.XPath
+
+    tables =
+      parsed()
+      |> Meeseeks.all(xpath("//table"))
+      |> Enum.map(&Meeseeks.all(&1, xpath("//td")))
+      |> Enum.map(&extract_text/1)
+
+    @tables
+    |> Enum.zip(tables)
+    |> Map.new()
+    |> Map.get(key)
+  end
+
   def tables(key) when is_binary(key) do
     import Meeseeks.XPath
 
@@ -145,10 +160,12 @@ defmodule Text.Inflect.Data.En do
   """
   def save_data do
     a1 = tables("a1")
+    a8 = tables("a8")
 
     all =
       tables()
       |> Map.put("a1", a1)
+      |> Map.put("a8", a8)
 
     final =
       all

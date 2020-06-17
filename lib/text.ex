@@ -16,11 +16,11 @@ defmodule Text do
   defdelegate detect(text), to: Text.Language
 
   @doc """
-  Pluralize a word.
+  Pluralize a noun.
 
   ## Arguments
 
-  * `word` is any English word.
+  * `word` is any English noun.
 
   * `options` is a keyword list
     of options.
@@ -36,42 +36,42 @@ defmodule Text do
 
   ## Returns
 
-  * a `String` representing the pluralized word
+  * a `String` representing the pluralized noun
 
   ## Notes
 
   `mode` when `:classical` applies pluralization
-  on latin words used in english but with latin
+  on latin nouns used in english but with latin
   suffixes.
 
   ## Examples
 
-      iex> Text.pluralize "Major general"
+      iex> Text.pluralize_noun "Major general"
       "Major generals"
 
-      iex> Text.pluralize "fish"
+      iex> Text.pluralize_noun "fish"
       "fish"
 
-      iex> Text.pluralize "soliloquy"
+      iex> Text.pluralize_noun "soliloquy"
       "soliloquies"
 
-      iex> Text.pluralize "genius", mode: :classical
+      iex> Text.pluralize_noun "genius", mode: :classical
       "genii"
 
-      iex> Text.pluralize "genius"
+      iex> Text.pluralize_noun "genius"
       "geniuses"
 
-      iex> Text.pluralize "platypus", mode: :classical
+      iex> Text.pluralize_noun "platypus", mode: :classical
       "platypodes"
 
-      iex> Text.pluralize "platypus"
+      iex> Text.pluralize_noun "platypus"
       "platypuses"
 
   """
-  def pluralize(word, options \\ []) do
+  def pluralize_noun(word, options \\ []) do
     inflector = inflector_from(options)
     mode = Keyword.get(options, :mode, :modern)
-    inflector.pluralize(word, mode)
+    inflector.pluralize_noun(word, mode)
   end
 
   # Only "en" is supoprted

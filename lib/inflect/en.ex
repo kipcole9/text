@@ -16,18 +16,18 @@ defmodule Text.Inflect.En do
   end
 
   @doc """
-  Pluralize an english word.
+  Pluralize an english noun.
 
   ## Arguments
 
-  * `word` is any English word.
+  * `word` is any English noun.
 
   * `mode` is `:modern` or `:classical`. The
     default is `:modern`.
 
   ## Returns
 
-  * a `String` representing the pluralized word
+  * a `String` representing the pluralized noun
 
   ## Notes
 
@@ -37,32 +37,32 @@ defmodule Text.Inflect.En do
 
   ## Examples
 
-      iex> Text.Inflect.En.pluralize "Major general"
+      iex> Text.Inflect.En.pluralize_noun "Major general"
       "Major generals"
 
-      iex> Text.Inflect.En.pluralize "fish"
+      iex> Text.Inflect.En.pluralize_noun "fish"
       "fish"
 
-      iex> Text.Inflect.En.pluralize "soliloquy"
+      iex> Text.Inflect.En.pluralize_noun "soliloquy"
       "soliloquies"
 
-      iex> Text.Inflect.En.pluralize "genius", :classical
+      iex> Text.Inflect.En.pluralize_noun "genius", :classical
       "genii"
 
-      iex> Text.Inflect.En.pluralize "genius"
+      iex> Text.Inflect.En.pluralize_noun "genius"
       "geniuses"
 
-      iex> Text.Inflect.En.pluralize "platypus", :classical
+      iex> Text.Inflect.En.pluralize_noun "platypus", :classical
       "platypodes"
 
-      iex> Text.Inflect.En.pluralize "platypus"
+      iex> Text.Inflect.En.pluralize_noun "platypus"
       "platypuses"
 
   """
-  def pluralize(word, mode \\ :modern) do
+  def pluralize_noun(word, mode \\ :modern) do
     is_non_inflecting(word, mode) ||
       is_pronoun(word, mode) ||
-      is_irregular(word, mode) ||
+      is_irregular_noun(word, mode) ||
       is_irregular_suffix(word, mode) ||
       is_assimilated_classical(word, mode) ||
       is_classical(word, mode) ||
@@ -119,10 +119,10 @@ defmodule Text.Inflect.En do
   #         if the word has an irregular plural,
   #                 return the specified plural
 
-  defp is_irregular(word, mode) do
+  defp is_irregular_noun(word, mode) do
     cond do
-      category?(word, "irregular", mode) ->
-        irregular(word, mode)
+      category?(word, "irregular_noun", mode) ->
+        irregular_noun(word, mode)
 
       true ->
         nil
@@ -426,16 +426,160 @@ defmodule Text.Inflect.En do
     word <> "s"
   end
 
+  @doc """
+  Pluralize an english verb.
+
+  ## Arguments
+
+  * `word` is any English verb.
+
+  ## Returns
+
+  * a `String` representing the pluralized verb
+
+  ## Examples
+
+      iex> Text.Inflect.En.pluralize_verb "has"
+      "have"
+
+      iex> Text.Inflect.En.pluralize_verb "catches"
+      "catch"
+
+  """
+  def pluralize_verb(word) do
+    is_non_inflecting_verb(word) ||
+    is_irregular_verb(word) ||
+    is_third_person_singular(word) ||
+    is_third_person_singular_s(word) ||
+    is_ambiguous(word) ||
+
+    # All other cases are regular 1st or 2nd person verbs, which don't inflect...
+    #         otherwise, return the verb uninflected
+    word
+  end
+
+  defp is_non_inflecting_verb(word) do
+    cond do
+      category?(word, "non_inflecting_verb") ->
+        word
+
+      true ->
+        nil
+    end
+  end
+
+  # Check if the verb is being used as an auxiliary and has a known irregular inflection (has seen,
+  # was going, etc. See Table A.8 for irregular verbs)...
+  #         if the word has the form "<auxiliary> <words>"
+  #         and <auxiliary> belongs to the category of irregular verbs,
+  #                 return "<specified plural of auxiliary> <words>"
+
+  # Handle simple irregular verbs (has, is, etc. - see Table A.8)...
+  #         if the word belongs to the category of irregular verbs,
+  #                 return the specified plural form
+
+  # Combine the both cases in this simpler execution
+
+  defp is_irregular_verb(word) do
+    cond do
+      category?(word, "irregular_verb") ->
+        irregular_verb(word)
+
+      true ->
+        nil
+    end
+  end
+
+  # Verbs in the regular 3rd person singular lose their -es, -ies, or -oes suffix (she catches -
+  # they catch, he tries -> they try, it does -> they do, etc.)...
+  #         if suffix(-[cs]hes), return inflection(-hes,-h)
+  #         if suffix(-[sx]es),  return inflection(-es,-)
+  #         if suffix(-zzes),    return inflection(-es,-)
+  #         if suffix(-ies),     return inflection(-ies,-y)
+  #         if suffix(-oes),     return inflection(-oes,-o)
+
+  defp is_third_person_singular(word) do
+    cond do
+      suffix?(word, "ches") ->
+        replace_suffix(word, "hes", "h")
+
+      suffix?(word, "shes") ->
+        replace_suffix(word, "hes", "h")
+
+      suffix?(word, "ses") ->
+        replace_suffix(word, "es", "")
+
+      suffix?(word, "xes") ->
+        replace_suffix(word, "es", "")
+
+      suffix?(word, "zzes") ->
+        replace_suffix(word, "es", "")
+
+      suffix?(word, "ies") ->
+        replace_suffix(word, "ies", "y")
+
+      suffix?(word, "oes") ->
+        replace_suffix(word, "oes", "o")
+
+      true ->
+        nil
+    end
+  end
+
+  # Other 3rd person singular verbs ending in -s (but not -ss) also lose their suffix...
+  #         if suffix(-[^s]s), return inflection(-s,-)
+
+  defp is_third_person_singular_s(word) do
+    cond do
+      suffix?(word, "ss") ->
+        nil
+
+      suffix?(word, "s") ->
+        replace_suffix(word, "s", "")
+
+      true ->
+        nil
+    end
+  end
+
+  # Handle ambiguous simple verbs that might also be nouns (thought, sink, fly, etc. - see Table
+  # A.4)...
+  #         if the word is in the ambiguous category,
+  #                 return the specified plural form
+
+  defp is_ambiguous(word) do
+    cond do
+      category?(word, "ambiguous") ->
+        pluralize_noun(word)
+
+      true ->
+        nil
+    end
+  end
+
   ##########################################
 
   # Category definitions
 
   ##########################################
 
-  @non_inflecting_words @inflections
+  @non_inflecting_nouns @inflections
                         |> Map.take(["a2", "a3"])
                         |> Map.values()
                         |> List.flatten()
+
+  @ambiguous @inflections
+    |> Map.get("a4")
+
+  @pluralize_auxillary_irregular @inflections
+  |> Map.get("a8")
+  |> Enum.drop(3)
+  |> Enum.map(&String.split(&1, " -> "))
+  |> Enum.map(&List.to_tuple/1)
+  |> Map.new
+
+  @non_inflecting_verbs @inflections
+    |> Map.get("a9")
 
   @a_ae_modern @inflections
                |> Map.get("a10")
@@ -518,7 +662,20 @@ defmodule Text.Inflect.En do
              |> Map.new()
 
   @doc false
-  def category?(word, "irregular", _mode) do
+  def category?(word, "irregular_verb") do
+    Map.has_key?(@pluralize_auxillary_irregular, word)
+  end
+
+  def category?(word, "ambiguous") do
+   word in @ambiguous
+  end
+
+  def category?(word, "non_inflecting_verb") do
+    word in @non_inflecting_verbs
+  end
+
+  @doc false
+  def category?(word, "irregular_noun", _mode) do
     Map.has_key?(@irregular, word)
   end
 
@@ -537,7 +694,7 @@ defmodule Text.Inflect.En do
 
   @doc false
   def category?(word, "-", "-", _) do
-    word in @non_inflecting_words
+    word in @non_inflecting_nouns
   end
 
   def category?(word, "-o", "-os", :classical) do
@@ -627,17 +784,17 @@ defmodule Text.Inflect.En do
   end
 
   @vowels ["a", "e", "i", "o", "u"]
-  defp vowel?(word, pos) when pos >= 0 do
-    :erlang.binary_part(word, pos, 1) in @vowels
+  defp vowel?(word, pos)  do
+    String.at(word, pos) in @vowels
   end
 
-  defp vowel?(word, pos) when pos < 0 do
-    :erlang.binary_part(word, byte_size(word) + pos, 1) in @vowels
-  end
-
-  defp irregular(word, mode) do
+  defp irregular_noun(word, mode) do
     [modern, classical] = Map.fetch!(@irregular, word)
     if mode == :modern, do: modern, else: classical
+  end
+
+  defp irregular_verb(word) do
+    Map.fetch!(@pluralize_auxillary_irregular, word)
   end
 
   defp pronoun(word, mode) do
