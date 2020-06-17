@@ -16,6 +16,84 @@ defmodule Text.Inflect.En do
   end
 
   @doc """
+  Pluralize an english noun, pronoun,
+  verb or adjective.
+
+  ## Arguments
+
+  * `word` is any English word.
+
+  * `mode` is `:modern` or `:classical`. The
+    default is `:modern`. This applies to
+    nouns only.
+
+  ## Returns
+
+  * a `String` representing the pluralized word.
+
+  ## Notes
+
+  `mode` when `:classical` applies pluralization
+  on latin nouns in english but with latin
+  suffixes.
+
+  ## Examples
+
+      iex> Text.Inflect.En.pluralize "fish"
+      "fish"
+
+      iex> Text.Inflect.En.pluralize "soliloquy"
+      "soliloquies"
+
+      iex> Text.Inflect.En.pluralize "genius", :classical
+      "genii"
+
+      iex> Text.Inflect.En.pluralize "has"
+      "have"
+
+      iex> Text.Inflect.En.pluralize "catches"
+      "catch"
+
+      iex> Text.Inflect.En.pluralize "child's"
+      "children's"
+
+      iex> Text.Inflect.En.pluralize "Mary's"
+      "Marys'"
+
+  """
+
+  def pluralize(word, mode \\ :modern) do
+    # Handle known adjectives...
+    #         try steps 2 through 4 of Algorithm 3
+    is_indefinite_article(word)  ||
+    is_possessive_pronoun(word) ||
+    is_genetive(word) ||
+
+    # Handle known verbs...
+    #         try steps 2 through 5 of Algorithm 2
+    is_non_inflecting_verb(word) ||
+    is_irregular_verb(word) ||
+    is_third_person_singular(word) ||
+    is_third_person_singular_s(word) ||
+
+    # Handle singular nouns ending in -s (ethos, axis, etc. - see Tables A.2, A.3, A.16, A.22, and A.23)...
+    #         if word is a noun ending in -s,
+    #                 try steps 2 through 13 of Algorithm 1
+    if suffix?(word, "s") do
+      pluralize_noun(word, mode)
+    else
+      # Handle 3rd person singular verbs (that is, any other words ending in -s)...
+      #         try steps 4 and 5 of Algorithm 2
+      is_third_person_singular(word) ||
+      is_third_person_singular_s(word) ||
+
+      # Treat the word as a noun...
+      #         try steps 2 through 13 of Algorithm 1
+      pluralize_noun(word, mode)
+    end
+  end
+
+  @doc """
   Pluralize an english noun.
 
   ## Arguments
@@ -32,7 +110,7 @@ defmodule Text.Inflect.En do
   ## Notes
 
   `mode` when `:classical` applies pluralization
-  on latin words used in english but with latin
+  on latin nouns used in english but with latin
   suffixes.
 
   ## Examples
@@ -61,17 +139,17 @@ defmodule Text.Inflect.En do
   """
   def pluralize_noun(word, mode \\ :modern) do
     is_non_inflecting(word, mode) ||
-      is_pronoun(word, mode) ||
-      is_irregular_noun(word, mode) ||
-      is_irregular_suffix(word, mode) ||
-      is_assimilated_classical(word, mode) ||
-      is_classical(word, mode) ||
-      is_compound_plural(word, mode) ||
-      is_ves_plural(word, mode) ||
-      is_word_ending_in_y(word, mode) ||
-      is_o_suffix(word, mode) ||
-      is_general(word, mode) ||
-      is_regular(word, mode)
+    is_pronoun(word, mode) ||
+    is_irregular_noun(word, mode) ||
+    is_irregular_suffix(word, mode) ||
+    is_assimilated_classical(word, mode) ||
+    is_classical(word, mode) ||
+    is_compound_plural(word, mode) ||
+    is_ves_plural(word, mode) ||
+    is_word_ending_in_y(word, mode) ||
+    is_o_suffix(word, mode) ||
+    is_general(word, mode) ||
+    is_regular(word, mode)
   end
 
   # Handle words that do not inflect in the plural (such as fish, travois, chassis, nationalities
