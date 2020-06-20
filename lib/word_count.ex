@@ -1,20 +1,8 @@
 defmodule Text.Word do
-  def file_word_count(path) when is_binary(path) do
-    path
-    |> File.stream!()
-    |> word_count
-  end
-
-  def file_total_word_count(path) do
-    path
-    |> word_count()
-    |> Enum.reduce(0, fn {_, count}, acc -> acc + count end)
-  end
+  @type frequencies :: [{String.t, pos_integer}, ...]
 
   def word_count(text) when is_binary(text) do
-    text
-    |> String.split()
-    |> word_count
+    word_count([text])
   end
 
   def word_count(list) when is_list(list) do
@@ -30,15 +18,45 @@ defmodule Text.Word do
   end
 
   def word_count(%Flow{} = stream) do
-    table = :ets.new(:words, [{:write_concurrency, true}, :public])
+    table = :ets.new(:word_count, [{:write_concurrency, true}, :public])
 
     stream
-    |> Flow.flat_map(&String.split(&1))
-    |> Flow.map(fn word ->
-      :ets.update_counter(table, word, {2, 1}, {word, 0})
-    end)
+    |> Flow.flat_map(&String.split/1)
+    |> Flow.map(&:ets.update_counter(table, &1, {2, 1}, {&1, 0}))
     |> Flow.run()
 
-    :ets.tab2list(table)
+    list = :ets.tab2list(table)
+    :ets.delete(table)
+
+    list
   end
+
+  @spec total_word_count(frequencies) :: pos_integer
+  def total_word_count(frequencies) when is_list(frequencies) do
+    Enum.reduce(frequencies, 0, fn {_word, count}, acc -> acc + count end)
+  end
+
+  @spec average_word_length(frequencies) :: float
+  def average_word_length(frequencies) when is_list(frequencies) do
+    {all, count} =
+      Enum.reduce(frequencies, {0, 0}, fn {word, count}, {all, total_count} ->
+        all = all + (String.length(word) * count)
+        total_count = total_count + count
+        {all, total_count}
+      end)
+
+    all / count
+  end
+
+  @spec sort(frequencies, :asc | :desc) :: frequencies
+  def sort(frequencies, direction \\ :desc)
+
+  def sort(frequencies, :desc) do
+    Enum.sort(frequencies, &(elem(&1, 1) > elem(&2, 1)))
+  end
+
+  def sort(frequencies, :asc) do
+    Enum.sort_by(frequencies, &elem(&1, 1))
+  end
+
 end
