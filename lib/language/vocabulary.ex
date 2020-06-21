@@ -1,3 +1,5 @@
+require Text.Language.Udhr
+
 defmodule Text.Vocabulary do
   @moduledoc """
   A vocabulary is the encoded form of

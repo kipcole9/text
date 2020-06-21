@@ -1,3 +1,5 @@
+require Text.Inflect.Data.En
+
 if Code.ensure_loaded?(Text.Inflect.Data.En) do
   defmodule Mix.Tasks.Text.CreateEnglishPlurals do
     @moduledoc """

@@ -1,5 +1,7 @@
+require Text.Language.Udhr
+
 if Code.ensure_loaded?(Text.Language.Udhr) do
-  defmodule Mix.Tasks.Text.CreateVocabulary do
+  defmodule Mix.Tasks.Text.CreateVocabularies do
     @moduledoc """
     Mix task to create the vocabularies for the
     [UDHR](http://research.ics.aalto.fi/cog/data/udhr/) corpus
