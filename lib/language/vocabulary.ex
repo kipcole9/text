@@ -53,13 +53,25 @@ defmodule Text.Vocabulary do
         |> Task.async_stream(__MODULE__, :calculate_corpus_ngrams, [ngram_range], async_options)
         |> Enum.map(&elem(&1, 1))
         |> calculate_global_frequencies
-        |> Map.new()
+        |> remove_structs_for_space_reduction
 
       binary = :erlang.term_to_binary(frequency_map_by_language)
       :ok = File.write!(file, binary)
 
       frequency_map_by_language
     end
+  end
+
+  @doc false
+  def remove_structs_for_space_reduction(frequency_map) do
+    Enum.map(frequency_map, fn {language, ngram_map} ->
+      new_ngram_map =
+        Enum.map(ngram_map, fn {ngram, stats} -> {ngram, Map.from_struct(stats)} end)
+        |> Map.new
+
+      {language, new_ngram_map}
+    end)
+    |> Map.new
   end
 
   # Calculate the total frequency for each
@@ -149,6 +161,7 @@ defmodule Text.Vocabulary do
       vocabulary_module.file
       |> File.read!()
       |> :erlang.binary_to_term()
+      |> structify_ngram_stats
 
     for {language, ngrams} <- vocabulary do
       :persistent_term.put({vocabulary_module, language}, ngrams)
@@ -156,6 +169,19 @@ defmodule Text.Vocabulary do
 
     :persistent_term.put({vocabulary_module, :languages}, Map.keys(vocabulary))
     vocabulary
+  end
+
+  defp structify_ngram_stats(ngram_by_language) do
+    Enum.map(ngram_by_language, fn {language, ngram_map} ->
+      new_ngram_map =
+        Enum.map(ngram_map, fn {ngram, stats} ->
+          {ngram, struct(Text.Ngram.Frequency, stats)}
+        end)
+        |> Map.new
+
+      {language, new_ngram_map}
+    end)
+    |> Map.new
   end
 
   @doc """
