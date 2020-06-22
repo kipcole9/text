@@ -64,7 +64,7 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14"},
       {:sweet_xml, "~> 0.6", only: [:dev, :test], optional: true},
-      {:meeseeks, "~> 0.15.1", only: [:dev], optional: true},
+      {:meeseeks, "~> 0.15.1", only: [:dev, :test], optional: true},
       {:ex_doc, "~> 0.21", only: [:dev, :release], optional: true}
     ]
   end
@@ -77,7 +77,7 @@ defmodule Text.MixProject do
     }
   end
 
-  defp elixirc_paths(:test), do: ["lib", "src", "test"]
+  defp elixirc_paths(:test), do: ["lib", "mix", "test"]
   defp elixirc_paths(:dev), do: ["lib", "mix", "bench"]
-  defp elixirc_paths(_), do: ["lib", "src"]
+  defp elixirc_paths(_), do: ["lib"]
 end

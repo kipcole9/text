@@ -13,6 +13,17 @@ defmodule Text.Ngram do
   @type ngram_range :: 2..7
   @spec ngram(String.t(), ngram_range) :: %{list() => integer}
 
+  defmodule Frequency do
+    defstruct [
+      :rank,
+      :count,
+      :frequency,
+      :log_frequency,
+      :global_rank,
+      :global_frequency
+    ]
+  end
+
   @doc """
   Returns a map of n-grams for a given text
   and n-gram size.

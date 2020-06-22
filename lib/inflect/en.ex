@@ -65,32 +65,29 @@ defmodule Text.Inflect.En do
   def pluralize(word, mode \\ :modern) do
     # Handle known adjectives...
     #         try steps 2 through 4 of Algorithm 3
-    is_indefinite_article(word)  ||
-    is_possessive_pronoun(word) ||
-    is_genetive(word) ||
-
     # Handle known verbs...
     #         try steps 2 through 5 of Algorithm 2
-    is_non_inflecting_verb(word) ||
-    is_irregular_verb(word) ||
-    is_third_person_singular(word) ||
     # is_third_person_singular_s(word) ||
-
     # Handle singular nouns ending in -s (ethos, axis, etc. - see Tables A.2, A.3, A.16, A.22, and A.23)...
     #         if word is a noun ending in -s,
     #                 try steps 2 through 13 of Algorithm 1
-    if suffix?(word, "s") do
-      pluralize_noun(word, mode)
-    else
-      # Handle 3rd person singular verbs (that is, any other words ending in -s)...
-      #         try steps 4 and 5 of Algorithm 2
+    is_indefinite_article(word) ||
+      is_possessive_pronoun(word) ||
+      is_genetive(word) ||
+      is_non_inflecting_verb(word) ||
+      is_irregular_verb(word) ||
       is_third_person_singular(word) ||
-      is_third_person_singular_s(word) ||
-
-      # Treat the word as a noun...
-      #         try steps 2 through 13 of Algorithm 1
-      pluralize_noun(word, mode)
-    end
+      if suffix?(word, "s") do
+        pluralize_noun(word, mode)
+      else
+        # Handle 3rd person singular verbs (that is, any other words ending in -s)...
+        #         try steps 4 and 5 of Algorithm 2
+        # Treat the word as a noun...
+        #         try steps 2 through 13 of Algorithm 1
+        is_third_person_singular(word) ||
+          is_third_person_singular_s(word) ||
+          pluralize_noun(word, mode)
+      end
   end
 
   @doc """
@@ -139,17 +136,17 @@ defmodule Text.Inflect.En do
   """
   def pluralize_noun(word, mode \\ :modern) do
     is_non_inflecting(word, mode) ||
-    is_pronoun(word, mode) ||
-    is_irregular_noun(word, mode) ||
-    is_irregular_suffix(word, mode) ||
-    is_assimilated_classical(word, mode) ||
-    is_classical(word, mode) ||
-    is_compound_plural(word, mode) ||
-    is_ves_plural(word, mode) ||
-    is_word_ending_in_y(word, mode) ||
-    is_o_suffix(word, mode) ||
-    is_general(word, mode) ||
-    is_regular(word, mode)
+      is_pronoun(word, mode) ||
+      is_irregular_noun(word, mode) ||
+      is_irregular_suffix(word, mode) ||
+      is_assimilated_classical(word, mode) ||
+      is_classical(word, mode) ||
+      is_compound_plural(word, mode) ||
+      is_ves_plural(word, mode) ||
+      is_word_ending_in_y(word, mode) ||
+      is_o_suffix(word, mode) ||
+      is_general(word, mode) ||
+      is_regular(word, mode)
   end
 
   # Handle words that do not inflect in the plural (such as fish, travois, chassis, nationalities
@@ -525,15 +522,14 @@ defmodule Text.Inflect.En do
 
   """
   def pluralize_verb(word) do
-    is_non_inflecting_verb(word) ||
-    is_irregular_verb(word) ||
-    is_third_person_singular(word) ||
-    is_third_person_singular_s(word) ||
-    is_ambiguous(word) ||
-
     # All other cases are regular 1st or 2nd person verbs, which don't inflect...
     #         otherwise, return the verb uninflected
-    word
+    is_non_inflecting_verb(word) ||
+      is_irregular_verb(word) ||
+      is_third_person_singular(word) ||
+      is_third_person_singular_s(word) ||
+      is_ambiguous(word) ||
+      word
   end
 
   defp is_non_inflecting_verb(word) do
@@ -663,12 +659,12 @@ defmodule Text.Inflect.En do
 
   """
   def pluralize_adjective(word) do
-    is_indefinite_article(word)  ||
-    is_possessive_pronoun(word) ||
-    is_genetive(word) ||
     # In all other cases no inflection is required...
     #         otherwise, return the adjective uninflected
-    word
+    is_indefinite_article(word) ||
+      is_possessive_pronoun(word) ||
+      is_genetive(word) ||
+      word
   end
 
   # Handle indefinite articles and demonstratives...
@@ -680,10 +676,13 @@ defmodule Text.Inflect.En do
     cond do
       word in ["a", "an"] ->
         "some"
+
       word == "this" ->
         "these"
+
       word == "that" ->
         "those"
+
       true ->
         nil
     end
@@ -750,26 +749,26 @@ defmodule Text.Inflect.En do
                         |> List.flatten()
 
   @ambiguous @inflections
-    |> Map.get("a4")
+             |> Map.get("a4")
 
   @personal_possessive @inflections
-  |> Map.get("a7")
-  |> Enum.drop(3)
-  |> Enum.flat_map(&String.split(&1, " "))
-  |> Enum.reject(&(&1 == "->" || &1 == " "))
-  |> Enum.chunk_every(2)
-  |> Enum.map(&List.to_tuple/1)
-  |> Map.new
+                       |> Map.get("a7")
+                       |> Enum.drop(3)
+                       |> Enum.flat_map(&String.split(&1, " "))
+                       |> Enum.reject(&(&1 == "->" || &1 == " "))
+                       |> Enum.chunk_every(2)
+                       |> Enum.map(&List.to_tuple/1)
+                       |> Map.new()
 
   @pluralize_auxillary_irregular @inflections
-  |> Map.get("a8")
-  |> Enum.drop(3)
-  |> Enum.map(&String.split(&1, " -> "))
-  |> Enum.map(&List.to_tuple/1)
-  |> Map.new
+                                 |> Map.get("a8")
+                                 |> Enum.drop(3)
+                                 |> Enum.map(&String.split(&1, " -> "))
+                                 |> Enum.map(&List.to_tuple/1)
+                                 |> Map.new()
 
   @non_inflecting_verbs @inflections
-    |> Map.get("a9")
+                        |> Map.get("a9")
 
   @a_ae_modern @inflections
                |> Map.get("a10")
@@ -857,7 +856,7 @@ defmodule Text.Inflect.En do
   end
 
   def category?(word, "ambiguous") do
-   word in @ambiguous
+    word in @ambiguous
   end
 
   def category?(word, "non_inflecting_verb") do
@@ -978,7 +977,7 @@ defmodule Text.Inflect.En do
   end
 
   @vowels ["a", "e", "i", "o", "u"]
-  defp vowel?(word, pos)  do
+  defp vowel?(word, pos) do
     String.at(word, pos) in @vowels
   end
 

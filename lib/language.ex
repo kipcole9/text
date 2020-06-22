@@ -1,3 +1,5 @@
+require Text.Vocabulary
+
 defmodule Text.Language do
   @moduledoc """
   A module to support natural language

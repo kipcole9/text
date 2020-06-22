@@ -14,6 +14,7 @@ defmodule Text do
 
   defdelegate ngram(text, n), to: Text.Ngram
   defdelegate detect(text), to: Text.Language
+  defdelegate detect(text, options), to: Text.Language
 
   @doc """
   Pluralize a noun.
@@ -77,5 +78,13 @@ defmodule Text do
   # Only "en" is supoprted
   defp inflector_from(_options) do
     Text.Inflect.En
+  end
+
+  @doc false
+  def ensure_compiled?(module) do
+    case Code.ensure_compiled(module) do
+      {:module, _module} -> true
+      _other -> false
+    end
   end
 end

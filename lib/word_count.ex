@@ -35,8 +35,8 @@ defmodule Text.Word do
   ## Examples
 
   """
-  @spec word_count(Flow.t() | File.Stream.t() | String.t | [String.t()], splitter) ::
-    frequency_list
+  @spec word_count(Flow.t() | File.Stream.t() | String.t() | [String.t()], splitter) ::
+          frequency_list
 
   def word_count(text, splitter \\ &String.split/1)
 
@@ -112,7 +112,7 @@ defmodule Text.Word do
   def average_word_length(frequency_list) when is_list(frequency_list) do
     {all, count} =
       Enum.reduce(frequency_list, {0, 0}, fn {word, count}, {all, total_count} ->
-        all = all + (String.length(word) * count)
+        all = all + String.length(word) * count
         total_count = total_count + count
         {all, total_count}
       end)
@@ -150,5 +150,4 @@ defmodule Text.Word do
   def sort(frequency_list, :asc) do
     Enum.sort_by(frequency_list, &elem(&1, 1))
   end
-
 end

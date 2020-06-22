@@ -1,5 +1,3 @@
-require Text.Language.Udhr
-
 defmodule Text.Vocabulary do
   @moduledoc """
   A vocabulary is the encoded form of
@@ -32,7 +30,7 @@ defmodule Text.Vocabulary do
     @known_vocabularies
   end
 
-  if Code.ensure_loaded?(Text.Language.Udhr) do
+  if Text.ensure_compiled?(Text.Language.Udhr) do
     @doc """
     Builds the vocabulary for
     all known vocabulary modules
@@ -50,16 +48,82 @@ defmodule Text.Vocabulary do
       file = vocabulary_module.file()
       async_options = Text.Language.async_options()
 
-      vocabulary =
+      frequency_map_by_language =
         udhr_corpus()
-        |> Task.async_stream(__MODULE__, :calculate_ngrams, [ngram_range], async_options)
+        |> Task.async_stream(__MODULE__, :calculate_corpus_ngrams, [ngram_range], async_options)
         |> Enum.map(&elem(&1, 1))
+        |> calculate_global_frequencies
         |> Map.new()
 
-      binary = :erlang.term_to_binary(vocabulary)
+      binary = :erlang.term_to_binary(frequency_map_by_language)
       :ok = File.write!(file, binary)
-      vocabulary
+
+      frequency_map_by_language
     end
+  end
+
+  # Calculate the total frequency for each
+  # ngram across all regions
+  @doc false
+  def calculate_global_frequencies(frequency_map_by_language) do
+    frequency_map_by_language
+    |> invert_to_frequency_map_by_ngram()
+    |> calculate_global_frequency_and_rank()
+    |> invert_to_frequency_map_by_language()
+  end
+
+  # Invert
+  #   %{language => %{ngram => frequencies}}
+  # to:
+  #   %{ngram => %{language => frequencies}}
+  @doc false
+  def invert_to_frequency_map_by_ngram(frequency_map_by_language) do
+    Enum.reduce(frequency_map_by_language, %{}, fn {language, ngrams}, acc ->
+      Enum.reduce(ngrams, acc, fn {ngram, ngram_stats}, acc2 ->
+        Map.update(acc2, ngram, %{language => ngram_stats}, &Map.put(&1, language, ngram_stats))
+      end)
+    end)
+  end
+
+  # Invert
+  #   %{ngram => %{language => frequencies}}
+  # to:
+  #   %{language => %{ngram => frequencies}}
+  @doc false
+  def invert_to_frequency_map_by_language(frequency_map_by_ngram) do
+    Enum.reduce(frequency_map_by_ngram, %{}, fn {ngram, languages}, acc ->
+      Enum.reduce(languages, acc, fn {language, ngram_stats}, acc2 ->
+        Map.update(acc2, language, %{ngram => ngram_stats}, &Map.put(&1, ngram, ngram_stats))
+      end)
+    end)
+  end
+
+  # Calculate the frequencies across all regions
+  # and then the global range across all region
+  @doc false
+  def calculate_global_frequency_and_rank(frequency_map_by_ngram) do
+    Enum.map(frequency_map_by_ngram, fn {ngram, ngram_by_language} ->
+      total_count_for_ngram = total_ngram_count_for_languages(ngram_by_language)
+
+      added_global_stats =
+        Enum.map(ngram_by_language, fn {language, ngram_stats} ->
+          {language, %{ngram_stats | global_frequency: ngram_stats.count / total_count_for_ngram}}
+        end)
+        |> Enum.sort(&(elem(&1, 1).global_frequency > elem(&2, 1).global_frequency))
+        |> Enum.with_index(1)
+        |> Enum.map(fn {{language, ngram_stats}, global_rank} ->
+          {language, %{ngram_stats | global_rank: global_rank}}
+        end)
+
+      {ngram, added_global_stats}
+    end)
+  end
+
+  @doc false
+  def total_ngram_count_for_languages(ngram_by_language) do
+    Enum.reduce(ngram_by_language, 0, fn {_language, %{count: count}}, acc ->
+      acc + count
+    end)
   end
 
   @doc """
@@ -120,7 +184,7 @@ defmodule Text.Vocabulary do
   """
   def top_n(language_vocabulary, n \\ @max_ngrams) do
     language_vocabulary
-    |> Enum.sort(fn {_, [rank1, _, _, _]}, {_, [rank2, _, _, _]} -> rank1 < rank2 end)
+    |> Enum.sort(fn {_, %{rank: rank1}}, {_, %{rank: rank2}} -> rank1 < rank2 end)
     |> Enum.take(n)
   end
 
@@ -149,7 +213,7 @@ defmodule Text.Vocabulary do
     merge_maps([Map.merge(a, b) | rest])
   end
 
-  if Code.ensure_loaded?(Text.Language.Udhr) do
+  if Text.ensure_compiled?(Text.Language.Udhr) do
     def calculate_corpus_ngrams({language, entry}, range) do
       ngrams =
         entry
@@ -174,8 +238,8 @@ defmodule Text.Vocabulary do
     |> add_statistics()
     |> order_by_count()
     |> Enum.with_index(1)
-    |> Enum.map(fn {{ngram, count, frequency, log_frequency}, rank} ->
-      {ngram, [rank, count, frequency, log_frequency]}
+    |> Enum.map(fn {{ngram, ngram_stats}, rank} ->
+      {ngram, %{ngram_stats | rank: rank}}
     end)
     |> top_n(top_n)
     |> Map.new()
@@ -184,8 +248,8 @@ defmodule Text.Vocabulary do
   @doc false
   def order_by_count(ngrams) do
     Enum.sort(ngrams, fn
-      {ngram1, count, _, _}, {ngram2, count, _, _} -> ngram1 > ngram2
-      {_, count1, _, _}, {_, count2, _, _} -> count1 > count2
+      {ngram1, %{count: count}}, {ngram2, %{count: count}} -> ngram1 > ngram2
+      {_, %{count: count1}}, {_, %{count: count2}} -> count1 > count2
     end)
   end
 
@@ -200,7 +264,13 @@ defmodule Text.Vocabulary do
     ngrams
     |> Enum.map(fn {ngram, count} ->
       frequency = count / total_count
-      {ngram, count, frequency, :math.log(frequency)}
+
+      {ngram,
+       %Text.Ngram.Frequency{
+         count: count,
+         frequency: frequency,
+         log_frequency: :math.log(frequency)
+       }}
     end)
   end
 end

@@ -10,10 +10,15 @@ defmodule Text.Language.Model.NaiveProbability do
   `probability * probability`.
 
   """
-  @no_entry [1000, 0, 0, :math.log(5.0e-6)]
+  @no_entry %Text.Ngram.Frequency{
+    rank: 1000,
+    count: 0,
+    frequency: 0,
+    log_frequency: :math.log(5.0e-6)
+  }
 
   @doc """
-  Sums the probabilies of each n-gram
+  Sums the frequencies of each n-gram
 
   A strong negative weighting is
   applied if the n-gram is not contained
@@ -22,10 +27,10 @@ defmodule Text.Language.Model.NaiveProbability do
   def score_one_language(language, text_ngrams, vocabulary) do
     score =
       text_ngrams
-      |> Enum.reduce(0, fn {ngram, [_rank, _count, _frequency, _log_frequency]}, acc ->
+      |> Enum.reduce(0, fn {ngram, _}, acc ->
         language = vocabulary.get_vocabulary(language)
-        [_index, _count, _frequency, log_frequency] = Map.get(language, ngram, @no_entry)
-        acc + log_frequency
+        ngram = Map.get(language, ngram, @no_entry)
+        acc + ngram.log_frequency
       end)
 
     {language, score}
