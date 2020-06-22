@@ -69,6 +69,7 @@ defmodule Text.Language.Udhr do
     |> String.split("---")
     |> Enum.at(1)
     |> String.trim()
-    |> Text.Language.normalise_text()
+    |> String.replace(~r/\s+/u, " ")
+    # |> Text.Language.normalise_text()
   end
 end

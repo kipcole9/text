@@ -12,9 +12,10 @@ defmodule Text.Language do
   """
 
   @known_models [
-    Text.Language.Model.NaiveProbability,
-    Text.Language.Model.RankOrder,
-    Text.Language.Model.Spearman
+    Text.Language.Classifier.NaiveBayesian,
+    Text.Language.Classifier.CummulativeFrequency,
+    Text.Language.Classifier.RankOrder,
+    Text.Language.Classifier.Spearman
   ]
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
@@ -61,7 +62,7 @@ defmodule Text.Language do
 
   """
   def detect(text, options \\ []) when is_binary(text) do
-    model = Keyword.get(options, :model, Text.Language.Model.NaiveProbability)
+    model = Keyword.get(options, :model, Text.Language.Classifier.NaiveProbability)
     vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Multigram)
     languages = Keyword.get(options, :only, known_languages())
 

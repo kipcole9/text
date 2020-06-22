@@ -16,9 +16,9 @@ defmodule Text.Vocabulary do
   @callback ngram_range() :: Range.t()
 
   @known_vocabularies [
-    Text.Vocabulary.Quadgram,
-    Text.Vocabulary.Bigram,
-    Text.Vocabulary.Multigram
+    Text.Vocabulary.Udhr.Quadgram,
+    Text.Vocabulary.Udhr.Bigram,
+    Text.Vocabulary.Udhr.Multigram
   ]
 
   @language_file "priv/vocabulary/udhr_languages.etf"
@@ -253,7 +253,7 @@ defmodule Text.Vocabulary do
   @doc """
   Calculate the n-grams for a given text
 
-  A range of n-grams is calcualted from
+  A range of n-grams is calculated from
   `range` and the top `n` ranked
   n-grams from the text are returned
 
