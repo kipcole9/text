@@ -1,5 +1,33 @@
 defmodule Text.Streamer do
-  def stream_udhr(language, size) do
+  @moduledoc """
+  Functions to support streaming text samples
+  in various languages and to execute detection
+  test cases against them.
+
+  """
+
+  @doc """
+  Returns an Enumerable stream
+  of random strings from a given language
+  corpus.
+
+  ## Arguments
+
+  * `language` is a BCP-47 language tag in the set
+    of `Text.Language.known_languages/0`
+
+  * `sample_length` is a the length of the string
+    in graphemes to be sampled and tested. For each
+    iteration a new string is randomly selected
+    from the language corpus.
+
+  ## Returns
+
+  * A random string from the corpus with a length
+    of `sample_length`
+
+  """
+  def stream_udhr(language, sample_length) do
     content =
       Text.Language.Udhr.udhr_corpus()
       |> Map.fetch!(language)
@@ -12,8 +40,8 @@ defmodule Text.Streamer do
         {content, length}
       end,
       fn {content, length} ->
-        index = :rand.uniform(length - size)
-        string = String.slice(content, index, size)
+        index = Enum.random(1..(length - sample_length))
+        string = String.slice(content, index, sample_length)
 
         {[string], {content, length}}
       end,
@@ -21,6 +49,42 @@ defmodule Text.Streamer do
     )
   end
 
+  @doc """
+  For a given BCP-47 language, a sample length
+  and options, test language detection over
+  a number of iterations.
+
+  ## Arguments
+
+  * `language` is a BCP47 language tag in the set
+    of `Text.Language.known_languages/0`
+
+  * `sample_length` is a the length of the string
+    in graphemes to be sampled and tested. For each
+    iteration a new string is randomly selected
+    from the language corpus.
+
+  * `options` is a keyword list of options
+
+  ## Options
+
+  * `:max_iterations` is the number of iterations
+    to be exectuted for each sample. The default is `1_000`
+
+  *  `:classifier` is the classifier to be used from
+    the set `Text.Language.known_classifiers/0`. The
+    defautls is `Text.Language.Classifier.NaiveBayesian`
+
+  * `:vocabulary` is the vocabulary to be used
+    from the set of `Text.Vocabulary.known_vocabularies/0`.
+    The default is `Text.Vocabulary.Udhr.Multigram`.
+
+    ## Returns
+
+  * A `{iterations, successful_detection, unsuccessful_detection}`
+    tuple
+
+  """
   def test(language, sample_length, options \\ []) do
     max = Keyword.get(options, :max_iterations, 1_000)
     classifier = Keyword.get(options, :classifier, Text.Language.Classifier.NaiveBayesian)
@@ -42,14 +106,58 @@ defmodule Text.Streamer do
     end)
   end
 
-  def matrix(languages, lengths) do
-    for classifier <- Text.Language.known_classifiers,
-        vocabulary <- Test.Vocabulary.known_vocabularies,
-        language <- languages,
-        length <- lengths do
+  @doc """
+  Executes a language detection test
+  matrix over all known classifiers
+  and vocabularies for a given list
+  of langauges and sample lengths.
 
-      result = test(language, sample_length, classifier: classifier, vocabulary: vocabulary)
-      [language, classifier, vocabulary, length, result]
+  ## Arguments
+
+  * `languages` is a list of BCP-47 language tag in the set
+    of `Text.Language.known_languages/0`
+
+  * `sample_length` is a list of the length of strings
+    in graphemes to be sampled and tested.
+
+  ## Returns
+
+  * A list of lists where the inner list contains
+   the test results for one matrix element. The
+   elements are `[language, classifier, vocabulary,
+   sample_length, iterations, correct_count,
+   incorrect_count]`
+
+  """
+  def matrix(languages, lengths) when is_list(languages) and is_list(lengths) do
+    for classifier <- Text.Language.known_classifiers,
+        vocabulary <- Text.Vocabulary.known_vocabularies,
+        language <- languages,
+        sample_length <- lengths do
+
+      {iterations, correct, incorrect} =
+        test(language, sample_length, classifier: classifier, vocabulary: vocabulary)
+
+      [language, classifier, vocabulary, sample_length, iterations, correct, incorrect]
+      |> Enum.join(",")
     end
+  end
+
+  @csv_path "corpus/analysis.csv"
+
+  @headers [
+    "Language", "Classifier", "Vocabulary", "Sample Length",
+    "Iterations", "Correct", "Incorrect"
+  ]
+
+  @doc """
+  Saves the results of `matrix/2` as a
+  CSV file #{inspect @csv_path}.
+
+  """
+  def save_as_csv(rows) do
+    rows = [@headers | rows]
+    content = Enum.join(rows, "\n")
+    File.write!(@csv_path, content)
   end
 end

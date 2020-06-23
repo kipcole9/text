@@ -19,7 +19,7 @@ defmodule Text.Language do
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
     Text.Language.Classifier.RankOrder
-    Text.Language.Classifier.Spearman
+    # Text.Language.Classifier.Spearman
   ]
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
