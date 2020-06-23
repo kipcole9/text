@@ -11,15 +11,18 @@ defmodule Text.Language do
 
   """
 
+  # See the benchmarking script in
+  # bench/multithread.exs
+  @default_concurrency 3
+
   @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
     Text.Language.Classifier.RankOrder
-    # Text.Language.Classifier.Spearman
+    Text.Language.Classifier.Spearman
   ]
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
-
   @language_file "priv/vocabulary/udhr_languages.etf"
   @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
 
@@ -96,7 +99,7 @@ defmodule Text.Language do
 
   @doc false
   def async_options(options \\ []) do
-    max_concurrency = Keyword.get(options, :max_concurrency, System.schedulers_online() * 2)
+    max_concurrency = Keyword.get(options, :max_concurrency, @default_concurrency)
     [max_concurrency: max_concurrency, timeout: :infinity, ordered: false]
   end
 
