@@ -37,21 +37,34 @@ defmodule Text.Metaphone do
   @silent_starters ["gn", "kn", "pn", "wr", "ps"]
   @vowels ["a", "e", "i", "o", "u"]
 
+  # The parameter structure is:
+  # consumed:  The characters in the string we have already processed
+  # string: the string we are now processing
+  # m1, m2: The metaphone codes we are accumulating
+
   # Ignore silent starters
-  def metaphone(<< start :: binary-2, rest :: binary >>, "" = m1, "" = m2)
+  def metaphone("", << start :: binary-2, rest :: binary >>, "" = m1, "" = m2)
       when start in @silent_starters do
-    metaphone(rest, m1, m2)
+    metaphone(start, rest, m1, m2)
   end
 
   # Initial "Z" maps to an "S"
-  def metaphone(<< "z", rest :: binary >>, "" = m1, "" = m2) do
-    metaphone("s" <> rest, m1, m2)
+  def metaphone("", << "z", rest :: binary >>, "" = m1, "" = m2) do
+    metaphone("", "s" <> rest, m1, m2)
   end
 
   # Initial vowel maps to "A"
-  def metaphone(<< vowel :: binary-1, rest :: binary >>, "", "")
+  def metaphone("", << vowel :: binary-1, rest :: binary >>, "", "")
       when vowel in @vowels do
-    metaphone(rest, "a", "a")
+    metaphone(vowel, rest, "a", "a")
+  end
+
+  def metaphone(consumed, << "bb", rest :: binary >>, m1, m2) do
+    metaphone(consumed <> "bb", rest, m1 <> "p", m2 <> "p")
+  end
+
+  def metaphone(consumed, << "b", rest :: binary >>, m1, m2) do
+    metaphone(consumed <> "b", rest, m1 <> "p", m2 <> "p")
   end
 
 
