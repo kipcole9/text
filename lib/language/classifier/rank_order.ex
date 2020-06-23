@@ -9,7 +9,7 @@ defmodule Text.Language.Classifier.RankOrder do
     rank: 1000,
     count: 0,
     frequency: 0,
-    global_rank: 10_000,
+    global_rank: 1000,
     global_frequency: 0,
     log_frequency: :math.log(5.0e-6)
   }
@@ -20,7 +20,7 @@ defmodule Text.Language.Classifier.RankOrder do
     score =
       Enum.reduce(text_ngrams, 0, fn {ngram, %{rank: text_rank, count: count}}, score ->
         vocab = Map.get(language_vocab, ngram, @no_entry)
-        score + (count * (abs(vocab.rank - text_rank) + abs(vocab.global_rank - text_rank)))
+        score + count * (abs(vocab.rank - text_rank) + abs(vocab.global_rank - text_rank))
       end)
 
     {language, score}

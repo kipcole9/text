@@ -27,14 +27,13 @@ defmodule Text.Language.Classifier.NaiveBayesian do
   in the given vocabulary.
   """
   def score_one_language(language, text_ngrams, vocabulary) do
-    vocab =
-      vocabulary.get_vocabulary(language)
+    vocab = vocabulary.get_vocabulary(language)
 
     score =
       text_ngrams
       |> Enum.reduce(0, fn {ngram, %{count: count}}, acc ->
         ngram_stats = Map.get(vocab, ngram, @no_entry)
-        acc + (count * ngram_stats.log_frequency)
+        acc + count * ngram_stats.log_frequency
       end)
 
     {language, score}

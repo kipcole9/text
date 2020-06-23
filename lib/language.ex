@@ -11,11 +11,11 @@ defmodule Text.Language do
 
   """
 
-  @known_models [
+  @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
-    Text.Language.Classifier.RankOrder,
-    Text.Language.Classifier.Spearman
+    Text.Language.Classifier.RankOrder
+    # Text.Language.Classifier.Spearman
   ]
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
@@ -24,27 +24,28 @@ defmodule Text.Language do
   @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
 
   @doc """
-  Detect the language of a given text.
+  Identify the natural language of a given text.
 
   ## Arguments
 
   * `text` is a binary text from which
-    the language is detected
+    the language is detected.
 
   * `options` is a keyword list of
     options.
 
   ## Options
 
-  * `:model` is the module used to detect the language.
-    The default is `Text.Language.Model.NaiveProbability`.
-    Other models are `Text.Language.Model.RankOrder` and
-    `Text.Language.Model.Spearman`
+  * `:classifier` is the module used to detect the language.
+    The default is `Text.Language.Classifier.NaiveBayesian`.
+    Other models are `Text.Language.Classifier.RankOrder`,
+    `Text.Classifier.CummulativeFrequency` and
+    `Text.Language.Classifier.Spearman`
 
   * `:vocabulary` is the vocabulary to be used. The
-    default is `Text.Vocabulary.Multigram`. Other
-    vocabularies are `Text.Vocabulary.Quadgram` and
-    `Text.Vocabulary.Bigram`.
+    default is `Text.Vocabulary.Udhr.Multigram`. Other
+    vocabularies are `Text.Vocabulary.Udhr.Quadgram` and
+    `Text.Vocabulary.Udhr.Bigram`.
 
   * `:only` is a list of languages to be used
     as candidates for the language of `text`. The
@@ -56,26 +57,32 @@ defmodule Text.Language do
   * A list of `2-tuples` in order of confidence with
     the first element being the BCP47 language code
     and the second element being the score as determined
-    by the requested model.
+    by the requested classifier. The score has no meaning
+    except to order the results by confidence level.
 
   ## Examples
 
   """
   def detect(text, options \\ []) when is_binary(text) do
-    model = Keyword.get(options, :model, Text.Language.Classifier.NaiveProbability)
-    vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Multigram)
+    classifier = Keyword.get(options, :model, Text.Language.Classifier.NaiveBayesian)
+    vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Udhr.Multigram)
     languages = Keyword.get(options, :only, known_languages())
 
-    with {:ok, _} <- validate(:model, model),
+    with {:ok, _} <- validate(:classifier, classifier),
          {:ok, _} <- validate(:vocabulary, vocabulary),
          {:ok, _} <- validate(:only, languages) do
       ensure_vocabulary_loaded!(vocabulary)
       text_ngrams = vocabulary.calculate_ngrams(text)
 
       languages
-      |> Task.async_stream(model, :score_one_language, [text_ngrams, vocabulary], async_options())
+      |> Task.async_stream(
+        classifier,
+        :score_one_language,
+        [text_ngrams, vocabulary],
+        async_options(options)
+      )
       |> Enum.map(&elem(&1, 1))
-      |> model.order_scores
+      |> classifier.order_scores
     end
   end
 
@@ -83,9 +90,14 @@ defmodule Text.Language do
     @known_languages
   end
 
+  def known_classifiers do
+    @known_classifiers
+  end
+
   @doc false
-  def async_options do
-    [max_concurrency: System.schedulers_online() * 8, timeout: :infinity, ordered: false]
+  def async_options(options \\ []) do
+    max_concurrency = Keyword.get(options, :max_concurrency, System.schedulers_online() * 2)
+    [max_concurrency: max_concurrency, timeout: :infinity, ordered: false]
   end
 
   @doc """
@@ -111,15 +123,15 @@ defmodule Text.Language do
     :persistent_term.get({vocabulary, :languages}, nil) || vocabulary.load_vocabulary!
   end
 
-  defp validate(:model, model) when model in @known_models do
+  defp validate(:classifier, model) when model in @known_classifiers do
     {:ok, model}
   end
 
-  defp validate(:model, model) do
+  defp validate(:classifier, model) do
     {:error,
      {ArgumentError,
       "Unknown model #{inspect(model)}. " <>
-        "Known models are #{inspect(@known_models)}."}}
+        "Known models are #{inspect(@known_classifiers)}."}}
   end
 
   defp validate(:vocabulary, vocabulary) when vocabulary in @known_vocabularies do

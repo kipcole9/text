@@ -67,11 +67,11 @@ defmodule Text.Vocabulary do
     Enum.map(frequency_map, fn {language, ngram_map} ->
       new_ngram_map =
         Enum.map(ngram_map, fn {ngram, stats} -> {ngram, Map.from_struct(stats)} end)
-        |> Map.new
+        |> Map.new()
 
       {language, new_ngram_map}
     end)
-    |> Map.new
+    |> Map.new()
   end
 
   # Calculate the total frequency for each
@@ -177,11 +177,11 @@ defmodule Text.Vocabulary do
         Enum.map(ngram_map, fn {ngram, stats} ->
           {ngram, struct(Text.Ngram.Frequency, stats)}
         end)
-        |> Map.new
+        |> Map.new()
 
       {language, new_ngram_map}
     end)
-    |> Map.new
+    |> Map.new()
   end
 
   @doc """

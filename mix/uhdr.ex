@@ -70,6 +70,7 @@ defmodule Text.Language.Udhr do
     |> Enum.at(1)
     |> String.trim()
     |> String.replace(~r/\s+/u, " ")
+
     # |> Text.Language.normalise_text()
   end
 end
