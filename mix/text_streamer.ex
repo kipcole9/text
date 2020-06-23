@@ -41,4 +41,15 @@ defmodule Text.Streamer do
       end
     end)
   end
+
+  def matrix(languages, lengths) do
+    for classifier <- Text.Language.known_classifiers,
+        vocabulary <- Test.Vocabulary.known_vocabularies,
+        language <- languages,
+        length <- lengths do
+
+      result = test(language, sample_length, classifier: classifier, vocabulary: vocabulary)
+      [language, classifier, vocabulary, length, result]
+    end
+  end
 end
