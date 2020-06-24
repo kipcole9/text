@@ -25,11 +25,15 @@ def deps do
 end
 ```
 
+## Word Counting
+
+## English Pluralization
+
 ## Language Detection
 
 |  | Cummulative Frequency | |  | Naive Bayesian | |  | Rank Order  | |  |
 |--|-----------------------|-|--|----------------|-|--|-------------|-|--|
-|  | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram  | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram |
+| Text Length | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram  | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram |
 | 50  | 94.8%   | 94.4%   | 95.4%  | 95.6%  | 92.7%   | 95.6%  | 95.3%   | 94.9%   | 95.4%  |
 | 100 | 99.4%   | 98.6%   | 98.3%  | 99.9%  | 99.5%   | 98.8%  | 99.7%   | 99.0%   | 98.7%  |
 | 150 | 100.0%  | 99.9%   | 99.6%  | 100.0% | 100.0%  | 99.3%  | 100.0%  | 100.0%  | 99.4%  |

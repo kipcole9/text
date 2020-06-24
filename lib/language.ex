@@ -25,6 +25,7 @@ defmodule Text.Language do
   @known_vocabularies Text.Vocabulary.known_vocabularies()
   @language_file "priv/vocabulary/udhr_languages.etf"
   @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
+  @default_max_demand 30
 
   @doc """
   Identify the natural language of a given text.
@@ -55,6 +56,10 @@ defmodule Text.Language do
     default is `Text.Language.Udhr.known_languages/0`
     which is all the lanuages known to `Text.Language`.
 
+  * `:max_demand` is used to determine the batch size
+    for `Flow.from_enumerable/1`. The default is
+    `#{@default_max_demand}`.
+
   ## Returns
 
   * A list of `2-tuples` in order of confidence with
@@ -70,6 +75,7 @@ defmodule Text.Language do
     classifier = Keyword.get(options, :model, Text.Language.Classifier.NaiveBayesian)
     vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Udhr.Multigram)
     languages = Keyword.get(options, :only, known_languages())
+    max_demand = Keyword.get(options, :max_demand, @default_max_demand)
 
     with {:ok, _} <- validate(:classifier, classifier),
          {:ok, _} <- validate(:vocabulary, vocabulary),
@@ -78,14 +84,10 @@ defmodule Text.Language do
       text_ngrams = vocabulary.calculate_ngrams(text)
 
       languages
-      |> Task.async_stream(
-        classifier,
-        :score_one_language,
-        [text_ngrams, vocabulary],
-        async_options(options)
-      )
-      |> Enum.map(&elem(&1, 1))
-      |> classifier.order_scores
+      |> Flow.from_enumerable(max_demand: max_demand)
+      |> Flow.map(&classifier.score_one_language(&1, text_ngrams, vocabulary))
+      |> Enum.to_list
+      |> classifier.order_scores()
     end
   end
 
