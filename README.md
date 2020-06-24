@@ -25,6 +25,17 @@ def deps do
 end
 ```
 
+## Language Detection
+
+|  | Cummulative Frequency | |  | Naive Bayesian | |  | Rank Order  | |  |
+|--|-----------------------|-|--|----------------|-|--|-------------|-|--|
+|  | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram  | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram |
+| 50  | 94.8%   | 94.4%   | 95.4%  | 95.6%  | 92.7%   | 95.6%  | 95.3%   | 94.9%   | 95.4%  |
+| 100 | 99.4%   | 98.6%   | 98.3%  | 99.9%  | 99.5%   | 98.8%  | 99.7%   | 99.0%   | 98.7%  |
+| 150 | 100.0%  | 99.9%   | 99.6%  | 100.0% | 100.0%  | 99.3%  | 100.0%  | 100.0%  | 99.4%  |
+| 300 | 100.0%  | 100.0%  | 100.0% | 100.0% | 100.0%  | 100.0% | 100.0%  | 100.0%  | 100.0% |
+
+
 ## Down the rabbit hole
 
 Text analysis at a fundamental level requires segmenting arbitrary text in any language into characters (graphemes), words and sentences. This is a complex topic covered by the [Unicode text segmentation](https://unicode.org/reports/tr29) standard agumented by localised rules in [CLDR's](https://cldr.unicode.org)  [segmentations](https://unicode-org.github.io/cldr/ldml/tr35-general.html#Segmentations) data.

@@ -16,4 +16,5 @@ erl_crash.dump
 # asdf
 .tool-versions
 
-
+# Excel temp file
+corpus/analysis/~$Accuracy Analysis.xlsx
