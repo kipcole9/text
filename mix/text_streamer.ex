@@ -143,12 +143,12 @@ defmodule Text.Streamer do
     end
   end
 
-  @csv_path "corpus/analysis.csv"
+  @csv_path "corpus/detection_analysis.csv"
 
   @headers [
     "Language", "Classifier", "Vocabulary", "Sample Length",
     "Iterations", "Correct", "Incorrect"
-  ]
+    ] |> Enum.join(",")
 
   @doc """
   Saves the results of `matrix/2` as a
