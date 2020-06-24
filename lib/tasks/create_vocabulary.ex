@@ -1,6 +1,4 @@
-require Text.Language.Udhr
-
-if Code.ensure_loaded?(Text.Language.Udhr) do
+if Text.ensure_compiled?(Text.Language.Udhr) do
   defmodule Mix.Tasks.Text.CreateVocabularies do
     @moduledoc """
     Mix task to create the vocabularies for the
@@ -15,7 +13,7 @@ if Code.ensure_loaded?(Text.Language.Udhr) do
 
     @doc false
     def run(_) do
-      Text.Vocabulary.build_vocabularies()
+      Text.Language.Udhr.build_vocabularies()
     end
   end
 end

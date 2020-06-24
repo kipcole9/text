@@ -1,5 +1,3 @@
-require Text.Vocabulary
-
 defmodule Text.Language do
   @moduledoc """
   A module to support natural language
@@ -11,10 +9,6 @@ defmodule Text.Language do
 
   """
 
-  # See the benchmarking script in
-  # bench/multithread.exs
-  @default_concurrency 3
-
   @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
@@ -23,9 +17,11 @@ defmodule Text.Language do
   ]
 
   @known_vocabularies Text.Vocabulary.known_vocabularies()
+
   @language_file "priv/vocabulary/udhr_languages.etf"
   @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
-  @default_max_demand 30
+
+  @default_max_demand 20
 
   @doc """
   Identify the natural language of a given text.
@@ -91,18 +87,24 @@ defmodule Text.Language do
     end
   end
 
+  @doc """
+  Returns a list of BCP-47 language
+  codes representing the languages
+  that can be detected.
+
+  """
   def known_languages do
     @known_languages
   end
 
+  @doc """
+  Returns a list of the known
+  classifiers that can be applied as
+  a `:classifer` option to `Text.Language.detect/2`
+
+  """
   def known_classifiers do
     @known_classifiers
-  end
-
-  @doc false
-  def async_options(options \\ []) do
-    max_concurrency = Keyword.get(options, :max_concurrency, @default_concurrency)
-    [max_concurrency: max_concurrency, timeout: :infinity, ordered: false]
   end
 
   @doc """
