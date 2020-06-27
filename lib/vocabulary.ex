@@ -10,11 +10,13 @@ defmodule Text.Vocabulary do
   """
   alias Text.Ngram
 
+  @type t :: module()
+
   @callback get_vocabulary(String.t()) :: map()
   @callback filename() :: String.t()
   @callback calculate_ngrams(String.t()) :: map()
   @callback ngram_range() :: Range.t()
-
+  @callback load_vocabulary! :: map()
 
   @max_ngrams 300
 

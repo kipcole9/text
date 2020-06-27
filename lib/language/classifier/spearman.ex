@@ -12,8 +12,8 @@ defmodule Text.Language.Classifier.Spearman do
       |> Enum.filter(fn {ngram, _} -> Map.get(ngrams, ngram) end)
       |> Vocabulary.order_by_count()
       |> Enum.with_index(1)
-      |> Enum.map(fn {{ngram, [_rank, count, frequency, log_frequency]}, index} ->
-        {ngram, [index, count, frequency, log_frequency]}
+      |> Enum.map(fn {{ngram, ngram_stats}, index} ->
+        {ngram, %{ngram_stats | rank: index}}
       end)
       |> Map.new()
 
@@ -22,8 +22,8 @@ defmodule Text.Language.Classifier.Spearman do
       |> Enum.filter(fn {ngram, _} -> Map.get(vocab, ngram) end)
       |> Vocabulary.order_by_count()
       |> Enum.with_index(1)
-      |> Enum.map(fn {{ngram, [_, count, frequency, log_fequency]}, index} ->
-        {ngram, [index, count, frequency, log_fequency]}
+      |> Enum.map(fn {{ngram, ngram_stats}, index} ->
+        {ngram, %{ngram_stats | rank: index}}
       end)
       |> Map.new()
 
@@ -35,8 +35,8 @@ defmodule Text.Language.Classifier.Spearman do
     if percentage_retained > @min_fit do
       squares =
         text_ngrams
-        |> Enum.map(fn {ngram, [text_rank, _, _, _]} ->
-          [vocab_rank, _, _, _] = Map.get(vocab, ngram)
+        |> Enum.map(fn {ngram, %{rank: text_rank}} ->
+          %{rank: vocab_rank} = Map.get(vocab, ngram)
           (vocab_rank - text_rank) * (vocab_rank - text_rank)
         end)
 
