@@ -12,6 +12,12 @@ defmodule Text do
 
   """
 
+  @type language :: String.t()
+  @type vocabulary :: module()
+  @type corpus :: module()
+  @type frequency_tuple :: {language, number}
+  @type reason :: String.t
+
   defdelegate ngram(text, n), to: Text.Ngram
   defdelegate detect(text), to: Text.Language
   defdelegate detect(text, options), to: Text.Language

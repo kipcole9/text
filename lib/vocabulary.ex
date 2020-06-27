@@ -15,19 +15,11 @@ defmodule Text.Vocabulary do
   @callback calculate_ngrams(String.t()) :: map()
   @callback ngram_range() :: Range.t()
 
-  @known_vocabularies [
-    Text.Vocabulary.Udhr.Quadgram,
-    Text.Vocabulary.Udhr.Bigram,
-    Text.Vocabulary.Udhr.Multigram
-  ]
-
-  @language_file "priv/vocabulary/udhr_languages.etf"
-  @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
 
   @max_ngrams 300
 
-  def known_vocabularies do
-    @known_vocabularies
+  def known_vocabularies(corpus) do
+    corpus.known_vocabularies
   end
 
   @doc """
@@ -35,8 +27,8 @@ defmodule Text.Vocabulary do
   a given language and vocabulary
 
   """
-  def get_vocabulary(language, vocabulary_module) do
-    :persistent_term.get({vocabulary_module, language}, nil)
+  def get_vocabulary(corpus, vocabulary, language) do
+    :persistent_term.get({corpus, vocabulary, language}, nil)
   end
 
   @doc """
@@ -48,19 +40,19 @@ defmodule Text.Vocabulary do
   multi-process access.
 
   """
-  def load_vocabulary!(vocabulary_module) do
-    vocabulary =
-      vocabulary_module.file
+  def load_vocabulary!(corpus, vocabulary) do
+    vocabulary_content =
+      vocabulary.file
       |> File.read!()
       |> :erlang.binary_to_term()
       |> structify_ngram_stats
 
-    for {language, ngrams} <- vocabulary do
-      :persistent_term.put({vocabulary_module, language}, ngrams)
+    for {language, ngrams} <- vocabulary_content do
+      :persistent_term.put({corpus, vocabulary, language}, ngrams)
     end
 
-    :persistent_term.put({vocabulary_module, :languages}, Map.keys(vocabulary))
-    vocabulary
+    :persistent_term.put({corpus, vocabulary, :languages}, Map.keys(vocabulary))
+    vocabulary_content
   end
 
   defp structify_ngram_stats(ngram_by_language) do
@@ -85,8 +77,7 @@ defmodule Text.Vocabulary do
   for debugging support.
 
   """
-  def top_n(vocabulary, language, n)
-      when vocabulary in @known_vocabularies and language in @known_languages do
+  def top_n(vocabulary, language, n) do
     vocabulary.file
     |> File.read!()
     |> :erlang.binary_to_term()
@@ -131,15 +122,13 @@ defmodule Text.Vocabulary do
     merge_maps([Map.merge(a, b) | rest])
   end
 
-  if Text.ensure_compiled?(Text.Language.Udhr) do
-    def calculate_corpus_ngrams({language, entry}, range) do
-      ngrams =
-        entry
-        |> Text.Language.Udhr.udhr_corpus_content()
-        |> calculate_ngrams(range)
+  def calculate_corpus_ngrams(corpus, language, range) do
+    ngrams =
+      language
+      |> corpus.language_content
+      |> calculate_ngrams(range)
 
-      {language, ngrams}
-    end
+    {language, ngrams}
   end
 
   @doc """
@@ -150,7 +139,8 @@ defmodule Text.Vocabulary do
   n-grams from the text are returned
 
   """
-  def calculate_ngrams(content, range, top_n \\ 300) when is_binary(content) do
+
+  def calculate_ngrams(content, range, top_n \\ @max_ngrams) when is_binary(content) do
     content
     |> get_ngrams(range)
     |> add_statistics()

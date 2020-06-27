@@ -1,82 +1,14 @@
-defmodule Text.Language.Udhr do
+defmodule Text.Corpus do
   @moduledoc """
-  Functions to process files from the
-  [UDHR corpus](http://research.ics.aalto.fi/cog/data/udhr/).
+
 
   """
-  import SweetXml
 
-  @corpus_dir "./corpus"
+  @callback known_vocabularies :: [Text.vocabulary, ...]
+  @callback known_languages :: [Text.language, ...]
+  @callback language_content(Text.language) :: String.t
 
-  @corpus @corpus_dir
-          |> Path.join(["udhr/index.xml"])
-          |> File.read!()
-          |> xpath(~x"//udhrs/udhr"l,
-            iso639: ~x"./@iso639-3"s,
-            bcp47: ~x"./@bcp47"s,
-            script: ~x"./@iso15924"s,
-            stage: ~x"./@stage"I,
-            name: ~x"./@n"s,
-            file: ~x"./@f"s
-          )
-          |> Enum.map(&Map.pop(&1, :bcp47))
-          |> Enum.filter(fn {_k, v} -> v[:stage] >= 4 end)
-          |> Map.new()
-
-  @doc false
-  def udhr_corpus_file(%{file: file}) do
-    "udhr/udhr_" <> file <> ".txt"
-  end
-
-  @doc false
-  def udhr_corpus_dir do
-    @corpus_dir
-  end
-
-  @doc """
-  Returns the map of the UDHR corpus
-  index keyed by the BCP47 language name.
-
-  """
-  def udhr_corpus do
-    @corpus
-  end
-
-  @doc """
-  Returns names of the languages in which
-  the UDHR corpus is available.
-
-  """
-  @known_languages Map.keys(@corpus)
-  def known_languages do
-    @known_languages
-  end
-
-  @doc """
-  Save the BCP-47 names of the languages in which
-  the UDHR corpus is available.
-
-  """
-  @language_file "priv/vocabulary/udhr_languages.etf"
-  def save_known_languages do
-    File.write!(@language_file, :erlang.term_to_binary(known_languages()))
-  end
-
-  def udhr_corpus_content(entry) do
-    udhr_corpus_dir()
-    |> Path.join(udhr_corpus_file(entry))
-    |> File.read!()
-    |> String.split("---")
-    |> Enum.at(1)
-    |> String.trim()
-    |> String.replace(~r/\s+/u, " ")
-
-    # Normalizing the corpus would
-    # require normalizing input text
-    # and its not clear thats an
-    # improvement in accuracy
-    # |> Text.Language.normalise_text()
-  end
+  @callback detect(String.t, Keyword.t) :: [Text.frequency_tuple, ...]
 
   @max_demand 5
 
@@ -85,10 +17,10 @@ defmodule Text.Language.Udhr do
   all known vocabulary modules
 
   """
-  def build_vocabularies(options \\ []) do
+  def build_vocabularies(corpus, options \\ []) do
     max_demand = Keyword.get(options, :max_demand, @max_demand)
 
-    Text.Vocabulary.known_vocabularies()
+    corpus.known_vocabularies()
     |> Enum.each(&build_vocabulary(&1, max_demand: max_demand))
   end
 
@@ -97,15 +29,15 @@ defmodule Text.Language.Udhr do
   module.
 
   """
-  def build_vocabulary(vocabulary_module, options \\ []) do
-    ngram_range = vocabulary_module.ngram_range()
-    file = vocabulary_module.file()
+  def build_vocabulary(corpus, vocabulary, options \\ []) do
+    ngram_range = vocabulary.ngram_range()
+    file = vocabulary.file()
     max_demand = Keyword.get(options, :max_demand, @max_demand)
 
     frequency_map_by_language =
-      udhr_corpus()
+      corpus.known_languages
       |> Flow.from_enumerable(max_demand: max_demand)
-      |> Flow.map(&Text.Vocabulary.calculate_corpus_ngrams(&1, ngram_range))
+      |> Flow.map(&Text.Vocabulary.calculate_corpus_ngrams(corpus, &1, ngram_range))
       |> Enum.to_list
       |> calculate_global_frequencies
       |> remove_structs_for_space_reduction

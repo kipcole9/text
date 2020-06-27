@@ -16,11 +16,6 @@ defmodule Text.Language do
     # Text.Language.Classifier.Spearman
   ]
 
-  @known_vocabularies Text.Vocabulary.known_vocabularies()
-
-  @language_file "priv/vocabulary/udhr_languages.etf"
-  @known_languages File.read!(@language_file) |> :erlang.binary_to_term()
-
   @default_max_demand 20
 
   @doc """
@@ -68,15 +63,16 @@ defmodule Text.Language do
 
   """
   def detect(text, options \\ []) when is_binary(text) do
+    corpus = Keyword.get(options, :corpus, Text.Corpus.Udhr)
     classifier = Keyword.get(options, :model, Text.Language.Classifier.NaiveBayesian)
     vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Udhr.Multigram)
-    languages = Keyword.get(options, :only, known_languages())
+    languages = Keyword.get(options, :only, corpus.known_languages())
     max_demand = Keyword.get(options, :max_demand, @default_max_demand)
 
     with {:ok, _} <- validate(:classifier, classifier),
-         {:ok, _} <- validate(:vocabulary, vocabulary),
-         {:ok, _} <- validate(:only, languages) do
-      ensure_vocabulary_loaded!(vocabulary)
+         {:ok, _} <- validate(:vocabulary, corpus, vocabulary),
+         {:ok, _} <- validate(:only, corpus, languages) do
+      ensure_vocabulary_loaded!(corpus, vocabulary)
       text_ngrams = vocabulary.calculate_ngrams(text)
 
       languages
@@ -85,16 +81,6 @@ defmodule Text.Language do
       |> Enum.to_list
       |> classifier.order_scores()
     end
-  end
-
-  @doc """
-  Returns a list of BCP-47 language
-  codes representing the languages
-  that can be detected.
-
-  """
-  def known_languages do
-    @known_languages
   end
 
   @doc """
@@ -126,8 +112,8 @@ defmodule Text.Language do
     |> String.replace(~r/\s+/u, " ")
   end
 
-  defp ensure_vocabulary_loaded!(vocabulary) do
-    :persistent_term.get({vocabulary, :languages}, nil) || vocabulary.load_vocabulary!
+  defp ensure_vocabulary_loaded!(corpus, vocabulary) do
+    :persistent_term.get({corpus, vocabulary, :languages}, nil) || vocabulary.load_vocabulary!
   end
 
   defp validate(:classifier, model) when model in @known_classifiers do
@@ -141,19 +127,23 @@ defmodule Text.Language do
         "Known models are #{inspect(@known_classifiers)}."}}
   end
 
-  defp validate(:vocabulary, vocabulary) when vocabulary in @known_vocabularies do
-    {:ok, vocabulary}
+  defp validate(:vocabulary, corpus, vocabulary) do
+    known_vocabularies = corpus.known_vocabularies
+
+    if vocabulary in corpus.known_vocabularies do
+      {:ok, vocabulary}
+    else
+      {:error,
+        {ArgumentError,
+          "Unknown vocabulary #{inspect(vocabulary)}. " <>
+          "Known vocabularies are #{inspect(known_vocabularies)}."
+      }}
+    end
   end
 
-  defp validate(:vocabulary, vocabulary) do
-    {:error,
-     {ArgumentError,
-      "Unknown vocabulary #{inspect(vocabulary)}. " <>
-        "Known vocabularies are #{inspect(@known_vocabularies)}."}}
-  end
-
-  defp validate(:only, languages) do
-    unknown_languages = Enum.filter(languages, &(&1 not in @known_languages))
+  defp validate(:only, corpus, languages) do
+    known_languages = corpus.known_languages
+    unknown_languages = Enum.filter(languages, &(&1 not in known_languages))
 
     if unknown_languages == [] do
       {:ok, languages}
@@ -161,7 +151,7 @@ defmodule Text.Language do
       {:error,
        {ArgumentError,
         "Unknown languages #{inspect(unknown_languages)}. " <>
-          "Known languages are #{inspect(@known_languages)}."}}
+          "Known languages are #{inspect(known_languages)}."}}
     end
   end
 end

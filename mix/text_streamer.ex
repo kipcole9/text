@@ -8,8 +8,8 @@ defmodule Text.Streamer do
 
   @doc """
   Returns an Enumerable stream
-  of random strings from a given language
-  corpus.
+  of random strings from a given corpus
+  and language.
 
   ## Arguments
 
@@ -27,12 +27,8 @@ defmodule Text.Streamer do
     of `sample_length`
 
   """
-  def stream_udhr(language, sample_length) do
-    content =
-      Text.Language.Udhr.udhr_corpus()
-      |> Map.fetch!(language)
-      |> Text.Language.Udhr.udhr_corpus_content()
-
+  def corpus_random_stream(corpus, language, sample_length) do
+    content = corpus.language_content(language)
     length = String.length(content)
 
     Stream.resource(
@@ -79,19 +75,19 @@ defmodule Text.Streamer do
     from the set of `Text.Vocabulary.known_vocabularies/0`.
     The default is `Text.Vocabulary.Udhr.Multigram`.
 
-    ## Returns
+  ## Returns
 
   * A `{iterations, successful_detection, unsuccessful_detection}`
     tuple
 
   """
-  def test(language, sample_length, options \\ []) do
+  def test(corpus, language, sample_length, options \\ []) do
     max = Keyword.get(options, :max_iterations, 1_000)
     classifier = Keyword.get(options, :classifier, Text.Language.Classifier.NaiveBayesian)
     vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Udhr.Multigram)
 
-    Enum.reduce_while(stream_udhr(language, sample_length), {0, 0, 0}, fn string,
-                                                                          {count, good, bad} ->
+    corpus_random_stream(corpus, language, sample_length)
+    |> Enum.reduce_while({0, 0, 0}, fn string, {count, good, bad} ->
       {count, good, bad} =
         case Text.detect(string, classifier: classifier, vocabulary: vocabulary) do
           [{lang, _} | _rest] when lang == language -> {count + 1, good + 1, bad}
@@ -114,8 +110,8 @@ defmodule Text.Streamer do
 
   ## Arguments
 
-  * `languages` is a list of BCP-47 language tag in the set
-    of `Text.Language.known_languages/0`
+  * `languages` is a list of BCP-47 language ids in the set
+    of `corpus.known_languages/0`
 
   * `sample_length` is a list of the length of strings
     in graphemes to be sampled and tested.
@@ -129,14 +125,14 @@ defmodule Text.Streamer do
    incorrect_count]`
 
   """
-  def matrix(languages, lengths) when is_list(languages) and is_list(lengths) do
+  def matrix(corpus, languages, lengths) when is_list(languages) and is_list(lengths) do
     for classifier <- Text.Language.known_classifiers,
-        vocabulary <- Text.Vocabulary.known_vocabularies,
+        vocabulary <- corpus.known_vocabularies,
         language <- languages,
         sample_length <- lengths do
 
       {iterations, correct, incorrect} =
-        test(language, sample_length, classifier: classifier, vocabulary: vocabulary)
+        test(corpus, language, sample_length, classifier: classifier, vocabulary: vocabulary)
 
       [language, classifier, vocabulary, sample_length, iterations, correct, incorrect]
       |> Enum.join(",")
