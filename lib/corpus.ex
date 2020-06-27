@@ -7,6 +7,7 @@ defmodule Text.Corpus do
   @callback known_vocabularies :: [Text.vocabulary, ...]
   @callback known_languages :: [Text.language, ...]
   @callback language_content(Text.language) :: String.t
+  @callback normalize_text(String.t) :: String.t
 
   @callback detect(String.t, Keyword.t) :: [Text.frequency_tuple, ...]
 

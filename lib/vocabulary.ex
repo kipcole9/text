@@ -27,8 +27,8 @@ defmodule Text.Vocabulary do
   a given language and vocabulary
 
   """
-  def get_vocabulary(corpus, vocabulary, language) do
-    :persistent_term.get({corpus, vocabulary, language}, nil)
+  def get_vocabulary(vocabulary, language) do
+    :persistent_term.get({vocabulary, language}, nil)
   end
 
   @doc """
@@ -40,7 +40,7 @@ defmodule Text.Vocabulary do
   multi-process access.
 
   """
-  def load_vocabulary!(corpus, vocabulary) do
+  def load_vocabulary!(vocabulary) do
     vocabulary_content =
       vocabulary.file
       |> File.read!()
@@ -48,10 +48,10 @@ defmodule Text.Vocabulary do
       |> structify_ngram_stats
 
     for {language, ngrams} <- vocabulary_content do
-      :persistent_term.put({corpus, vocabulary, language}, ngrams)
+      :persistent_term.put({vocabulary, language}, ngrams)
     end
 
-    :persistent_term.put({corpus, vocabulary, :languages}, Map.keys(vocabulary))
+    :persistent_term.put({vocabulary, :languages}, Map.keys(vocabulary))
     vocabulary_content
   end
 
@@ -126,6 +126,7 @@ defmodule Text.Vocabulary do
     ngrams =
       language
       |> corpus.language_content
+      |> corpus.normalize_text
       |> calculate_ngrams(range)
 
     {language, ngrams}

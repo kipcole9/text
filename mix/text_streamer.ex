@@ -13,6 +13,9 @@ defmodule Text.Streamer do
 
   ## Arguments
 
+  * `corpus` is any module that implements the
+    `Text.Corpus` behaviour
+
   * `language` is a BCP-47 language tag in the set
     of `Text.Language.known_languages/0`
 
@@ -51,6 +54,9 @@ defmodule Text.Streamer do
   a number of iterations.
 
   ## Arguments
+
+  * `corpus` is any module that implements the
+    `Text.Corpus` behaviour
 
   * `language` is a BCP47 language tag in the set
     of `Text.Language.known_languages/0`
@@ -109,6 +115,9 @@ defmodule Text.Streamer do
   of langauges and sample lengths.
 
   ## Arguments
+
+  * `corpus` is any module that implements the
+    `Text.Corpus` behaviour
 
   * `languages` is a list of BCP-47 language ids in the set
     of `corpus.known_languages/0`

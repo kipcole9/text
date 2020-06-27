@@ -73,7 +73,11 @@ defmodule Text.Language do
          {:ok, _} <- validate(:vocabulary, corpus, vocabulary),
          {:ok, _} <- validate(:only, corpus, languages) do
       ensure_vocabulary_loaded!(corpus, vocabulary)
-      text_ngrams = vocabulary.calculate_ngrams(text)
+
+      text_ngrams =
+        text
+        |> corpus.normalize_text
+        |> vocabulary.calculate_ngrams(text)
 
       languages
       |> Flow.from_enumerable(max_demand: max_demand)
