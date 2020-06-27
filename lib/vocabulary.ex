@@ -11,7 +11,7 @@ defmodule Text.Vocabulary do
   alias Text.Ngram
 
   @callback get_vocabulary(String.t()) :: map()
-  @callback file() :: String.t()
+  @callback filename() :: String.t()
   @callback calculate_ngrams(String.t()) :: map()
   @callback ngram_range() :: Range.t()
 
@@ -42,7 +42,7 @@ defmodule Text.Vocabulary do
   """
   def load_vocabulary!(vocabulary) do
     vocabulary_content =
-      vocabulary.file
+      vocabulary.filename
       |> File.read!()
       |> :erlang.binary_to_term()
       |> structify_ngram_stats
@@ -78,7 +78,7 @@ defmodule Text.Vocabulary do
 
   """
   def top_n(vocabulary, language, n) do
-    vocabulary.file
+    vocabulary.filename
     |> File.read!()
     |> :erlang.binary_to_term()
     |> Map.fetch!(language)

@@ -32,11 +32,11 @@ defmodule Text.Corpus do
   """
   def build_vocabulary(corpus, vocabulary, options \\ []) do
     ngram_range = vocabulary.ngram_range()
-    file = vocabulary.file()
+    file = vocabulary.filename()
     max_demand = Keyword.get(options, :max_demand, @max_demand)
 
     frequency_map_by_language =
-      corpus.known_languages
+      corpus.known_languages()
       |> Flow.from_enumerable(max_demand: max_demand)
       |> Flow.map(&Text.Vocabulary.calculate_corpus_ngrams(corpus, &1, ngram_range))
       |> Enum.to_list
