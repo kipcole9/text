@@ -18,7 +18,7 @@ defmodule Text.Language do
   @default_max_demand 20
 
   @doc """
-  Identify the natural language of a given text.
+  Detect the natural language of a given text.
 
   ## Arguments
 
@@ -68,12 +68,72 @@ defmodule Text.Language do
     by the requested classifier. The score has no meaning
     except to order the results by confidence level.
 
-  ## Examples
-
   """
-  @spec detect(String.t, Keyword.t) :: Text.Language.Classifier.frequency_list()
+  @spec detect(String.t, Keyword.t) :: {:ok, Text.language} | {:error, {module(), String.t}}
 
   def detect(text, options \\ []) when is_binary(text) do
+    case classify(text, options) do
+      {:error, _} = error -> error
+      [{language, _} | _rest] -> {:ok, language}
+    end
+  end
+
+  @doc """
+  Classify the natural language of a given text.
+
+  ## Arguments
+
+  * `text` is a binary text from which
+    the language is detected.
+
+  * `options` is a keyword list of
+    options.
+
+  ## Options
+
+  * `:corpus` is a module encapsulating a body of
+    text in one or more natural languages.A corpus
+    module implements the `Text.Corpus` behaviour.
+    The default is `Text.Corpus.Udhr` which is implemented by the
+    [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr)
+    package. This package must be installed as a dependency in
+    order for this default to be used.
+
+  * `:classifier` is the module used to detect the language.
+    The default is `Text.Language.Classifier.NaiveBayesian`.
+    Other classifiers are `Text.Language.Classifier.RankOrder`,
+    `Text.Classifier.CummulativeFrequency` and
+    `Text.Language.Classifier.Spearman`. Any module that
+    implements the `Text.Language.Classifier` behaviour
+    may be used.
+
+  * `:vocabulary` is the vocabulary to be used. The
+    default is `hd(corpus.known_vocabularies())`. Available
+    vocabularies are returned from `corpus.known_vocabularies/0`.
+
+  * `:only` is a list of languages to be used
+    as candidates for the language of `text`. The
+    default is `corpus.known_languages/0`
+    which is all the lanuages known to a given
+    corpus.
+
+  * `:max_demand` is used to determine the batch size
+    for `Flow.from_enumerable/1`. The default is
+    `#{@default_max_demand}`.
+
+  ## Returns
+
+  * A list of `2-tuples` in order of confidence with
+    the first element being the BCP-47 language code
+    and the second element being the score as determined
+    by the requested classifier. The score has no meaning
+    except to order the results by confidence level.
+
+  """
+  @spec classify(String.t, Keyword.t) ::
+    Text.Language.Classifier.frequency_list() | {:error, {module(), String.t}}
+
+  def classify(text, options \\ []) when is_binary(text) do
     corpus = Keyword.get(options, :corpus, Text.Corpus.Udhr)
     classifier = Keyword.get(options, :classifier, Text.Language.Classifier.NaiveBayesian)
     vocabulary = Keyword.get(options, :vocabulary)

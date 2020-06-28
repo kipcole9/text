@@ -34,14 +34,26 @@ defmodule Text.Corpus do
   @callback normalize_text(String.t) :: String.t
 
   @doc """
-  Detects the natural language of a given
+  Classifies the natural language of a given
+  text into an ordered list.
+
+  See `Text.Language.classify/2` for
+  the options that may be passed.
+
+  """
+  @callback classify(String.t, Keyword.t) ::
+    [Text.frequency_tuple, ...] | {:error, {module(), String.t}}
+
+  @doc """
+  Detects the most likely natural language of a given
   text.
 
   See `Text.Language.detect/2` for
   the options that may be passed.
 
   """
-  @callback detect(String.t, Keyword.t) :: [Text.frequency_tuple, ...]
+  @callback detect(String.t, Keyword.t) ::
+    {:ok, Text.language} | {:error, {module(), String.t}}
 
   @max_demand 5
 

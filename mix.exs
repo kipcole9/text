@@ -18,7 +18,7 @@ defmodule Text.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore_warnings",
-        plt_add_apps: ~w(inets jason mix)a
+        plt_add_apps: ~w(inets jason mix meeseeks)a
       ]
     ]
   end
@@ -66,7 +66,8 @@ defmodule Text.MixProject do
       {:meeseeks, "~> 0.15.1", only: [:dev, :test], optional: true},
       {:ex_doc, "~> 0.21", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
-      {:jason, "~> 1.0", only: :dev, runtime: false}
+      {:jason, "~> 1.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
     ]
   end
 
