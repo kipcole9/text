@@ -37,7 +37,7 @@ defmodule Text.Corpus do
   Detects the natural language of a given
   text.
 
-  See `Text.Language.detect_language/2` for
+  See `Text.Language.detect/2` for
   the options that may be passed.
 
   """

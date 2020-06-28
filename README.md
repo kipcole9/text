@@ -5,7 +5,7 @@ Text & language processing for Elixir.  Initial release focuses on:
 * [x] n-gram generation from text
 * [x] pluralization of english words
 * [x] word counting (word freqencies)
-* [x] language detection using pluggable classifier backends.
+* [x] language detection using pluggable classifier, vocabulary and corpus backends.
 
 Second phase will focus on:
 
@@ -27,18 +27,34 @@ end
 
 ## Word Counting
 
+`text` contains an implementation of word counting that is oriented towards large streams of words rather than discrete strings. Input to `Text.Word.word_count/2` can be a `String.t`, `File.Stream.t` or `Flow.t` allowing flexible streaming of text.
+
 ## English Pluralization
+
+`text` includes an inflector for the English language that takes an approach based upon  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html). See the module `Text.Inflect.En` and the functions:
+
+* `Text.Inflect.En.pluralize/2`
+* `Text.Inflect.En.pluralize_noun/2`
+* `Text.Inflect.En.pluralize_verb/1`
+* `Text.Inflect.En.pluralize_adjective/1`
 
 ## Language Detection
 
-|  | Cummulative Frequency | |  | Naive Bayesian | |  | Rank Order  | |  |
-|--|-----------------------|-|--|----------------|-|--|-------------|-|--|
-| Text Length | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram  | Udhr.Multigram | Udhr.Quadgram | Udhr.Bigram | Udhr.Multigram | Udhr.Quadgram |
-| 50  | 94.8%   | 94.4%   | 95.4%  | 95.6%  | 92.7%   | 95.6%  | 95.3%   | 94.9%   | 95.4%  |
-| 100 | 99.4%   | 98.6%   | 98.3%  | 99.9%  | 99.5%   | 98.8%  | 99.7%   | 99.0%   | 98.7%  |
-| 150 | 100.0%  | 99.9%   | 99.6%  | 100.0% | 100.0%  | 99.3%  | 100.0%  | 100.0%  | 99.4%  |
-| 300 | 100.0%  | 100.0%  | 100.0% | 100.0% | 100.0%  | 100.0% | 100.0%  | 100.0%  | 100.0% |
+`text` contains 3 language classifiers to aid in natural language detection. However it does not include any corpora; these are contained in separate libraries. The available classifiers are:
 
+* `Text.Language.Classifier.CommulativeFrequency`
+* `Text.Language.Classifier.NaiveBayesian`
+* `Text.Language.Classifier.RankOrder`
+
+Additional classifiers can be added by defining a module that implements the `Text.Language.Classifier` behaviour.
+
+The library [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr) implements the `Text.Corpus` behaviour for the [United National Declaration of Human Rights](https://en.wikipedia.org/wiki/Universal_Declaration_of_Human_Rights) which is available for download in 423 languages from [Unicode](https://unicode.org/udhr/).
+
+See `Text.Language.detect/2`.
+
+## N-Gram generation
+
+The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
 
 ## Down the rabbit hole
 
