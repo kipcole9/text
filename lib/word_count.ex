@@ -1,10 +1,11 @@
 defmodule Text.Word do
   @moduledoc """
-
+  Implements word counting for lists,
+  streams and flows.
 
   """
 
-  @typedoc "Enumerable types for text analysis"
+  @typedoc "Enumerable types for word counting"
   @type text :: Flow.t() | File.Stream.t() | String.t() | [String.t(), ...]
 
   @typedoc "A list of words and their frequencies in a text"

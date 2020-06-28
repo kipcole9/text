@@ -2,7 +2,7 @@ language =
   "en"
 
 text =
-  Text.Streamer.stream_udhr(language, 1000)
+  Text.Streamer.corpus_random_stream(language, 1000)
   |> Enum.take(1)
   |> hd
 

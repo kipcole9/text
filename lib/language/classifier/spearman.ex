@@ -3,6 +3,11 @@ defmodule Text.Language.Classifier.Spearman do
 
   @min_fit 0.55
 
+  @doc """
+  Correlation based upon the
+  Spearman coefficient.
+
+  """
   def score_one_language(language, ngrams, vocabulary) do
     language_vocab = vocabulary.get_vocabulary(language)
 
@@ -56,6 +61,11 @@ defmodule Text.Language.Classifier.Spearman do
     [ngram | List.duplicate(?\s, l)]
   end
 
+  @doc """
+  Return the `{language score}` tuples
+  in the correct order for this classifier.
+
+  """
   def order_scores(score) do
     score
     |> Enum.reject(fn {_, score} -> score == :no_fit end)

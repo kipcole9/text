@@ -1,22 +1,20 @@
 defmodule Text do
   @moduledoc """
-  Functions for basic text processing including:
-
-  * Word counting
-
-  * N-gram generation
-
-  * Pluralization
-
-  * Language detection
+  Functions for basic text processing
+  and analysis.
 
   """
-
+  @typedoc "A language as a BCP-47 string"
   @type language :: String.t()
+
+  @typedoc "A vocabulary module"
   @type vocabulary :: module()
+
+  @typedoc "A corpus module"
   @type corpus :: module()
+
+  @typedoc "A tuple of the form `{language, number}`"
   @type frequency_tuple :: {language, number}
-  @type reason :: String.t
 
   defdelegate ngram(text, n), to: Text.Ngram
   defdelegate detect(text), to: Text.Language

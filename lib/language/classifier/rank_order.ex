@@ -14,6 +14,11 @@ defmodule Text.Language.Classifier.RankOrder do
     log_frequency: :math.log(5.0e-6)
   }
 
+  @doc """
+  Correlates based upon a
+  rank order coefficient.
+
+  """
   def score_one_language(language, text_ngrams, vocabulary) do
     language_vocab = vocabulary.get_vocabulary(language)
 
@@ -26,6 +31,11 @@ defmodule Text.Language.Classifier.RankOrder do
     {language, score}
   end
 
+  @doc """
+  Return the `{language score}` tuples
+  in the correct order for this classifier.
+
+  """
   def order_scores(scores) do
     Enum.sort(scores, fn
       {ngram1, score}, {ngram2, score} -> ngram1 < ngram2

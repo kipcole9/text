@@ -39,6 +39,11 @@ defmodule Text.Language.Classifier.NaiveBayesian do
     {language, score}
   end
 
+  @doc """
+  Return the `{language score}` tuples
+  in the correct order for this classifier.
+
+  """
   def order_scores(scores) do
     scores
     |> Enum.sort(fn

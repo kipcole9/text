@@ -1,14 +1,46 @@
 defmodule Text.Corpus do
   @moduledoc """
-
+  Defines the behaviour for a language
+  corpus with convenience functions to
+  simplifying the creation of corpus
+  vocabularies.
 
   """
 
+  @doc """
+  Returns a list of vocabularies for a corpus.
+
+  """
   @callback known_vocabularies :: [Text.vocabulary, ...]
+
+  @doc """
+  Returns a ist of vocabularies for a corpus.
+
+  """
   @callback known_languages :: [Text.language, ...]
+
+  @doc """
+  Returns the natural langauge training text for
+  a given language in the corpus.
+
+  """
   @callback language_content(Text.language) :: String.t
+
+  @doc """
+  Normalizes the text used for training and
+  for classification.
+
+  """
   @callback normalize_text(String.t) :: String.t
 
+  @doc """
+  Detects the natural language of a given
+  text.
+
+  See `Text.Language.detect_language/2` for
+  the options that may be passed.
+
+  """
   @callback detect(String.t, Keyword.t) :: [Text.frequency_tuple, ...]
 
   @max_demand 5

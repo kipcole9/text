@@ -3,7 +3,7 @@ defmodule Text.Language do
   A module to support natural language
   detection.
 
-  The primary models are implemnetations
+  The primary models are implementations
   derived from [Language Identification from Text
   Using N-gram Based Cumulative Frequency Addition](http://www.csis.pace.edu/~ctappert/srd2004/paper12.pdf)
 
@@ -64,7 +64,7 @@ defmodule Text.Language do
   ## Returns
 
   * A list of `2-tuples` in order of confidence with
-    the first element being the BCP47 language code
+    the first element being the BCP-47 language code
     and the second element being the score as determined
     by the requested classifier. The score has no meaning
     except to order the results by confidence level.
@@ -72,6 +72,8 @@ defmodule Text.Language do
   ## Examples
 
   """
+  @spec detect(String.t, Keyword.t) :: Text.Language.Classifier.frequency_list()
+
   def detect(text, options \\ []) when is_binary(text) do
     corpus = Keyword.get(options, :corpus, Text.Corpus.Udhr)
     classifier = Keyword.get(options, :classifier, Text.Language.Classifier.NaiveBayesian)
@@ -104,6 +106,7 @@ defmodule Text.Language do
   a `:classifer` option to `Text.Language.detect/2`
 
   """
+  @spec known_classifiers :: [Text.Language.Classifier.t, ...]
   def known_classifiers do
     @known_classifiers
   end
@@ -112,8 +115,23 @@ defmodule Text.Language do
   Function to remove text elements that
   interfer with language detection.
 
+  Each corpus has a callback `normalize_text/1`
+  that is applied when training the
+  classifier and when detecting language
+  from natural text. If desired, the corpus
+  can delegate to this function.
+
+  ## Argument
+
+  * `text` is any `String.t`
+
+  ## Returns
+
+  * A normalized `String.t`
+
   """
-  def normalise_text(text) do
+  @spec normalize_text(String.t) :: String.t
+  def normalize_text(text) do
     text
     # Downcase
     |> String.downcase()
@@ -183,6 +201,7 @@ defmodule Text.Language do
     end
   end
 
+  @doc false
   def corpus_module?(corpus) do
     Code.ensure_loaded?(corpus) && function_exported?(corpus, :known_vocabularies, 0)
   end
