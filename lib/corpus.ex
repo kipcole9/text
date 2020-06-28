@@ -22,7 +22,7 @@ defmodule Text.Corpus do
     max_demand = Keyword.get(options, :max_demand, @max_demand)
 
     corpus.known_vocabularies()
-    |> Enum.each(&build_vocabulary(&1, max_demand: max_demand))
+    |> Enum.each(&build_vocabulary(corpus, &1, max_demand: max_demand))
   end
 
   @doc """

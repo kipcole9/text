@@ -53,7 +53,7 @@ defmodule Text.Vocabulary do
       :persistent_term.put({vocabulary, language}, ngrams)
     end
 
-    :persistent_term.put({vocabulary, :languages}, Map.keys(vocabulary))
+    :persistent_term.put({vocabulary, :languages}, Map.keys(vocabulary_content))
     vocabulary_content
   end
 

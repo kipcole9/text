@@ -11,9 +11,17 @@ defmodule Text.Ngram do
   @default_ngram @min_ngram
 
   @type ngram_range :: 2..7
-  @spec ngram(String.t(), ngram_range) :: %{list() => integer}
 
   defmodule Frequency do
+    @type t :: %{
+      rank: non_neg_integer,
+      count: non_neg_integer,
+      frequency: float,
+      log_frequency: float,
+      global_rank: non_neg_integer,
+      global_frequency: float
+    }
+
     defstruct [
       :rank,
       :count,
@@ -32,6 +40,7 @@ defmodule Text.Ngram do
   a maximum of #{@max_ngram} with a default of #{@default_ngram}.
 
   """
+  @spec ngram(String.t(), ngram_range) :: %{list() => integer}
   def ngram(string, n \\ @default_ngram) when is_binary(string) and n in @min_ngram..@max_ngram do
     string
     |> :unicode.characters_to_nfc_binary()

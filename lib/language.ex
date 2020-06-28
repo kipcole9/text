@@ -12,8 +12,8 @@ defmodule Text.Language do
   @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
-    Text.Language.Classifier.RankOrder
-    # Text.Language.Classifier.Spearman
+    Text.Language.Classifier.RankOrder,
+    Text.Language.Classifier.Spearman
   ]
 
   @default_max_demand 20
@@ -31,21 +31,31 @@ defmodule Text.Language do
 
   ## Options
 
+  * `:corpus` is a module encapsulating a body of
+    text in one or more natural languages.A corpus
+    module implements the `Text.Corpus` behaviour.
+    The default is `Text.Corpus.Udhr` which is implemented by the
+    [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr)
+    package. This package must be installed as a dependency in
+    order for this default to be used.
+
   * `:classifier` is the module used to detect the language.
     The default is `Text.Language.Classifier.NaiveBayesian`.
-    Other models are `Text.Language.Classifier.RankOrder`,
+    Other classifiers are `Text.Language.Classifier.RankOrder`,
     `Text.Classifier.CummulativeFrequency` and
-    `Text.Language.Classifier.Spearman`
+    `Text.Language.Classifier.Spearman`. Any module that
+    implements the `Text.Language.Classifier` behaviour
+    may be used.
 
   * `:vocabulary` is the vocabulary to be used. The
-    default is `Text.Vocabulary.Udhr.Multigram`. Other
-    vocabularies are `Text.Vocabulary.Udhr.Quadgram` and
-    `Text.Vocabulary.Udhr.Bigram`.
+    default is `hd(corpus.known_vocabularies())`. Available
+    vocabularies are returned from `corpus.known_vocabularies/0`.
 
   * `:only` is a list of languages to be used
     as candidates for the language of `text`. The
-    default is `Text.Language.Udhr.known_languages/0`
-    which is all the lanuages known to `Text.Language`.
+    default is `corpus.known_languages/0`
+    which is all the lanuages known to a given
+    corpus.
 
   * `:max_demand` is used to determine the batch size
     for `Flow.from_enumerable/1`. The default is
@@ -64,20 +74,21 @@ defmodule Text.Language do
   """
   def detect(text, options \\ []) when is_binary(text) do
     corpus = Keyword.get(options, :corpus, Text.Corpus.Udhr)
-    classifier = Keyword.get(options, :model, Text.Language.Classifier.NaiveBayesian)
-    vocabulary = Keyword.get(options, :vocabulary, Text.Vocabulary.Udhr.Multigram)
+    classifier = Keyword.get(options, :classifier, Text.Language.Classifier.NaiveBayesian)
+    vocabulary = Keyword.get(options, :vocabulary)
     languages = Keyword.get(options, :only, corpus.known_languages())
     max_demand = Keyword.get(options, :max_demand, @default_max_demand)
 
-    with {:ok, _} <- validate(:classifier, classifier),
-         {:ok, _} <- validate(:vocabulary, corpus, vocabulary),
-         {:ok, _} <- validate(:only, corpus, languages) do
-      ensure_vocabulary_loaded!(corpus, vocabulary)
+    with {:ok, corpus} <- validate(:corpus, corpus),
+         {:ok, classifier} <- validate(:classifier, classifier),
+         {:ok, vocabulary} <- validate(:vocabulary, corpus, vocabulary),
+         {:ok, languages} <- validate(:only, corpus, languages) do
+      ensure_vocabulary_loaded!(vocabulary)
 
       text_ngrams =
         text
         |> corpus.normalize_text
-        |> vocabulary.calculate_ngrams(text)
+        |> vocabulary.calculate_ngrams
 
       languages
       |> Flow.from_enumerable(max_demand: max_demand)
@@ -116,19 +127,32 @@ defmodule Text.Language do
     |> String.replace(~r/\s+/u, " ")
   end
 
-  defp ensure_vocabulary_loaded!(corpus, vocabulary) do
-    :persistent_term.get({corpus, vocabulary, :languages}, nil) || vocabulary.load_vocabulary!
+  defp ensure_vocabulary_loaded!(vocabulary) do
+    :persistent_term.get({vocabulary, :languages}, nil) || vocabulary.load_vocabulary!
   end
 
-  defp validate(:classifier, model) when model in @known_classifiers do
-    {:ok, model}
+  defp validate(:corpus, corpus) when is_atom(corpus) do
+    if corpus_module?(corpus) do
+      {:ok, corpus}
+    else
+      {:error, {ArgumentError, "Unknown corpus #{inspect(corpus)}"}}
+    end
   end
 
-  defp validate(:classifier, model) do
+  defp validate(:classifier, classifier) when classifier in @known_classifiers do
+    {:ok, classifier}
+  end
+
+  defp validate(:classifier, classifier) do
     {:error,
      {ArgumentError,
-      "Unknown model #{inspect(model)}. " <>
-        "Known models are #{inspect(@known_classifiers)}."}}
+      "Unknown classifier #{inspect(classifier)}. " <>
+        "Known classifiers are #{inspect(@known_classifiers)}."}}
+  end
+
+  defp validate(:vocabulary, corpus, nil) do
+    known_vocabularies = corpus.known_vocabularies
+    validate(:vocabulary, corpus, hd(known_vocabularies))
   end
 
   defp validate(:vocabulary, corpus, vocabulary) do
@@ -157,5 +181,9 @@ defmodule Text.Language do
         "Unknown languages #{inspect(unknown_languages)}. " <>
           "Known languages are #{inspect(known_languages)}."}}
     end
+  end
+
+  def corpus_module?(corpus) do
+    Code.ensure_loaded?(corpus) && function_exported?(corpus, :known_vocabularies, 0)
   end
 end
