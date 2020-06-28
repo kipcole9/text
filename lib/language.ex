@@ -12,8 +12,7 @@ defmodule Text.Language do
   @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
     Text.Language.Classifier.CummulativeFrequency,
-    Text.Language.Classifier.RankOrder,
-    Text.Language.Classifier.Spearman
+    Text.Language.Classifier.RankOrder
   ]
 
   @default_max_demand 20
