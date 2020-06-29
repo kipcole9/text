@@ -56,6 +56,8 @@ defmodule Text.MixProject do
     [
       source_ref: "v#{@version}",
       main: "readme",
+      logo: "logo.png",
+      skip_undefined_reference_warnings_on: ["changelog", "CHANGELOG.md"],
       extras: ["README.md", "CHANGELOG.md", "LICENSE.md"]
     ]
   end
