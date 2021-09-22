@@ -15,6 +15,10 @@ Second phase will focus on:
 
 Each of these phases requires prior development. See [below](#down_the_rabbit_hole).
 
+## Status Update Sept 2021
+
+The `Text` project remains active and maintained. However with the advent of the amazing [Numerical Elixir (Nx)](https://github.com/elixir-nx) project, many improved opportunities to leverage ML for text analysis open up and this is the planned path.  I expect to focus using ML for the additional planned functionality as a calendar year 2022 project.  Bug reports, PR and suggests are welcome!
+
 ## Installation
 
 ```elixir
