@@ -4,7 +4,7 @@ Text & language processing for Elixir.  Initial release focuses on:
 
 * [x] n-gram generation from text
 * [x] pluralization of english words
-* [x] word counting (word freqencies)
+* [x] word counting (word frequencies)
 * [x] language detection using pluggable classifier, vocabulary and corpus backends.
 
 Second phase will focus on:
@@ -62,7 +62,7 @@ The `Text.Ngram` module supports efficient generation of n-grams of length `2` t
 
 ## Down the rabbit hole
 
-Text analysis at a fundamental level requires segmenting arbitrary text in any language into characters (graphemes), words and sentences. This is a complex topic covered by the [Unicode text segmentation](https://unicode.org/reports/tr29) standard agumented by localised rules in [CLDR's](https://cldr.unicode.org)  [segmentations](https://unicode-org.github.io/cldr/ldml/tr35-general.html#Segmentations) data.
+Text analysis at a fundamental level requires segmenting arbitrary text in any language into characters (graphemes), words and sentences. This is a complex topic covered by the [Unicode text segmentation](https://unicode.org/reports/tr29) standard augmented by localised rules in [CLDR's](https://cldr.unicode.org)  [segmentations](https://unicode-org.github.io/cldr/ldml/tr35-general.html#Segmentations) data.
 
 Therefore in order to provide higher order text analysis the order of development looks like this:
 

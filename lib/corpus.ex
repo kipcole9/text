@@ -14,13 +14,13 @@ defmodule Text.Corpus do
   @callback known_vocabularies :: [Text.vocabulary, ...]
 
   @doc """
-  Returns a ist of vocabularies for a corpus.
+  Returns a list of vocabularies for a corpus.
 
   """
   @callback known_languages :: [Text.language, ...]
 
   @doc """
-  Returns the natural langauge training text for
+  Returns the natural language training text for
   a given language in the corpus.
 
   """

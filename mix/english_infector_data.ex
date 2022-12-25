@@ -42,7 +42,7 @@ defmodule Text.Inflect.Data.En do
 
   @doc """
   Returns the map of all the tables
-  contained in the downlaoded data set.
+  contained in the downloaded data set.
 
   This data is in a raw form and this
   function is intended for internal
@@ -66,7 +66,7 @@ defmodule Text.Inflect.Data.En do
 
   @doc """
   Returns the map of all one table
-  contained in the downlaoded data set.
+  contained in the downloaded data set.
 
   The parameter is the name of one of
   the tables from `a1` to `a26`.
