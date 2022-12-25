@@ -36,7 +36,7 @@ defmodule Text do
     default is `:modern`.
 
   * `:language` is the inflection module
-    to be used. The default and ony option is
+    to be used. The default and only option is
     `Text.Inflect.En`
 
   ## Returns

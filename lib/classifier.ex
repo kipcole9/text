@@ -3,7 +3,7 @@ defmodule Text.Language.Classifier do
   A behaviour definition module for language
   classifiers.
 
-  A langauge classifier correlates supplied
+  A language classifier correlates supplied
   natural language text against a vocabulary
   and returns a score indicating how closely the
   supplied text matches the vocabulary.
@@ -24,7 +24,7 @@ defmodule Text.Language.Classifier do
 
   A classifier correlates how closely a
   supplied string (encoded into n-grams)
-  matches against a given langauge profile
+  matches against a given language profile
   implemented as a vocabulary.
 
   See `Text.Language.Classifier.NaiveBayesian`

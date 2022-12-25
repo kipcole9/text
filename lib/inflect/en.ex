@@ -760,7 +760,7 @@ defmodule Text.Inflect.En do
                        |> Enum.map(&List.to_tuple/1)
                        |> Map.new()
 
-  @pluralize_auxillary_irregular @inflections
+  @pluralize_auxiliary_irregular @inflections
                                  |> Map.get("a8")
                                  |> Enum.drop(3)
                                  |> Enum.map(&String.split(&1, " -> "))
@@ -852,7 +852,7 @@ defmodule Text.Inflect.En do
 
   @doc false
   def category?(word, "irregular_verb") do
-    Map.has_key?(@pluralize_auxillary_irregular, word)
+    Map.has_key?(@pluralize_auxiliary_irregular, word)
   end
 
   def category?(word, "ambiguous") do
@@ -987,7 +987,7 @@ defmodule Text.Inflect.En do
   end
 
   defp irregular_verb(word) do
-    Map.fetch!(@pluralize_auxillary_irregular, word)
+    Map.fetch!(@pluralize_auxiliary_irregular, word)
   end
 
   defp pronoun(word, mode) do

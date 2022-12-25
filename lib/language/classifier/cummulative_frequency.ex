@@ -1,6 +1,6 @@
-defmodule Text.Language.Classifier.CummulativeFrequency do
+defmodule Text.Language.Classifier.CumulativeFrequency do
   @moduledoc """
-  A language detection model that uses cummulative
+  A language detection model that uses cumulative
   frequencies
 
   It sums the frequencies of detected

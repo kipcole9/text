@@ -11,7 +11,7 @@ defmodule Text.Language do
 
   @known_classifiers [
     Text.Language.Classifier.NaiveBayesian,
-    Text.Language.Classifier.CummulativeFrequency,
+    Text.Language.Classifier.CumulativeFrequency,
     Text.Language.Classifier.RankOrder
   ]
 
@@ -41,7 +41,7 @@ defmodule Text.Language do
   * `:classifier` is the module used to detect the language.
     The default is `Text.Language.Classifier.NaiveBayesian`.
     Other classifiers are `Text.Language.Classifier.RankOrder`,
-    `Text.Classifier.CummulativeFrequency` and
+    `Text.Classifier.CumulativeFrequency` and
     `Text.Language.Classifier.Spearman`. Any module that
     implements the `Text.Language.Classifier` behaviour
     may be used.
@@ -102,7 +102,7 @@ defmodule Text.Language do
   * `:classifier` is the module used to detect the language.
     The default is `Text.Language.Classifier.NaiveBayesian`.
     Other classifiers are `Text.Language.Classifier.RankOrder`,
-    `Text.Classifier.CummulativeFrequency` and
+    `Text.Classifier.CumulativeFrequency` and
     `Text.Language.Classifier.Spearman`. Any module that
     implements the `Text.Language.Classifier` behaviour
     may be used.
@@ -162,7 +162,7 @@ defmodule Text.Language do
   @doc """
   Returns a list of the known
   classifiers that can be applied as
-  a `:classifer` option to `Text.Language.detect/2`
+  a `:classifier` option to `Text.Language.detect/2`
 
   """
   @spec known_classifiers :: [Text.Language.Classifier.t, ...]
@@ -172,7 +172,7 @@ defmodule Text.Language do
 
   @doc """
   Function to remove text elements that
-  interfer with language detection.
+  interfere with language detection.
 
   Each corpus has a callback `normalize_text/1`
   that is applied when training the
