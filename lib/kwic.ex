@@ -162,7 +162,11 @@ defmodule Text.KWIC do
       tokens
       |> Enum.slice(max(idx - context, 0), min(idx, context))
 
-    right = Enum.slice(tokens, (idx + 1)..(idx + context))
+    # Use the (start, count) form rather than a range — `context: 0`
+    # would otherwise produce a descending range like `4..3`, which
+    # Elixir 1.19+ rejects with a "negative steps not supported"
+    # warning.
+    right = Enum.slice(tokens, idx + 1, context)
     term = Enum.at(tokens, idx)
 
     %Match{position: idx, left: left, term: term, right: right}
