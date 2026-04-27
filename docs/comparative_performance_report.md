@@ -11,10 +11,11 @@ indistinguishable between the two implementations** (label parity is
 100% on the curated set; the maximum top-1 probability difference is
 below 1 × 10⁻⁶). **Memory footprint is essentially identical**
 (~130 MB for the model). **Per-prediction wall time** is the only
-metric that differs materially: with the EXLA backend the Elixir port
-runs in roughly 200 μs per call versus 2-4 μs for the native C++
-implementation — the cost of ~30 round-trips between the BEAM and the
-XLA kernel per prediction.
+metric that differs materially: with the EXLA backend and the
+inference path folded into a single `defn` graph, the Elixir port
+runs in roughly **100 μs per call** versus 2-4 μs for the native C++
+implementation — the cost of the remaining BEAM ↔ NIF round-trip
+overhead (one fused EXLA call plus the BEAM-side Huffman DFS).
 
 ## Test environment
 
@@ -116,59 +117,87 @@ and `model.predict(text, k=1)`).
 
 | Metric | Elixir port | Reference (`fasttext` C++) |
 |---|---:|---:|
-| `lid.176.bin` load time | **78.5 ms** (BinaryBackend) — **251 ms** (EXLA, includes JIT compile) | **138.4 ms** |
+| `lid.176.bin` load time | **78 ms** (BinaryBackend) — **158 ms** (EXLA, includes initial graph trace) | **138 ms** |
 
 The BinaryBackend Elixir loader is faster than the C++ loader on this
 machine — `Nx.from_binary` is a contiguous memcpy and the dictionary
 parser does no thresholding pass. With the EXLA backend the load is
-slower because EXLA traces and compiles the inference graph on first
-use; subsequent loads in the same VM are amortised. For services that
-serve many predictions per process, the one-time compile cost is
-irrelevant.
+slightly slower because EXLA traces the input matrix on first use;
+subsequent loads in the same VM are amortised. The first prediction
+also pays the EXLA JIT compile cost for the inference graph (~30 ms);
+the perf script's 50-iteration warmup absorbs that.
 
 ### Per-prediction wall time
 
-| Input (length / script) | Elixir, BinaryBackend (median μs) | Elixir, EXLA (median μs) | Reference C++ (median μs) |
+| Input (length / script) | Elixir, BinaryBackend (median μs) | Elixir, EXLA + `defn` (median μs) | Reference C++ (median μs) |
 |---|---:|---:|---:|
-| short ASCII (3 words) | 569 | **168** | 2 |
-| medium ASCII (10 words) | 772 | **183** | 3 |
-| long sentence (~80 chars) | 1 004 | **199** | 4 |
-| Cyrillic | 808 | **194** | 4 |
-| CJK (Chinese) | 630 | **218** | 4 |
-| CJK (Japanese) | 648 | **217** | 4 |
+| short ASCII (3 words) | 569 | **91** | 2 |
+| medium ASCII (10 words) | 772 | **103** | 3 |
+| long sentence (~80 chars) | 1 004 | **115** | 4 |
+| Cyrillic | 808 | **114** | 4 |
+| CJK (Chinese) | 630 | **115** | 4 |
+| CJK (Japanese) | 648 | **107** | 4 |
 
-EXLA reduces per-prediction time by **3-4×** versus BinaryBackend, but
-the Elixir port is still **~50×** slower than the C++ reference on warm
-inference. The remaining gap is structural rather than algorithmic:
+The `defn`-fused EXLA pipeline reduces per-prediction time by **6-9×**
+versus pure-Elixir BinaryBackend, but the Elixir port is still
+**~30×** slower than the C++ reference on warm inference. The
+remaining gap is structural rather than algorithmic:
 
 * The C++ predictor performs the entire forward pass in one tight
   function, with the dictionary lookup, hidden-vector accumulation,
-  Huffman traversal, and softmax sharing the same stack frame and
+  Huffman traversal, and sigmoid sharing the same stack frame and
   cache lines.
 
-* The Elixir port stages the same work as a sequence of separate `Nx`
-  calls (`Nx.take`, `Nx.mean`, `Nx.dot`, `Nx.to_list`), each crossing
-  the BEAM ↔ NIF boundary and allocating a fresh tensor reference. At
-  ~10 μs of round-trip overhead per call, ~30 calls per prediction
-  yields the bulk of the observed cost.
+* The Elixir port runs the matrix work as **a single fused EXLA
+  graph** (`take + mean + dot`), then performs the Huffman DFS in
+  pure Elixir — total of three BEAM ↔ NIF transitions per call: list
+  → tensor, the fused graph, and tensor → list. At ~30 μs each, that
+  accounts for most of the ~100 μs floor.
+
+### Folding the inference path into a single `defn` graph
+
+An earlier revision of the inference module ran the matrix work as
+several separate `Nx` calls (`Nx.tensor`, `Nx.take`, `Nx.mean`,
+`Nx.as_type`, `Nx.dot`, `Nx.to_list`). Each call crossed the BEAM ↔
+EXLA boundary independently, with ~10–30 μs of round-trip overhead per
+call. Wrapping `take + mean + dot` (and the softmax tail for the
+softmax loss path) inside `defn` lets EXLA trace and compile the
+entire forward pass to a single XLA HLO computation, executed in one
+NIF call.
+
+| Stage | Median time, separate `Nx` calls | Median time, fused `defn` graph |
+|---|---:|---:|
+| `Inference.compute_hidden` (`take + mean`) | 122 μs | **47 μs** |
+| `Inference.predict_features` (full forward pass + Huffman DFS) | 188 μs | **103 μs** |
+| `Fasttext.detect` (`predict_features` + script detection) | 207 μs | **111 μs** |
+
+The `defn` form is bit-equivalent to the pre-fusion form — the test
+suite (`mix test --include requires_lid_176`) passes both ways with
+zero label or probability deviations from the reference. EXLA being
+unavailable is not a failure mode: `Nx.Defn.Evaluator` (the default
+compiler) executes the same `defn` graph correctly on the
+`Nx.BinaryBackend`; the savings simply do not materialise.
 
 ### Where the time goes
 
-For a medium ASCII input on EXLA, the breakdown looks like:
+For a medium ASCII input with the `defn` graph compiled by EXLA, the
+breakdown is:
 
 | Stage | Median time |
 |---|---:|
 | `Tokenizer.tokenize` | < 1 μs |
 | `Features.extract` (BOW + EOW + subword indices) | 8 μs |
-| `Inference.compute_hidden` (Nx.take + Nx.mean) | 122 μs |
-| `Inference.predict_features` (compute_hidden + Huffman DFS) | 188 μs |
-| `Fasttext.detect` (predict_features + script detection) | 207 μs |
+| `Inference.compute_hidden` (fused take + mean) | 47 μs |
+| `Inference.predict_features` (full forward pass + Huffman DFS) | 103 μs |
+| `Fasttext.detect` (predict_features + script detection) | 111 μs |
 
 The pure-Elixir paths (tokenization, feature extraction, script
 detection) are negligible relative to the matrix work. Tokenization in
 particular is sub-microsecond — over 1 M tokenizations/second. The
-matrix path inside `compute_hidden` is the bottleneck, and is the
-target for the next round of optimisation (see "Future work" below).
+remaining ~50 μs gap between `compute_hidden` and `predict_features`
+covers the Huffman DFS in pure Elixir (~30 μs of f32-rounded sigmoid +
+log calls plus the top-K bookkeeping) and the `Nx.to_list` extraction
+of the 176 internal-node logits back to BEAM space.
 
 ## 4. Choosing a backend
 
@@ -194,7 +223,7 @@ cost is 3-4× higher.
 |---|---|
 | Accuracy | Identical to the reference. |
 | Memory | Within 3 MB of the reference. |
-| Speed | ~50× slower per call than the reference; ~4× faster with EXLA than without. Sub-millisecond on EXLA, sub-2-millisecond on BinaryBackend. |
+| Speed | ~30× slower per call than the reference; 6-9× faster with EXLA + fused `defn` than with `Nx.BinaryBackend`. Sub-150 μs on EXLA, sub-2-millisecond on BinaryBackend. |
 | Maintainability | Pure Elixir + Nx, no NIFs other than EXLA itself, no Python sidecar, no model conversion. |
 
 For the use case this port was built to support — embedding language
@@ -207,13 +236,28 @@ to within rounding.
 
 ## 6. Future work
 
-The biggest available speedup is to fold the Elixir-side inference
-path into a single `defn` (or compiled `Nx.Defn.jit`) graph so that
-`compute_hidden` and the output-side dot product execute as one EXLA
-kernel rather than as several round-trips. This would eliminate most of
-the per-call BEAM ↔ NIF overhead and likely close 5-10× of the gap to
-C++. The current code is staged for clarity; the optimisation can
-land without changing the public API.
+The forward pass is already a single fused EXLA graph (see "Folding
+the inference path…" above). The remaining ~100 μs floor is dominated
+by the three unavoidable BEAM ↔ NIF transitions per call (list →
+tensor, fused EXLA call, tensor → list) plus the BEAM-side Huffman
+DFS. Further speedups are possible but require more invasive changes:
+
+* **Vectorise the Huffman DFS inside EXLA.** Encode each leaf's path
+  through the tree as a fixed-length sequence of (node_id, direction)
+  pairs and compute all leaf scores in one matrix multiply. This is a
+  significant rewrite of the HS scoring path but would push the
+  inference into a single end-to-end EXLA graph and cut another
+  20–30 μs.
+
+* **Reuse a pre-allocated index buffer.** Each call constructs a fresh
+  s64 indices tensor from the feature list, which crosses the NIF
+  boundary. A pool of reusable buffers (similar to `Nx.Serving`'s
+  preallocation) could amortise the cost.
+
+* **`Nx.Serving` for batched inference.** When throughput matters more
+  than latency, batching many predictions into one EXLA call would be
+  a substantial multiplier (single-digit μs per prediction at modest
+  batch sizes).
 
 Quantized models (`lid.176.ftz`, 917 KB) remain unsupported. Adding
 product-quantization decoding would shrink the resident model from

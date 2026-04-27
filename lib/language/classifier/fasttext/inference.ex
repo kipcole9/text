@@ -34,10 +34,41 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
 
   """
 
+  import Nx.Defn
+
   alias Text.Language.Classifier.Fasttext.{Features, HuffmanTree, Model}
 
   @log_epsilon 1.0e-5
   @eos_token "</s>"
+
+  # ---- fused tensor pipelines (defn) -------------------------------------
+  #
+  # The Nx ops `take` → `mean` → `dot` (and the softmax tail) are folded
+  # into single `defn` graphs so an EXLA-compiled execution runs the
+  # whole forward pass as one kernel call rather than 4–8 separate
+  # BEAM ↔ NIF round trips. Without this, EXLA's per-call overhead
+  # (~10 µs each) dominates the per-prediction wall time on small
+  # models like `lid.176`.
+  #
+  # Both functions are also valid under the default `Nx.Defn.Evaluator`
+  # compiler, so the package still works correctly when EXLA is not
+  # installed — the savings simply don't materialise.
+
+  defnp hidden_n(feature_indices, input_matrix) do
+    rows = Nx.take(input_matrix, feature_indices, axis: 0)
+    Nx.mean(rows, axes: [0])
+  end
+
+  defnp logits_n(feature_indices, input_matrix, output_matrix) do
+    Nx.dot(output_matrix, hidden_n(feature_indices, input_matrix))
+  end
+
+  defnp softmax_probs_n(feature_indices, input_matrix, output_matrix) do
+    logits = logits_n(feature_indices, input_matrix, output_matrix)
+    shifted = logits - Nx.reduce_max(logits)
+    exps = Nx.exp(shifted)
+    exps / Nx.sum(exps)
+  end
 
   @doc """
   Returns the hidden activation vector for a list of feature indices.
@@ -63,10 +94,7 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
 
   def compute_hidden(features, input_matrix) when is_list(features) do
     indices = Nx.tensor(features, type: {:s, 64})
-
-    input_matrix
-    |> Nx.take(indices, axis: 0)
-    |> Nx.mean(axes: [0])
+    hidden_n(indices, input_matrix)
   end
 
   @doc """
@@ -110,8 +138,8 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
     if features == [] do
       []
     else
-      hidden = compute_hidden(features, model.input_matrix)
-      score_predictions(hidden, model, k, threshold)
+      indices = Nx.tensor(features, type: {:s, 64})
+      score_predictions(indices, model, k, threshold)
     end
   end
 
@@ -167,11 +195,10 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
 
   # ---- internal -----------------------------------------------------------
 
-  defp score_predictions(hidden, %Model{args: %{loss: :softmax}} = model, k, threshold) do
+  defp score_predictions(indices, %Model{args: %{loss: :softmax}} = model, k, threshold) do
     probs =
-      model.output_matrix
-      |> Nx.dot(hidden)
-      |> softmax()
+      indices
+      |> softmax_probs_n(model.input_matrix, model.output_matrix)
       |> Nx.to_list()
 
     probs
@@ -187,16 +214,18 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
     |> Enum.take(k)
   end
 
-  defp score_predictions(hidden, %Model{args: %{loss: :hs}} = model, k, threshold) do
+  defp score_predictions(indices, %Model{args: %{loss: :hs}} = model, k, threshold) do
     %HuffmanTree{} = tree = model.loss_state
 
-    # Compute all internal-node dot products in one Nx call. This keeps the
-    # arithmetic in the same f32 precision the C++ reference uses; the
-    # earlier per-node loop in pure Elixir promoted to f64 and produced
-    # tail-label mismatches when nearby probabilities were within rounding.
+    # The fused `logits_n` runs `take + mean + dot` in a single
+    # EXLA-compiled kernel. The arithmetic stays in f32 to match the
+    # C++ reference's `real = float`, which is critical for the DFS
+    # below (an earlier per-node BEAM-side loop promoted to f64 and
+    # produced tail-label mismatches when nearby probabilities were
+    # within rounding).
     internal_dots =
-      model.output_matrix
-      |> Nx.dot(Nx.as_type(hidden, {:f, 32}))
+      indices
+      |> logits_n(model.input_matrix, model.output_matrix)
       |> Nx.to_list()
       |> List.to_tuple()
 
@@ -219,15 +248,8 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
     |> Enum.map(fn {score, leaf} -> {elem(labels_tuple, leaf), :math.exp(score)} end)
   end
 
-  defp score_predictions(_hidden, %Model{args: %{loss: loss}}, _k, _threshold) do
+  defp score_predictions(_indices, %Model{args: %{loss: loss}}, _k, _threshold) do
     raise ArgumentError, "inference for loss #{inspect(loss)} is not implemented yet"
-  end
-
-  # Stable softmax: subtract max before exponentiating.
-  defp softmax(tensor) do
-    shifted = Nx.subtract(tensor, Nx.reduce_max(tensor))
-    exps = Nx.exp(shifted)
-    Nx.divide(exps, Nx.sum(exps))
   end
 
   # ---- hierarchical-softmax DFS -------------------------------------------

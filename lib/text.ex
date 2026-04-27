@@ -7,9 +7,6 @@ defmodule Text do
   @typedoc "A language as a BCP-47 string"
   @type language :: String.t()
 
-  @typedoc "A tuple of the form `{language, number}`"
-  @type frequency_tuple :: {language, number}
-
   defdelegate ngram(text, n), to: Text.Ngram
 
   @doc """
@@ -71,16 +68,8 @@ defmodule Text do
     inflector.pluralize_noun(word, mode)
   end
 
-  # Only "en" is supoprted
+  # Only "en" is supported
   defp inflector_from(_options) do
     Text.Inflect.En
-  end
-
-  @doc false
-  def ensure_compiled?(module) do
-    case Code.ensure_compiled(module) do
-      {:module, _module} -> true
-      _other -> false
-    end
   end
 end

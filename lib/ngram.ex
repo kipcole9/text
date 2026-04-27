@@ -12,26 +12,6 @@ defmodule Text.Ngram do
 
   @type ngram_range :: 2..7
 
-  defmodule Frequency do
-    @type t :: %{
-      rank: non_neg_integer,
-      count: non_neg_integer,
-      frequency: float,
-      log_frequency: float,
-      global_rank: non_neg_integer,
-      global_frequency: float
-    }
-
-    defstruct [
-      :rank,
-      :count,
-      :frequency,
-      :log_frequency,
-      :global_rank,
-      :global_frequency
-    ]
-  end
-
   @doc """
   Returns a map of n-grams for a given text
   and n-gram size.

@@ -71,14 +71,15 @@ Without `localize` a built-in fallback table covers ~60 of the most common langu
 
 ### Tensor backend
 
-The model's input matrix is approximately 128 MB of `float32` data held in an `Nx` tensor. `Nx.BinaryBackend` works out of the box. For higher inference throughput, add `:exla` to your deps and configure it as the default backend:
+The model's input matrix is approximately 128 MB of `float32` data held in an `Nx` tensor. `Nx.BinaryBackend` works out of the box. The inference forward pass (`take + mean + dot`, plus `softmax` for softmax-loss models) is wrapped in `defn` so an EXLA-compiled execution runs the whole pass as a single fused kernel — three BEAM ↔ NIF transitions per prediction instead of seven. For production throughput add `:exla` to your deps and configure it as both the default backend and the default `defn` compiler:
 
 ```elixir
 # config/config.exs
 config :nx, default_backend: EXLA.Backend
+config :nx, :default_defn_options, compiler: EXLA
 ```
 
-`exla` is declared as an optional dependency of `:text` and does not need to be required at runtime.
+`exla` is declared as an optional dependency of `:text`. Without it the package still works correctly — `Nx.Defn.Evaluator` runs the same `defn` graph against `Nx.BinaryBackend` — but per-prediction wall time is roughly an order of magnitude higher. See [docs/comparative_performance_report.md](docs/comparative_performance_report.md) for measured numbers.
 
 ### Quantized model
 
@@ -117,16 +118,20 @@ The `Text.Ngram` module supports efficient generation of n-grams of length `2` t
 
 ## Roadmap
 
-Text analysis at a fundamental level requires segmenting arbitrary text in any language into characters (graphemes), words and sentences. This is a complex topic covered by the [Unicode text segmentation](https://unicode.org/reports/tr29) standard agumented by localised rules in [CLDR's](https://cldr.unicode.org)  [segmentations](https://unicode-org.github.io/cldr/ldml/tr35-general.html#Segmentations) data.
+Near-term improvements aimed at the fastText path:
 
-Therefore in order to provide higher order text analysis the order of development looks like this:
+* **Quantized model support.** Decode the 917 KB `lid.176.ftz` variant via product quantization to enable smaller deployments. Today only the 126 MB `lid.176.bin` is supported.
 
-1. Finish the [Unicode regular expression](http://unicode.org/reports/tr18/) engine in [ex_unicode_set](https://github.com/elixir-unicode/unicode_set). Most of the work is complete but compound character classes needs further work.  Unicode regular expressions are required to implement both [Unicode transforms](https://unicode.org/reports/tr35/tr35-general.html#Transforms) and [Unicode segmentation](https://unicode-org/reports/tr25/tr35-general.html#Segmentations)
+* **Hans / Hant disambiguation.** `lid.176` reports `zh` for both Simplified and Traditional Chinese; `Text.Language.Classifier.Fasttext.ScriptDetector` currently folds both to `:Hani`. A codepoint-frequency analysis against the [Unihan Variants](https://www.unicode.org/reports/tr38/) database can split them, allowing `to_locale/2` to distinguish `zh-Hans-CN` from `zh-Hant-TW` without an explicit hint.
 
-2. Implement basic Unicode word and sentence segmentation in [ex_unicode_string](https://github.com/elixir-unicode/unicode_string). Grapheme cluster segmentation is available in the standard library as `String.graphemes/1`
+* **Vectorise the Huffman DFS.** The hierarchical-softmax traversal currently runs in pure Elixir over a precomputed logits tensor, costing roughly half of the ~100 μs per-call budget. Encoding each leaf's path as a fixed-length matrix would let EXLA score all 176 leaves in one fused kernel.
 
-3. Add CLDR tailorings for locale-specific segmentation of words and sentences.
+* **`Nx.Serving` for batched inference.** When throughput matters more than latency, batching predictions into a single EXLA call is a substantial multiplier.
 
-4. Finish up the [Snowball](https://snowballstem.org) stemming compiler. There is a lot to do here, only the parser is partially complete.
+Beyond the fastText classifier, the longer-running interest is locale-aware text segmentation:
 
-5. Implement stemming
+* Finish the [Unicode regular expression](http://unicode.org/reports/tr18/) engine in [unicode_set](https://github.com/elixir-unicode/unicode_set), then implement basic Unicode word and sentence segmentation in [unicode_string](https://github.com/elixir-unicode/unicode_string), with CLDR tailorings on top.
+
+* Snowball-based stemming, once the segmentation primitives exist to drive it.
+
+These segmentation pieces live outside this package and are tracked in the linked repositories.

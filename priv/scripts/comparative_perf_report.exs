@@ -25,18 +25,21 @@
 alias Text.Language.Classifier.Fasttext
 alias Text.Language.Classifier.Fasttext.{Features, Inference, ModelLoader, Tokenizer}
 
-# Switch to EXLA for the matrix work. Without this, Nx falls back to the
-# pure-Erlang BinaryBackend, which makes the per-prediction numbers ~200x
-# slower than the reference C++ implementation. EXLA compiles the dot
-# products and reductions to native code, bringing inference within
-# striking distance of the reference.
+# Switch to EXLA for the matrix work AND configure it as the default
+# `defn` compiler. The Inference module uses `defn` to fuse `take + mean
+# + dot` (and the softmax tail) into a single graph; with EXLA as the
+# compiler that whole graph runs as one native kernel call rather than
+# 4–8 separate BEAM ↔ NIF round-trips.
 case Code.ensure_loaded?(EXLA.Backend) do
   true ->
     Nx.global_default_backend(EXLA.Backend)
-    IO.puts("Backend: EXLA (#{inspect(Nx.default_backend())})")
+    Nx.Defn.global_default_options(compiler: EXLA)
+    IO.puts("Backend: EXLA (defn compiler: EXLA)")
 
   false ->
-    IO.puts("Backend: Nx.BinaryBackend (EXLA not available — install :exla for full speed)")
+    IO.puts(
+      "Backend: Nx.BinaryBackend (EXLA not available — install :exla for full speed)"
+    )
 end
 
 model_path = Path.join([File.cwd!(), "priv", "lid_176", "lid.176.bin"])

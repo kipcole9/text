@@ -28,31 +28,33 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * Added required dependencies on `:nx` and `:unicode`. Optional dependencies on `:exla` (recommended for inference performance) and `:localize` (for CLDR-canonical locale resolution).
 
+* The fastText inference forward pass (`take + mean + dot`, plus the softmax tail for softmax-loss models) is now wrapped in `Nx.Defn` so that an EXLA-compiled execution runs the entire pass as a single fused XLA kernel. With EXLA configured as both backend and `defn` compiler, per-prediction wall time on `lid.176` drops from roughly 200 μs to ~100 μs — about 2× over the unfused EXLA path and 6-9× over `Nx.BinaryBackend`. Bit-equivalent to the pre-fusion form; the test suite passes both ways.
+
 * Hex package version bumped to `0.3.0`.
 
 ### Removed
 
 * **Breaking:** the legacy n-gram language classifiers (`Text.Language.Classifier.NaiveBayesian`, `CummulativeFrequency`, `RankOrder`) and their supporting modules (`Text.Language`, `Text.Language.Classifier`, `Text.Corpus`, `Text.Vocabulary`). These required a separately-installed corpus (`text_corpus_udhr`) and were not competitive with the fastText classifier on inputs outside the UDHR register. Use `Text.Language.Classifier.Fasttext.classify/2` and `detect/3` instead.
 
-* The `:meeseeks` build-time HTML scraper dependency, which was unmaintained for modern Rust toolchains. The English-inflection data scraper at `mix/english_infector_data.ex` is now wrapped in a `Code.ensure_loaded?(Meeseeks)` guard and is a no-op without the optional dep — it was only used to regenerate inflection data, never at runtime.
+* The `:meeseeks` build-time HTML scraper dependency along with the English-inflection scraper module (`Text.Inflect.Data.En`) and its `mix text.create_english_plurals` task. Pluralization data continues to ship as a precompiled ETF blob in `priv/inflection/en/en.etf`; only the regeneration tooling is gone.
 
-# Changelog for Text v0.2.0
+* `Text.Ngram.Frequency` struct, `Text.frequency_tuple` typedef, and the `Text.ensure_compiled?/1` helper. All three existed solely to support the deleted classifier behaviour and had no other callers.
 
-This is the changelog for Text v0.2.0 released on June 28th, 2020. For older changelogs please consult the release tag on [GitHub](https://github.com/kipcole9/text/tags).
+## [0.2.0] — 2020-06-28
 
-### Enhancements
+### Added
 
-* Adds pluralization for english words
+* Pluralization for English words.
 
-* Adds language detection classifiers (corpus' are defined in separate libraries, for example [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr))
+* Language detection classifiers — corpora defined in separate libraries, e.g. [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr).
 
-* Refactor word counting
+### Changed
 
-# Changelog for Text v0.1.0
+* Refactored word counting.
 
-This is the changelog for Text v0.1.0 released on August 26th, 2019.  For older changelogs please consult the release tag on [GitHub](https://github.com/kipcole9/text/tags)
+## [0.1.0] — 2019-08-26
 
-### Enhancements
+### Added
 
 * Initial version implementing `ngram`s.
 
