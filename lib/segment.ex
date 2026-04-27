@@ -20,6 +20,13 @@ defmodule Text.Segment do
     `"hello"`; in practice every text-processing pipeline immediately
     filters those out, so this module does it by default.
 
+  ### Locale input shapes
+
+  The `:locale` option (where it appears) accepts an atom (`:fr`), a
+  string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`), or a
+  `Localize.LanguageTag` struct when the optional `:localize`
+  dependency is loaded. See `Text.Language` for details.
+
   * **`sentences/2`** trims trailing whitespace from each sentence so
     callers don't have to. The Unicode rules attach trailing whitespace
     to the preceding sentence, which is rarely what you want.
@@ -122,7 +129,10 @@ defmodule Text.Segment do
   end
 
   defp locale_option(nil), do: []
-  defp locale_option(locale), do: [locale: locale]
+
+  defp locale_option(locale) do
+    [locale: Text.Language.to_locale_string(locale)]
+  end
 
   @doc """
   Splits `text` into sentences, trimming trailing whitespace by default.

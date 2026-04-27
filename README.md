@@ -114,7 +114,28 @@ The fixture-generation scripts live under `priv/scripts/` and are wired up as `m
 
 ### Sentiment analysis
 
-`Text.Sentiment` runs lexicon-based sentiment analysis with multilingual support. The default backend is the bundled [AFINN](https://github.com/fnielsen/afinn) lexicons (Apache 2.0), shipping word-level polarity scores for **English, Danish, Finnish, French, Polish, Swedish, and Turkish**, plus a language-agnostic emoticon lexicon.
+`Text.Sentiment` runs sentiment analysis with multilingual support. Two backends are shipped:
+
+* **`Text.Sentiment.Backends.Lexicon`** (the default) — lexicon-based scoring backed by the bundled [AFINN](https://github.com/fnielsen/afinn) lexicons (Apache 2.0) for **English, Danish, Finnish, French, Polish, Swedish, and Turkish**, plus a language-agnostic emoticon lexicon. Sub-millisecond per call, fully deterministic, no model download.
+
+* **`Text.Sentiment.Backends.Bumblebee`** (optional) — neural sentiment via [Bumblebee](https://hex.pm/packages/bumblebee) and a pre-trained multilingual XLM-RoBERTa model (`cardiffnlp/twitter-xlm-roberta-base-sentiment` by default). Higher quality, particularly on idiom and sarcasm, at the cost of a 10–30 s cold start and a ~280 MB model download. Add `{:bumblebee, "~> 0.6"}` and `{:exla, "~> 0.9"}` to your deps to enable it.
+
+Switch backends globally:
+
+```elixir
+# config/config.exs
+config :text, :sentiment_backend, Text.Sentiment.Backends.Bumblebee
+```
+
+…or per call:
+
+```elixir
+Text.Sentiment.analyze(text, backend: Text.Sentiment.Backends.Bumblebee)
+```
+
+Custom backends are supported via the `Text.Sentiment.Backend` behaviour.
+
+#### Default usage (lexicon backend)
 
 ```elixir
 Text.Sentiment.analyze("This is a great day, I love it!").label
@@ -148,7 +169,35 @@ Text.Sentiment.analyze(text, language: lang)
 
 Detected languages outside the bundled set fall back to English by default. For unsupported languages, supply your own `%{token => number}` lexicon via the `:lexicon` option — anything `Map`-like works.
 
-The lexicon-based approach trades sophistication for speed and determinism: it produces useful labels in a few microseconds with no model download, but doesn't capture sarcasm, idiom, or context. For higher-quality multilingual sentiment, a future Bumblebee-backed adapter (XLM-RoBERTa or similar) is on the roadmap.
+The lexicon-based approach trades sophistication for speed and determinism: it produces useful labels in a few microseconds with no model download, but doesn't capture sarcasm, idiom, or context. When you need that, switch to the Bumblebee backend.
+
+#### Bumblebee backend (neural multilingual)
+
+```elixir
+# Add to mix.exs:
+#   {:bumblebee, "~> 0.6"}
+#   {:exla, "~> 0.9"}
+
+result = Text.Sentiment.analyze(
+  "J'adore ce produit, c'est excellent!",
+  backend: Text.Sentiment.Backends.Bumblebee
+)
+result.label    #=> :positive
+result.compound #=> 0.94...
+result.scores   #=> %{positive: 0.95, neutral: 0.04, negative: 0.01}
+```
+
+The first call downloads the model (~280 MB) and traces the inference graph through EXLA. Subsequent calls in the same VM hit a cached `Nx.Serving` and return in single-digit milliseconds. For production deployments where cold-start is unacceptable, start a named serving at boot (see `Bumblebee.Text.text_classification/3` + `Nx.Serving.start_link/1`) and pass `serving: <name>` to `analyze/2`.
+
+#### Language input
+
+Every function that takes a `:language` (or `:locale`) accepts:
+
+* an atom (`:fr`),
+* a string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`),
+* or a `Localize.LanguageTag` struct when the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded.
+
+The full BCP-47 form is normalised to its language subtag for sentiment-lexicon lookup, so `"fr-CA"`, `"FR"`, `:fr`, and `%Localize.LanguageTag{language: :fr, ...}` all route to the French lexicon.
 
 ### N-Gram generation
 

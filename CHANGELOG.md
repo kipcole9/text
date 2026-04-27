@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+* `Text.Language.normalize/1` and `Text.Language.to_locale_string/1` — every public function in the package that takes a `:language` or `:locale` option now accepts an atom, a string (BCP-47 or otherwise), or a `Localize.LanguageTag` struct (when the optional `:localize` dependency is loaded). The new helpers normalise to the language subtag (atom) or to a canonical BCP-47 string respectively.
+
+* `Text.Sentiment.Backend` behaviour with two shipped backends: `Text.Sentiment.Backends.Lexicon` (the default — lexicon-based, multilingual via AFINN, always available) and `Text.Sentiment.Backends.Bumblebee` (optional — neural via [Bumblebee](https://hex.pm/packages/bumblebee) and XLM-RoBERTa, requires `:bumblebee` and `:exla` deps). Routing via the `:backend` option to `Text.Sentiment.analyze/2` or globally via the `:sentiment_backend` application configuration.
+
 * `Text.Sentiment` — multilingual lexicon-based sentiment analysis. Returns a label (`:positive`, `:negative`, `:neutral`), a normalised compound score, and the matched-token count. Handles negation (`"not good"` flips polarity) and intensifiers (`"very good"` boosts) via VADER-style scalars.
 
 * `Text.Sentiment.Lexicons.AFINN` — bundled [AFINN](https://github.com/fnielsen/afinn) sentiment lexicons (Apache 2.0) for English, Danish, Finnish, French, Polish, Swedish, and Turkish, plus a language-agnostic emoticon lexicon. Routed automatically by `Text.Sentiment.analyze/2`'s `:language` option.

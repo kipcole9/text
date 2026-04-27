@@ -129,4 +129,40 @@ defmodule Text.SegmentTest do
       end
     end
   end
+
+  describe ":locale option accepts atom, string, and Localize.LanguageTag" do
+    test "atom locale" do
+      assert Segment.words("hello", locale: :en) == ["hello"]
+    end
+
+    test "string locale" do
+      assert Segment.words("hello", locale: "en") == ["hello"]
+    end
+
+    test "BCP-47 string with region" do
+      assert Segment.words("hello", locale: "en-US") == ["hello"]
+    end
+
+    test "BCP-47 string with script and region" do
+      assert Segment.words("hello", locale: "en-Latn-US") == ["hello"]
+    end
+
+    if Code.ensure_loaded?(Localize.LanguageTag) do
+      @tag :requires_localize
+      test "Localize.LanguageTag input" do
+        {:ok, tag} = Localize.validate_locale("en-US")
+        assert Segment.words("hello", locale: tag) == ["hello"]
+      end
+
+      @tag :requires_localize
+      test "sentences/2 with LanguageTag uses CLDR suppressions" do
+        {:ok, tag} = Localize.validate_locale("en")
+
+        assert Segment.sentences(
+                 "He used i.e. and e.g. in his memo. Then he stopped.",
+                 locale: tag
+               ) == ["He used i.e. and e.g. in his memo.", "Then he stopped."]
+      end
+    end
+  end
 end

@@ -2,12 +2,32 @@ defmodule Text.Sentiment do
   @moduledoc """
   Sentiment analysis with multilingual support.
 
-  The default backend is the bundled AFINN lexicon (Apache 2.0,
-  available for English, Danish, Finnish, French, Polish, Swedish, and
-  Turkish — see `Text.Sentiment.Lexicons.AFINN`). The scoring engine
-  in `Text.Sentiment.Lexicon` handles negation and intensifier
-  modifiers and produces both a raw sum and a normalised compound
-  score in `[-1.0, +1.0]`.
+  Two backends are shipped with `text`:
+
+  * **`Text.Sentiment.Backends.Lexicon`** (the default) — fast,
+    deterministic, multilingual lexicon-based scoring backed by the
+    bundled AFINN lexicons (English, Danish, Finnish, French, Polish,
+    Swedish, Turkish, plus a language-agnostic emoticon lexicon).
+    Apache 2.0. Sub-millisecond per call. No model download, no
+    optional dependencies.
+
+  * **`Text.Sentiment.Backends.Bumblebee`** (optional) — neural
+    sentiment via [Bumblebee](https://hex.pm/packages/bumblebee) and a
+    pre-trained multilingual transformer (XLM-RoBERTa). Higher quality,
+    slower (single-digit ms per call after a 10-30 s cold start), and
+    requires adding `:bumblebee` and `:exla` to your deps.
+
+  The default backend is the lexicon. To switch globally:
+
+      # config/config.exs
+      config :text, :sentiment_backend, Text.Sentiment.Backends.Bumblebee
+
+  To switch per call:
+
+      Text.Sentiment.analyze(text, backend: Text.Sentiment.Backends.Bumblebee)
+
+  Custom backends can be supplied by implementing the
+  `Text.Sentiment.Backend` behaviour.
 
   ### Three-line summary
 
@@ -57,7 +77,7 @@ defmodule Text.Sentiment do
 
   """
 
-  alias Text.Sentiment.{Lexicon, Lexicons}
+  alias Text.Sentiment.{Backend, Lexicons}
 
   @default_language :en
 
@@ -83,17 +103,20 @@ defmodule Text.Sentiment do
 
   ### Options
 
-  * `:language` — a bundled AFINN tag
-    (`#{inspect(Lexicons.AFINN.available())}`). Defaults to `:#{@default_language}`.
-    Ignored when `:lexicon` is given.
+  * `:language` — accepts an atom (`:fr`), a string (`"fr"`,
+    `"fr-CA"`), or a `Localize.LanguageTag` struct when the optional
+    `:localize` dependency is loaded. The tag is normalised to its
+    language subtag before lookup. Bundled AFINN tags are
+    `#{inspect(Lexicons.AFINN.available())}`. Defaults to
+    `:#{@default_language}`. Ignored when `:lexicon` is given.
 
   * `:lexicon` — a `%{token => number}` map. Overrides `:language` if
     given. Use `lexicon_for/2` to compose a bundled language with the
     emoticon lexicon, or supply your own.
 
   * `:fallback_language` — the bundled tag to fall back to if
-    `:language` is given but not bundled. Defaults to
-    `:#{@default_language}`.
+    `:language` is given but not bundled. Same shapes as `:language`.
+    Defaults to `:#{@default_language}`.
 
   * Any of the keyword options accepted by
     `Text.Sentiment.Lexicon.score/3` (`:tokenizer`, `:fold_case`,
@@ -123,11 +146,8 @@ defmodule Text.Sentiment do
   """
   @spec analyze(String.t(), keyword()) :: result()
   def analyze(text, options \\ []) when is_binary(text) do
-    {language, lexicon, scoring_opts} = resolve_lexicon(options)
-
-    text
-    |> Lexicon.score(lexicon, scoring_opts)
-    |> Map.put(:language, language)
+    backend = Backend.resolve(options)
+    backend.analyze(text, options)
   end
 
   @doc """
@@ -197,50 +217,17 @@ defmodule Text.Sentiment do
       5
 
   """
-  @spec lexicon_for(atom(), keyword()) :: %{String.t() => number()}
-  def lexicon_for(language, options \\ []) when is_atom(language) do
-    base = Lexicons.AFINN.lexicon(language)
-    base = if Keyword.get(options, :with_emoticons, false), do: Map.merge(base, Lexicons.AFINN.lexicon(:emoticon)), else: base
+  @spec lexicon_for(Text.Language.input(), keyword()) :: %{String.t() => number()}
+  def lexicon_for(language, options \\ []) do
+    tag = Text.Language.normalize(language)
+    base = Lexicons.AFINN.lexicon(tag)
+
+    base =
+      if Keyword.get(options, :with_emoticons, false),
+        do: Map.merge(base, Lexicons.AFINN.lexicon(:emoticon)),
+        else: base
+
     overrides = Keyword.get(options, :overrides, %{})
     Map.merge(base, overrides)
-  end
-
-  # ---- internal: option resolution ---------------------------------------
-
-  defp resolve_lexicon(options) do
-    {scoring_opts, control_opts} =
-      Keyword.split(options, [
-        :tokenizer,
-        :fold_case,
-        :negators,
-        :intensifiers,
-        :diminishers,
-        :negation_window,
-        :negation_scalar,
-        :intensifier_boost,
-        :diminisher_factor,
-        :positive_threshold,
-        :negative_threshold
-      ])
-
-    cond do
-      lexicon = Keyword.get(control_opts, :lexicon) ->
-        language = Keyword.get(control_opts, :language, :custom)
-        {language, lexicon, scoring_opts}
-
-      true ->
-        language = Keyword.get(control_opts, :language, @default_language)
-        fallback = Keyword.get(control_opts, :fallback_language, @default_language)
-        {used, lexicon} = bundled_or_fallback(language, fallback)
-        {used, lexicon, scoring_opts}
-    end
-  end
-
-  defp bundled_or_fallback(language, fallback) do
-    if language in Lexicons.AFINN.available() do
-      {language, Lexicons.AFINN.lexicon(language)}
-    else
-      {fallback, Lexicons.AFINN.lexicon(fallback)}
-    end
   end
 end

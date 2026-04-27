@@ -184,4 +184,45 @@ defmodule Text.SentimentTest do
       assert result.matched > 0
     end
   end
+
+  describe ":language option accepts atom, string, and Localize.LanguageTag" do
+    test "atom input" do
+      assert Sentiment.analyze("excellent", language: :fr).language == :fr
+    end
+
+    test "string input" do
+      assert Sentiment.analyze("excellent", language: "fr").language == :fr
+    end
+
+    test "BCP-47 string with region falls back to language subtag" do
+      assert Sentiment.analyze("excellent", language: "fr-CA").language == :fr
+    end
+
+    test "BCP-47 string with script and region" do
+      assert Sentiment.analyze("good", language: "en-Latn-US").language == :en
+    end
+
+    test "fallback_language also accepts string and BCP-47" do
+      result = Sentiment.analyze("excellent", language: :xx, fallback_language: "fr-CA")
+      assert result.language == :fr
+      assert result.label == :positive
+    end
+
+    if Code.ensure_loaded?(Localize.LanguageTag) do
+      @tag :requires_localize
+      test "Localize.LanguageTag input" do
+        {:ok, tag} = Localize.validate_locale("fr-CA")
+        result = Sentiment.analyze("excellent", language: tag)
+        assert result.language == :fr
+        assert result.label == :positive
+      end
+
+      @tag :requires_localize
+      test "lexicon_for/2 accepts a LanguageTag" do
+        {:ok, tag} = Localize.validate_locale("fr-CA")
+        lex = Sentiment.lexicon_for(tag)
+        assert Map.get(lex, "excellent") == 4
+      end
+    end
+  end
 end
