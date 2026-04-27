@@ -112,6 +112,44 @@ The fixture-generation scripts live under `priv/scripts/` and are wired up as `m
 * `Text.Inflect.En.pluralize_verb/1`
 * `Text.Inflect.En.pluralize_adjective/1`
 
+### Sentiment analysis
+
+`Text.Sentiment` runs lexicon-based sentiment analysis with multilingual support. The default backend is the bundled [AFINN](https://github.com/fnielsen/afinn) lexicons (Apache 2.0), shipping word-level polarity scores for **English, Danish, Finnish, French, Polish, Swedish, and Turkish**, plus a language-agnostic emoticon lexicon.
+
+```elixir
+Text.Sentiment.analyze("This is a great day, I love it!").label
+#=> :positive
+
+Text.Sentiment.analyze("Ce produit est excellent et magnifique!", language: :fr).label
+#=> :positive
+
+Text.Sentiment.analyze("Detta är en mycket dålig idé.", language: :sv).label
+#=> :negative
+```
+
+The scoring engine handles **negation** (`"not good"` → negative) and **intensifiers** (`"very good"` scores higher than `"good"`) using simple, well-understood scalars from VADER. The full result includes a raw sum, a normalised compound score in `[-1.0, +1.0]`, the matched-token count, and the resolved language tag.
+
+For informal text containing emoticons, merge the bundled emoticon lexicon:
+
+```elixir
+lex = Text.Sentiment.lexicon_for(:en, with_emoticons: true)
+Text.Sentiment.analyze("That movie was awful :-(", lexicon: lex).label
+#=> :negative
+```
+
+When the input language is unknown, detect it first with `Text.Language.Classifier.Fasttext` and route to the matching lexicon:
+
+```elixir
+{:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(model_path)
+{:ok, detection} = Text.Language.Classifier.Fasttext.detect(text, model)
+lang = String.to_atom(detection.language)
+Text.Sentiment.analyze(text, language: lang)
+```
+
+Detected languages outside the bundled set fall back to English by default. For unsupported languages, supply your own `%{token => number}` lexicon via the `:lexicon` option — anything `Map`-like works.
+
+The lexicon-based approach trades sophistication for speed and determinism: it produces useful labels in a few microseconds with no model download, but doesn't capture sarcasm, idiom, or context. For higher-quality multilingual sentiment, a future Bumblebee-backed adapter (XLM-RoBERTa or similar) is on the roadmap.
+
 ### N-Gram generation
 
 The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
