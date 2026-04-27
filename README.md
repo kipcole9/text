@@ -110,6 +110,12 @@ config :nx, default_backend: EXLA.Backend
 config :nx, :default_defn_options, compiler: EXLA
 ```
 
+This configuration matters even more for the Bumblebee-backed
+modules (`Text.Sentiment.Backends.Bumblebee`, `Text.POS`, `Text.NER`)
+— without EXLA, every layer of the underlying transformer runs on
+the interpreted backend, slowing each prediction by an order of
+magnitude.
+
 `exla` is declared as an optional dependency of `:text`. Without it the package still works correctly — `Nx.Defn.Evaluator` runs the same `defn` graph against `Nx.BinaryBackend` — but per-prediction wall time is roughly an order of magnitude higher. See [docs/comparative_performance_report.md](docs/comparative_performance_report.md) for measured numbers.
 
 ### Quantized model
