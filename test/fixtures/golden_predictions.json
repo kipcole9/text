@@ -1,0 +1,675 @@
+{
+  "model": "priv/lid_176/lid.176.bin",
+  "fasttext_version": "unknown",
+  "top_k": 5,
+  "entries": [
+    {
+      "text": "Hello world. This is an English sentence used for language identification testing.",
+      "predictions": [
+        {
+          "label": "en",
+          "probability": 0.9127516150474548
+        },
+        {
+          "label": "hi",
+          "probability": 0.005432598292827606
+        },
+        {
+          "label": "te",
+          "probability": 0.0050390735268592834
+        },
+        {
+          "label": "bn",
+          "probability": 0.004534236155450344
+        },
+        {
+          "label": "kn",
+          "probability": 0.0026976538356393576
+        }
+      ]
+    },
+    {
+      "text": "Bonjour le monde. Ceci est une phrase française utilisée pour tester l'identification de la langue.",
+      "predictions": [
+        {
+          "label": "fr",
+          "probability": 0.9842252731323242
+        },
+        {
+          "label": "it",
+          "probability": 0.0036987510975450277
+        },
+        {
+          "label": "ia",
+          "probability": 0.0021539509762078524
+        },
+        {
+          "label": "en",
+          "probability": 0.0019186105346307158
+        },
+        {
+          "label": "vi",
+          "probability": 0.0016107182018458843
+        }
+      ]
+    },
+    {
+      "text": "Hola mundo. Esta es una frase en español para probar la identificación del idioma.",
+      "predictions": [
+        {
+          "label": "es",
+          "probability": 0.9877196550369263
+        },
+        {
+          "label": "pt",
+          "probability": 0.007436044048517942
+        },
+        {
+          "label": "ast",
+          "probability": 0.0013394947163760662
+        },
+        {
+          "label": "gl",
+          "probability": 0.0008383131353184581
+        },
+        {
+          "label": "ca",
+          "probability": 0.0005699085886590183
+        }
+      ]
+    },
+    {
+      "text": "Hallo Welt. Dies ist ein deutscher Satz zur Sprachidentifizierung.",
+      "predictions": [
+        {
+          "label": "de",
+          "probability": 0.9996992349624634
+        },
+        {
+          "label": "eo",
+          "probability": 5.441231041913852e-05
+        },
+        {
+          "label": "en",
+          "probability": 4.551967140287161e-05
+        },
+        {
+          "label": "ja",
+          "probability": 4.138049189350568e-05
+        },
+        {
+          "label": "hu",
+          "probability": 3.915727211278863e-05
+        }
+      ]
+    },
+    {
+      "text": "Ciao mondo. Questa è una frase italiana per testare il riconoscimento della lingua.",
+      "predictions": [
+        {
+          "label": "it",
+          "probability": 0.9976652264595032
+        },
+        {
+          "label": "es",
+          "probability": 0.0005271936533972621
+        },
+        {
+          "label": "pt",
+          "probability": 0.0004004696384072304
+        },
+        {
+          "label": "ca",
+          "probability": 0.0003897135320585221
+        },
+        {
+          "label": "eu",
+          "probability": 0.0003867628111038357
+        }
+      ]
+    },
+    {
+      "text": "Olá mundo. Esta é uma frase em português para testar a identificação do idioma.",
+      "predictions": [
+        {
+          "label": "pt",
+          "probability": 0.9999775886535645
+        },
+        {
+          "label": "gl",
+          "probability": 4.865919254370965e-05
+        },
+        {
+          "label": "en",
+          "probability": 2.2635447749053128e-05
+        },
+        {
+          "label": "it",
+          "probability": 1.1787760740844533e-05
+        },
+        {
+          "label": "qu",
+          "probability": 1.007956871035276e-05
+        }
+      ]
+    },
+    {
+      "text": "Hej världen. Detta är en svensk mening för språkidentifiering.",
+      "predictions": [
+        {
+          "label": "sv",
+          "probability": 0.9999365210533142
+        },
+        {
+          "label": "no",
+          "probability": 6.679794751107693e-05
+        },
+        {
+          "label": "da",
+          "probability": 3.5260924050817266e-05
+        },
+        {
+          "label": "en",
+          "probability": 1.799858182494063e-05
+        },
+        {
+          "label": "nl",
+          "probability": 1.2722352948912885e-05
+        }
+      ]
+    },
+    {
+      "text": "Hallo wereld. Dit is een Nederlandse zin voor taalidentificatie.",
+      "predictions": [
+        {
+          "label": "nl",
+          "probability": 0.9992772340774536
+        },
+        {
+          "label": "af",
+          "probability": 0.0006379146943800151
+        },
+        {
+          "label": "en",
+          "probability": 6.903622124809772e-05
+        },
+        {
+          "label": "ru",
+          "probability": 2.506139389879536e-05
+        },
+        {
+          "label": "eu",
+          "probability": 2.416710958641488e-05
+        }
+      ]
+    },
+    {
+      "text": "Witaj świecie. To jest polskie zdanie do identyfikacji języka.",
+      "predictions": [
+        {
+          "label": "pl",
+          "probability": 0.9999743103981018
+        },
+        {
+          "label": "en",
+          "probability": 3.798819670919329e-05
+        },
+        {
+          "label": "cs",
+          "probability": 1.3624811799672898e-05
+        },
+        {
+          "label": "be",
+          "probability": 1.319615330430679e-05
+        },
+        {
+          "label": "eo",
+          "probability": 1.2241421245562378e-05
+        }
+      ]
+    },
+    {
+      "text": "Привет мир. Это русское предложение для определения языка.",
+      "predictions": [
+        {
+          "label": "ru",
+          "probability": 0.9871025085449219
+        },
+        {
+          "label": "ba",
+          "probability": 0.003450779477134347
+        },
+        {
+          "label": "bg",
+          "probability": 0.0031322920694947243
+        },
+        {
+          "label": "tg",
+          "probability": 0.0015863158041611314
+        },
+        {
+          "label": "sah",
+          "probability": 0.0009168169926851988
+        }
+      ]
+    },
+    {
+      "text": "Γεια σου κόσμε. Αυτή είναι μια ελληνική πρόταση για την αναγνώριση γλώσσας.",
+      "predictions": [
+        {
+          "label": "el",
+          "probability": 0.9998924732208252
+        },
+        {
+          "label": "en",
+          "probability": 0.0001130572782130912
+        },
+        {
+          "label": "ja",
+          "probability": 5.193499964661896e-05
+        },
+        {
+          "label": "fr",
+          "probability": 1.4170507711241953e-05
+        },
+        {
+          "label": "hu",
+          "probability": 1.3966203368909191e-05
+        }
+      ]
+    },
+    {
+      "text": "你好世界。这是一个用于语言识别的中文句子。",
+      "predictions": [
+        {
+          "label": "zh",
+          "probability": 0.9999325275421143
+        },
+        {
+          "label": "wuu",
+          "probability": 0.00011325022933306172
+        },
+        {
+          "label": "sh",
+          "probability": 1.412179244653089e-05
+        },
+        {
+          "label": "ja",
+          "probability": 1.0898103028011974e-05
+        },
+        {
+          "label": "sr",
+          "probability": 1.0700838174670935e-05
+        }
+      ]
+    },
+    {
+      "text": "こんにちは世界。これは言語識別のための日本語の文です。",
+      "predictions": [
+        {
+          "label": "ja",
+          "probability": 1.0000487565994263
+        },
+        {
+          "label": "zh",
+          "probability": 1.0358125109632965e-05
+        },
+        {
+          "label": "es",
+          "probability": 1.003481520456262e-05
+        }
+      ]
+    },
+    {
+      "text": "안녕하세요 세계. 이것은 언어 식별을 위한 한국어 문장입니다.",
+      "predictions": [
+        {
+          "label": "ko",
+          "probability": 1.0000699758529663
+        },
+        {
+          "label": "tr",
+          "probability": 1.0000403563026339e-05
+        },
+        {
+          "label": "en",
+          "probability": 1.0000098882301245e-05
+        }
+      ]
+    },
+    {
+      "text": "مرحبا بالعالم. هذه جملة عربية لاختبار التعرف على اللغة.",
+      "predictions": [
+        {
+          "label": "ar",
+          "probability": 0.9950562715530396
+        },
+        {
+          "label": "arz",
+          "probability": 0.003055111039429903
+        },
+        {
+          "label": "ur",
+          "probability": 0.0009239261853508651
+        },
+        {
+          "label": "fa",
+          "probability": 0.0008456744835712016
+        },
+        {
+          "label": "vi",
+          "probability": 3.327395097585395e-05
+        }
+      ]
+    },
+    {
+      "text": "שלום עולם. זה משפט בעברית לזיהוי שפה.",
+      "predictions": [
+        {
+          "label": "he",
+          "probability": 1.0000337362289429
+        },
+        {
+          "label": "yi",
+          "probability": 1.4766958884138148e-05
+        },
+        {
+          "label": "es",
+          "probability": 1.47236887642066e-05
+        },
+        {
+          "label": "en",
+          "probability": 1.1552601790754125e-05
+        },
+        {
+          "label": "de",
+          "probability": 1.0000107977248263e-05
+        }
+      ]
+    },
+    {
+      "text": "สวัสดีชาวโลก นี่คือประโยคภาษาไทยสำหรับการระบุภาษา",
+      "predictions": [
+        {
+          "label": "th",
+          "probability": 1.0000656843185425
+        },
+        {
+          "label": "bn",
+          "probability": 1.8660777641343884e-05
+        },
+        {
+          "label": "ca",
+          "probability": 1.3244365618447773e-05
+        },
+        {
+          "label": "ru",
+          "probability": 1.0676801139197778e-05
+        },
+        {
+          "label": "nl",
+          "probability": 1.0238883987767622e-05
+        }
+      ]
+    },
+    {
+      "text": "Xin chào thế giới. Đây là một câu tiếng Việt để nhận dạng ngôn ngữ.",
+      "predictions": [
+        {
+          "label": "vi",
+          "probability": 1.0000617504119873
+        },
+        {
+          "label": "bg",
+          "probability": 1.3696242604055442e-05
+        },
+        {
+          "label": "en",
+          "probability": 1.1311373782518785e-05
+        },
+        {
+          "label": "ceb",
+          "probability": 1.0000356269301847e-05
+        }
+      ]
+    },
+    {
+      "text": "Merhaba dünya. Bu, dil tanıma için bir Türkçe cümledir.",
+      "predictions": [
+        {
+          "label": "tr",
+          "probability": 0.9998753666877747
+        },
+        {
+          "label": "az",
+          "probability": 0.00016632011102046818
+        },
+        {
+          "label": "en",
+          "probability": 1.1428707693994511e-05
+        },
+        {
+          "label": "uz",
+          "probability": 1.1137578439956997e-05
+        }
+      ]
+    },
+    {
+      "text": "Hei maailma. Tämä on suomenkielinen lause kielentunnistusta varten.",
+      "predictions": [
+        {
+          "label": "fi",
+          "probability": 0.9911584258079529
+        },
+        {
+          "label": "et",
+          "probability": 0.002653382485732436
+        },
+        {
+          "label": "it",
+          "probability": 0.0008972823270596564
+        },
+        {
+          "label": "de",
+          "probability": 0.000765428296290338
+        },
+        {
+          "label": "en",
+          "probability": 0.0007046773098409176
+        }
+      ]
+    },
+    {
+      "text": "नमस्ते दुनिया। यह भाषा पहचान के लिए एक हिंदी वाक्य है।",
+      "predictions": [
+        {
+          "label": "hi",
+          "probability": 0.9998010396957397
+        },
+        {
+          "label": "bh",
+          "probability": 0.000177581183379516
+        },
+        {
+          "label": "mai",
+          "probability": 3.950976315536536e-05
+        },
+        {
+          "label": "sa",
+          "probability": 2.5535025997669436e-05
+        },
+        {
+          "label": "mr",
+          "probability": 2.531126665417105e-05
+        }
+      ]
+    },
+    {
+      "text": "வணக்கம் உலகம். இது மொழி அடையாளத்திற்கான ஒரு தமிழ் வாக்கியம்.",
+      "predictions": [
+        {
+          "label": "ta",
+          "probability": 1.0000725984573364
+        },
+        {
+          "label": "en",
+          "probability": 1.4949464457458816e-05
+        },
+        {
+          "label": "ms",
+          "probability": 1.1183527021785267e-05
+        },
+        {
+          "label": "sr",
+          "probability": 1.0434786418045405e-05
+        },
+        {
+          "label": "zh",
+          "probability": 1.001780492515536e-05
+        }
+      ]
+    },
+    {
+      "text": "Hello world",
+      "predictions": [
+        {
+          "label": "en",
+          "probability": 0.16532786190509796
+        },
+        {
+          "label": "ru",
+          "probability": 0.07777532935142517
+        },
+        {
+          "label": "de",
+          "probability": 0.06413289904594421
+        },
+        {
+          "label": "es",
+          "probability": 0.049863167107105255
+        },
+        {
+          "label": "uk",
+          "probability": 0.04571826010942459
+        }
+      ]
+    },
+    {
+      "text": "Bonjour",
+      "predictions": [
+        {
+          "label": "fr",
+          "probability": 0.9555752277374268
+        },
+        {
+          "label": "ru",
+          "probability": 0.00901033915579319
+        },
+        {
+          "label": "ca",
+          "probability": 0.0073948996141552925
+        },
+        {
+          "label": "es",
+          "probability": 0.006487076170742512
+        },
+        {
+          "label": "en",
+          "probability": 0.005983049049973488
+        }
+      ]
+    },
+    {
+      "text": "Hola",
+      "predictions": [
+        {
+          "label": "es",
+          "probability": 0.9042546153068542
+        },
+        {
+          "label": "pl",
+          "probability": 0.038754116743803024
+        },
+        {
+          "label": "ca",
+          "probability": 0.0334789976477623
+        },
+        {
+          "label": "eo",
+          "probability": 0.0046444968320429325
+        },
+        {
+          "label": "en",
+          "probability": 0.004262440372258425
+        }
+      ]
+    },
+    {
+      "text": "Привет",
+      "predictions": [
+        {
+          "label": "ru",
+          "probability": 0.9691303968429565
+        },
+        {
+          "label": "sr",
+          "probability": 0.012684543617069721
+        },
+        {
+          "label": "az",
+          "probability": 0.004216451197862625
+        },
+        {
+          "label": "sah",
+          "probability": 0.0033880071714520454
+        },
+        {
+          "label": "mhr",
+          "probability": 0.003266574814915657
+        }
+      ]
+    },
+    {
+      "text": "你好",
+      "predictions": [
+        {
+          "label": "zh",
+          "probability": 0.9832334518432617
+        },
+        {
+          "label": "yue",
+          "probability": 0.016831709071993828
+        },
+        {
+          "label": "sr",
+          "probability": 1.0535599358263426e-05
+        }
+      ]
+    },
+    {
+      "text": "the cat sat on the mat",
+      "predictions": [
+        {
+          "label": "en",
+          "probability": 0.6423178911209106
+        },
+        {
+          "label": "ro",
+          "probability": 0.030876442790031433
+        },
+        {
+          "label": "it",
+          "probability": 0.025018727406859398
+        },
+        {
+          "label": "or",
+          "probability": 0.020062629133462906
+        },
+        {
+          "label": "si",
+          "probability": 0.0177015271037817
+        }
+      ]
+    }
+  ]
+}

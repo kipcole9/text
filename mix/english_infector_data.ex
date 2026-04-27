@@ -1,3 +1,4 @@
+if Code.ensure_loaded?(Meeseeks) do
 defmodule Text.Inflect.Data.En do
   @moduledoc """
   Functions to structure the data underpinning
@@ -12,7 +13,8 @@ defmodule Text.Inflect.Data.En do
 
   This data from these files is added to the downloaded data
   set at library build time and can be rebuild by the library
-  maintainer with `mix text.create_english_plurals`.
+  maintainer with `mix text.create_english_plurals`. Defined only when the
+  optional `:meeseeks` dependency is available.
 
   """
 
@@ -260,4 +262,5 @@ defmodule Text.Inflect.Data.En do
       other -> other
     end
   end
+end
 end

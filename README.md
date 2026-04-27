@@ -1,39 +1,108 @@
 # Text
 
-Text & language processing for Elixir.  Initial release focuses on:
+Text & language processing for Elixir. Capabilities:
 
-* [x] n-gram generation from text
-* [x] pluralization of english words
-* [x] word counting (word freqencies)
-* [x] language detection using pluggable classifier, vocabulary and corpus backends.
-
-Second phase will focus on:
-
-* Stemming
-* tokenization and part-of-speech tagging (at least for english)
-* Sentiment analysis
-
-Each of these phases requires prior development. See [below](#down_the_rabbit_hole).
-
-## Status Update Sept 2021
-
-The `Text` project remains active and maintained. However with the advent of the amazing [Numerical Elixir (Nx)](https://github.com/elixir-nx) project, many improved opportunities to leverage ML for text analysis open up and this is the planned path.  I expect to focus using ML for the additional planned functionality as a calendar year 2022 project.  Bug reports, PR and suggests are welcome!
+* n-gram generation from text
+* pluralization of English words
+* word counting (word frequencies)
+* language detection — pluggable classifier, vocabulary, and corpus backends, plus a pure-Elixir port of fastText's `lid.176` model (new in v0.3)
+* CLDR-canonical locale resolution from a detection (with the optional [`localize`](https://hex.pm/packages/localize) dependency)
 
 ## Installation
 
 ```elixir
 def deps do
   [
-    {:text, "~> 0.2.0"}
+    {:text, "~> 0.3.0"}
   ]
 end
 ```
 
-## Word Counting
+## fastText `lid.176` Language Identification
+
+`Text.Language.Classifier.Fasttext` is a pure-Elixir reimplementation of fastText's [`lid.176`](https://fasttext.cc/docs/en/language-identification.html) model, validated bit-for-bit against the official C++ / Python reference for hashing, n-gram generation, feature extraction, and tree traversal.
+
+It supports 176 languages, runs in pure BEAM (no NIFs, no Python sidecar), and produces predictions that match the reference within rounding for inputs whose probability is above the noise floor.
+
+### One-time setup
+
+The `lid.176.bin` model is approximately 126 MB and is **not** shipped with this package. Fetch it once after installing:
+
+```sh
+mix text.download_model
+```
+
+The file is written to `priv/lid_176/lid.176.bin` inside this project. It is added to `.gitignore` and is **not** part of the Hex package payload — every install fetches its own copy.
+
+### Detecting a language
+
+```elixir
+{:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(
+  Path.join(:code.priv_dir(:text), "lid_176/lid.176.bin")
+)
+
+{:ok, det} = Text.Language.Classifier.Fasttext.detect("Bonjour le monde", model)
+det.language    #=> "fr"
+det.script      #=> :Latn
+det.confidence  #=> 0.984...
+det.alternatives
+#=> [{"en", 0.0035}, {"it", 0.0024}, {"oc", 0.0009}, {"ca", 0.0006}]
+```
+
+### Just the language code
+
+```elixir
+{:ok, "es"} = Text.Language.Classifier.Fasttext.classify("Hola mundo", model)
+```
+
+### Resolving to a CLDR locale
+
+When the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded, detections expand into full CLDR-canonical locale strings via likely-subtags. The script signal from `ScriptDetector` is used to disambiguate Latin vs Cyrillic Serbian and similar multi-script cases; for `zh` / `ja` / `ko` the language alone determines the script, so likely-subtags fills it in automatically.
+
+```elixir
+{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界", model)
+{:ok, "zh-Hans-CN"} = Text.Language.Classifier.Fasttext.to_locale(det)
+
+{:ok, det} = Text.Language.Classifier.Fasttext.detect("Bonjour le monde", model)
+{:ok, "fr-Latn-CA"} = Text.Language.Classifier.Fasttext.to_locale(det, region: :CA)
+```
+
+Without `localize` a built-in fallback table covers ~60 of the most common languages.
+
+### Tensor backend
+
+The model's input matrix is approximately 128 MB of `float32` data held in an `Nx` tensor. `Nx.BinaryBackend` works out of the box. For higher inference throughput, add `:exla` to your deps and configure it as the default backend:
+
+```elixir
+# config/config.exs
+config :nx, default_backend: EXLA.Backend
+```
+
+`exla` is declared as an optional dependency of `:text` and does not need to be required at runtime.
+
+### Quantized model
+
+The 917 KB quantized variant `lid.176.ftz` is **not yet supported** — product-quantization decoding is on the v2 follow-up list. The 126 MB `lid.176.bin` works today and produces identical results to fastText's own predictions on it.
+
+### Reference fixtures and differential tests
+
+The package's test suite includes golden fixtures generated from the official `fasttext` Python bindings against `lid.176`, covering hashing, subword extraction, feature assembly, and predictions across 24 languages. The tests are skipped by default (the model is not present in CI); run them locally with:
+
+```sh
+mix text.download_model               # one-time
+pip install fasttext                  # one-time, for fixture regeneration
+mix test --include requires_lid_176
+```
+
+The fixture-generation scripts live under `priv/scripts/` and are wired up as `mix text.gen_*_fixtures` tasks for convenience.
+
+## Other capabilities
+
+### Word Counting
 
 `text` contains an implementation of word counting that is oriented towards large streams of words rather than discrete strings. Input to `Text.Word.word_count/2` can be a `String.t`, `File.Stream.t` or `Flow.t` allowing flexible streaming of text.
 
-## English Pluralization
+### English Pluralization
 
 `text` includes an inflector for the English language that takes an approach based upon  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html). See the module `Text.Inflect.En` and the functions:
 
@@ -42,25 +111,11 @@ end
 * `Text.Inflect.En.pluralize_verb/1`
 * `Text.Inflect.En.pluralize_adjective/1`
 
-## Language Detection
-
-`text` contains 3 language classifiers to aid in natural language detection. However it does not include any corpora; these are contained in separate libraries. The available classifiers are:
-
-* `Text.Language.Classifier.CommulativeFrequency`
-* `Text.Language.Classifier.NaiveBayesian`
-* `Text.Language.Classifier.RankOrder`
-
-Additional classifiers can be added by defining a module that implements the `Text.Language.Classifier` behaviour.
-
-The library [text_corpus_udhr](https://hex.pm/packages/text_corpus_udhr) implements the `Text.Corpus` behaviour for the [United National Declaration of Human Rights](https://en.wikipedia.org/wiki/Universal_Declaration_of_Human_Rights) which is available for download in 423 languages from [Unicode](https://unicode.org/udhr/).
-
-See `Text.Language.detect/2`.
-
-## N-Gram generation
+### N-Gram generation
 
 The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
 
-## Down the rabbit hole
+## Roadmap
 
 Text analysis at a fundamental level requires segmenting arbitrary text in any language into characters (graphemes), words and sentences. This is a complex topic covered by the [Unicode text segmentation](https://unicode.org/reports/tr29) standard agumented by localised rules in [CLDR's](https://cldr.unicode.org)  [segmentations](https://unicode-org.github.io/cldr/ldml/tr35-general.html#Segmentations) data.
 

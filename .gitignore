@@ -19,3 +19,7 @@ erl_crash.dump
 
 # Excel temp file
 corpus/analysis/~$Accuracy Analysis.xlsx
+
+# fastText lid.176 model — fetched via `mix text.download_model`, not committed
+/priv/lid_176/lid.176.bin
+/priv/lid_176/lid.176.ftz

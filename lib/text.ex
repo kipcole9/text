@@ -7,18 +7,10 @@ defmodule Text do
   @typedoc "A language as a BCP-47 string"
   @type language :: String.t()
 
-  @typedoc "A vocabulary module"
-  @type vocabulary :: module()
-
-  @typedoc "A corpus module"
-  @type corpus :: module()
-
   @typedoc "A tuple of the form `{language, number}`"
   @type frequency_tuple :: {language, number}
 
   defdelegate ngram(text, n), to: Text.Ngram
-  defdelegate detect(text), to: Text.Language
-  defdelegate detect(text, options), to: Text.Language
 
   @doc """
   Pluralize a noun.

@@ -1,14 +1,14 @@
 defmodule Text.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0-dev"
 
   def project do
     [
       app: :text,
       version: @version,
       docs: docs(),
-      elixir: "~> 1.8",
+      elixir: "~> 1.17",
       name: "Text",
       source_url: "https://github.com/kipcole9/text",
       description: description(),
@@ -18,7 +18,7 @@ defmodule Text.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
         ignore_warnings: ".dialyzer_ignore_warnings",
-        plt_add_apps: ~w(inets jason mix meeseeks)a
+        plt_add_apps: ~w(inets jason mix)a
       ]
     ]
   end
@@ -64,11 +64,14 @@ defmodule Text.MixProject do
 
   defp deps do
     [
-      {:flow, "~> 0.14"},
-      {:meeseeks, "~> 0.15", only: [:dev, :test], optional: true},
-      {:ex_doc, "~> 0.21", only: [:dev, :release], optional: true},
+      {:flow, "~> 0.14 or ~> 1.0"},
+      {:nx, "~> 0.7 or ~> 0.8 or ~> 0.9 or ~> 0.10 or ~> 0.11"},
+      {:exla, "~> 0.7 or ~> 0.8 or ~> 0.9 or ~> 0.10 or ~> 0.11", optional: true},
+      {:unicode, "~> 1.21"},
+      {:localize, "~> 0.23", optional: true},
+      {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
-      {:jason, "~> 1.0", only: :dev, runtime: false},
+      {:jason, "~> 1.2", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
     ]
   end
@@ -81,7 +84,7 @@ defmodule Text.MixProject do
     }
   end
 
-  defp elixirc_paths(:test), do: ["lib", "mix", "test"]
+  defp elixirc_paths(:test), do: ["lib", "mix/tasks", "test/support"]
   defp elixirc_paths(:dev), do: ["lib", "mix", "bench"]
   defp elixirc_paths(_), do: ["lib"]
 end

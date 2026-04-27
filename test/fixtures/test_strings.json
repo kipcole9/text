@@ -1,0 +1,39 @@
+{
+  "description": "Canonical inputs for differential testing of the pure-Elixir lid.176 implementation against the fastText reference.",
+  "notes": [
+    "Each entry pairs a short natural-language phrase with the language code it is expected to resolve to.",
+    "The expected_label column is informational only — fastText is the source of truth in the generated fixture file.",
+    "Edits should preserve the existing strings and only ever extend the list, so previously-generated golden fixtures remain valid."
+  ],
+  "strings": [
+    { "text": "Hello world. This is an English sentence used for language identification testing.", "expected_label": "en" },
+    { "text": "Bonjour le monde. Ceci est une phrase française utilisée pour tester l'identification de la langue.", "expected_label": "fr" },
+    { "text": "Hola mundo. Esta es una frase en español para probar la identificación del idioma.", "expected_label": "es" },
+    { "text": "Hallo Welt. Dies ist ein deutscher Satz zur Sprachidentifizierung.", "expected_label": "de" },
+    { "text": "Ciao mondo. Questa è una frase italiana per testare il riconoscimento della lingua.", "expected_label": "it" },
+    { "text": "Olá mundo. Esta é uma frase em português para testar a identificação do idioma.", "expected_label": "pt" },
+    { "text": "Hej världen. Detta är en svensk mening för språkidentifiering.", "expected_label": "sv" },
+    { "text": "Hallo wereld. Dit is een Nederlandse zin voor taalidentificatie.", "expected_label": "nl" },
+    { "text": "Witaj świecie. To jest polskie zdanie do identyfikacji języka.", "expected_label": "pl" },
+    { "text": "Привет мир. Это русское предложение для определения языка.", "expected_label": "ru" },
+    { "text": "Здравствуйте, как у вас дела сегодня вечером?", "expected_label": "ru" },
+    { "text": "Γεια σου κόσμε. Αυτή είναι μια ελληνική πρόταση για την αναγνώριση γλώσσας.", "expected_label": "el" },
+    { "text": "你好世界。这是一个用于语言识别的中文句子。", "expected_label": "zh" },
+    { "text": "你好世界。這是一個用於語言識別的中文句子。", "expected_label": "zh" },
+    { "text": "こんにちは世界。これは言語識別のための日本語の文です。", "expected_label": "ja" },
+    { "text": "안녕하세요 세계. 이것은 언어 식별을 위한 한국어 문장입니다.", "expected_label": "ko" },
+    { "text": "مرحبا بالعالم. هذه جملة عربية لاختبار التعرف على اللغة.", "expected_label": "ar" },
+    { "text": "שלום עולם. זה משפט בעברית לזיהוי שפה.", "expected_label": "he" },
+    { "text": "สวัสดีชาวโลก นี่คือประโยคภาษาไทยสำหรับการระบุภาษา", "expected_label": "th" },
+    { "text": "Xin chào thế giới. Đây là một câu tiếng Việt để nhận dạng ngôn ngữ.", "expected_label": "vi" },
+    { "text": "Merhaba dünya. Bu, dil tanıma için bir Türkçe cümledir.", "expected_label": "tr" },
+    { "text": "Hei maailma. Tämä on suomenkielinen lause kielentunnistusta varten.", "expected_label": "fi" },
+    { "text": "Halló heimur. Þetta er íslensk setning til tungumálagreiningar.", "expected_label": "is" },
+    { "text": "Helo byd. Mae hwn yn frawddeg Gymraeg ar gyfer adnabod iaith.", "expected_label": "cy" },
+    { "text": "Dia duit a dhomhain. Is abairt Ghaeilge í seo le haghaidh aitheantas teanga.", "expected_label": "ga" },
+    { "text": "Halo dunia. Ini adalah kalimat bahasa Indonesia untuk identifikasi bahasa.", "expected_label": "id" },
+    { "text": "Kamusta mundo. Ito ay isang pangungusap na Tagalog para sa pagtukoy ng wika.", "expected_label": "tl" },
+    { "text": "नमस्ते दुनिया। यह भाषा पहचान के लिए एक हिंदी वाक्य है।", "expected_label": "hi" },
+    { "text": "வணக்கம் உலகம். இது மொழி அடையாளத்திற்கான ஒரு தமிழ் வாக்கியம்.", "expected_label": "ta" }
+  ]
+}
