@@ -1,12 +1,38 @@
 # Text
 
-Text & language processing for Elixir. Capabilities:
+Text & language processing for Elixir.
 
-* n-gram generation from text
-* pluralization of English words
-* word counting (word frequencies)
-* language detection — pluggable classifier, vocabulary, and corpus backends, plus a pure-Elixir port of fastText's `lid.176` model (new in v0.3)
-* CLDR-canonical locale resolution from a detection (with the optional [`localize`](https://hex.pm/packages/localize) dependency)
+### Detection and analysis
+
+* **Language identification** (`Text.Language.Classifier.Fasttext`) — pure-Elixir port of fastText's `lid.176`, supporting 176 languages.
+* **Locale resolution** (`Text.Language.Classifier.Fasttext.Locale`) — CLDR likely-subtags via the optional [`localize`](https://hex.pm/packages/localize) dep, with Simplified / Traditional Chinese (`Hans` / `Hant`) disambiguation from script analysis.
+* **Sentiment analysis** (`Text.Sentiment`) — multilingual, two backends: bundled AFINN lexicons (default, 7 languages) or Bumblebee + XLM-RoBERTa (optional, ~30 languages).
+* **Part-of-speech tagging** (`Text.POS`) — via Bumblebee; English by default.
+* **Named-entity recognition** (`Text.NER`) — via Bumblebee; multilingual by default (10 languages).
+
+### Strings
+
+* **String distance** (`Text.Distance`) — Levenshtein, Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler.
+* **Set similarity** (`Text.Similarity`) — Jaccard, Dice, overlap, cosine.
+* **Phonetic encoding** (`Text.Phonetic.Soundex`, `Text.Phonetic.Metaphone`).
+* **Slugification** (`Text.Slug`) — locale-aware Unicode folding via [`unicode_transform`](https://hex.pm/packages/unicode_transform), with cross-script transliteration.
+* **Segmentation** (`Text.Segment`) — UAX #29 word and sentence boundaries via [`unicode_string`](https://hex.pm/packages/unicode_string), with CLDR abbreviation suppressions.
+
+### Statistics and search
+
+* **N-grams and word counts** (`Text.Ngram`, `Text.Word`).
+* **TF-IDF and BM25** (`Text.IR`) — indexed corpus with scoring and top-K search.
+* **Collocation extraction** (`Text.Collocation`) — bigrams ranked by frequency, PMI, or Dunning's log-likelihood.
+* **Concordance** (`Text.KWIC`) — keyword-in-context lookup.
+* **Word embeddings** (`Text.Embedding`) — load fastText-format `.vec` files, then cosine similarity, nearest neighbours, and analogies (`king - man + woman ≈ queen`).
+
+### Inflection
+
+* **English pluralization** (`Text.Inflect.En`) — modern and classical modes.
+
+### Language input
+
+Every public function that takes a `:language` (or `:locale`) option accepts an atom (`:fr`), a string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`), or a `Localize.LanguageTag` struct (when `:localize` is loaded). See `Text.Language` for the normalisation helpers.
 
 ## Installation
 
@@ -57,11 +83,16 @@ det.alternatives
 
 ### Resolving to a CLDR locale
 
-When the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded, detections expand into full CLDR-canonical locale strings via likely-subtags. The script signal from `ScriptDetector` is used to disambiguate Latin vs Cyrillic Serbian and similar multi-script cases; for `zh` / `ja` / `ko` the language alone determines the script, so likely-subtags fills it in automatically.
+When the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded, detections expand into full CLDR-canonical locale strings via likely-subtags. The script signal from `ScriptDetector` is used to disambiguate Latin vs Cyrillic Serbian and similar multi-script cases.
+
+For Chinese, `ScriptDetector` runs a second-pass codepoint-frequency analysis to distinguish Simplified (`Hans`) from Traditional (`Hant`) using curated lists of distinguishing characters. Inputs containing only shared Han codepoints fall back to the generic `Hani` and likely-subtags then picks `Hans` (the mainland-China default).
 
 ```elixir
-{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界", model)
+{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界，这是简体中文。", model)
 {:ok, "zh-Hans-CN"} = Text.Language.Classifier.Fasttext.to_locale(det)
+
+{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界，這是繁體中文。", model)
+{:ok, "zh-Hant-TW"} = Text.Language.Classifier.Fasttext.to_locale(det)
 
 {:ok, det} = Text.Language.Classifier.Fasttext.detect("Bonjour le monde", model)
 {:ok, "fr-Latn-CA"} = Text.Language.Classifier.Fasttext.to_locale(det, region: :CA)
@@ -199,6 +230,48 @@ Every function that takes a `:language` (or `:locale`) accepts:
 
 The full BCP-47 form is normalised to its language subtag for sentiment-lexicon lookup, so `"fr-CA"`, `"FR"`, `:fr`, and `%Localize.LanguageTag{language: :fr, ...}` all route to the French lexicon.
 
+### Word embeddings
+
+`Text.Embedding` loads pre-trained word vectors in fastText `.vec` format and exposes lookup, cosine similarity, nearest-neighbour search, and analogies:
+
+```elixir
+{:ok, emb} = Text.Embedding.load("path/to/cc.en.300.vec")
+
+Text.Embedding.similarity(emb, "king", "queen")
+#=> 0.84
+
+Text.Embedding.nearest(emb, "king", k: 3)
+#=> [{"queen", 0.84}, {"prince", 0.79}, {"monarch", 0.77}]
+
+Text.Embedding.analogy(emb, "king", "man", "woman", k: 1)
+#=> [{"queen", 0.71}]
+```
+
+A typical pre-trained fastText vector file is several gigabytes; pass `:filter` to load only a domain-specific vocabulary, or `:max_tokens` for tests and quick experiments. The matrix is held as a single `Nx` tensor of shape `{n, dim}`.
+
+### Part-of-speech tagging and named-entity recognition
+
+`Text.POS` and `Text.NER` wrap [Bumblebee](https://hex.pm/packages/bumblebee)'s `token_classification` serving with sensible defaults — English POS, multilingual NER (10 high-resource languages):
+
+```elixir
+# Add to mix.exs:
+#   {:bumblebee, "~> 0.6"}
+#   {:exla, "~> 0.9"}
+
+Text.POS.tag("The cat sat on the mat.")
+#=> [{"the", :det, 0.99}, {"cat", :noun, 0.99}, ...]
+
+Text.NER.extract("Barack Obama visited Berlin in 2013.")
+#=> [
+#=>   %Text.NER.Entity{text: "Barack Obama", type: :per, start: 0, end: 12, score: 0.99},
+#=>   %Text.NER.Entity{text: "Berlin", type: :loc, start: 21, end: 27, score: 0.99}
+#=> ]
+```
+
+Both modules are no-op (compile to a runtime-raise) without `:bumblebee`. First call downloads and compiles the model (~440 MB POS, ~700 MB NER); subsequent calls hit a cached `Nx.Serving`.
+
+Override the default model via `:model` to use a language-specific or domain-specific checkpoint.
+
 ### N-Gram generation
 
 The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
@@ -208,10 +281,6 @@ The `Text.Ngram` module supports efficient generation of n-grams of length `2` t
 Near-term improvements aimed at the fastText path:
 
 * **Quantized model support.** Decode the 917 KB `lid.176.ftz` variant via product quantization to enable smaller deployments. Today only the 126 MB `lid.176.bin` is supported.
-
-* **Hans / Hant disambiguation.** `lid.176` reports `zh` for both Simplified and Traditional Chinese; `Text.Language.Classifier.Fasttext.ScriptDetector` currently folds both to `:Hani`. A codepoint-frequency analysis against the [Unihan Variants](https://www.unicode.org/reports/tr38/) database can split them, allowing `to_locale/2` to distinguish `zh-Hans-CN` from `zh-Hant-TW` without an explicit hint.
-
-* **Vectorise the Huffman DFS.** The hierarchical-softmax traversal currently runs in pure Elixir over a precomputed logits tensor, costing roughly half of the ~100 μs per-call budget. Encoding each leaf's path as a fixed-length matrix would let EXLA score all 176 leaves in one fused kernel.
 
 * **`Nx.Serving` for batched inference.** When throughput matters more than latency, batching predictions into a single EXLA call is a substantial multiplier.
 

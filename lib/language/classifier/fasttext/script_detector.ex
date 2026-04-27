@@ -23,11 +23,21 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetector do
 
   ### Han disambiguation
 
-  `Unicode.script_dominance/1` reports CJK ideographs as `:han`. This
-  module maps that to `:Hani` — the ISO 15924 generic Han code. The
-  Hans/Hant choice (Simplified vs Traditional) is left to
-  `Text.Language.Classifier.Fasttext.Locale`, which combines the script
-  signal with the detected language and any region hint.
+  `Unicode.script_dominance/1` reports CJK ideographs as `:han`. When
+  the dominant script of the input is Han, `detect/1` runs a second
+  pass over the codepoints comparing them against curated lists of
+  Simplified-only (`Hans`) and Traditional-only (`Hant`) characters.
+  The variant whose count is higher wins; ties (including text using
+  only shared Han codepoints) fall back to the generic `:Hani`.
+
+  The curated lists cover the ~50 most distinguishing characters for
+  each variant — the high-frequency function words and pronouns that
+  reliably differ between Simplified and Traditional. They are not
+  exhaustive (the [Unihan
+  Variants](https://www.unicode.org/reports/tr38/) database has
+  thousands of entries) but cover the realistic case where the input
+  is more than a handful of characters long. For shorter or
+  ambiguous input, the disambiguation may stay at `:Hani`.
 
   """
 
@@ -67,6 +77,15 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetector do
 
   @type script :: atom()
 
+  # Codepoints that exist *only* in Simplified Chinese: their
+  # Traditional equivalents have different codepoints (`国` ↔ `國`,
+  # `学` ↔ `學`, …). Curated from the most common ~60 distinguishing
+  # function words, pronouns, common verbs, and high-frequency nouns.
+  @hans_only_codepoints MapSet.new(~c"国学时来这个们与为经后还没现实当处应让总极区选议队体点开关龙华爱进发业东车报边长万门问间听说样头觉见画书认识语话读写传专属赞议价较脑亲笔诉觉养")
+
+  # Codepoints that exist *only* in Traditional Chinese.
+  @hant_only_codepoints MapSet.new(~c"國學時來這個們與為經後還沒現實當處應讓總極區選議隊體點開關龍華愛進發業東車報邊長萬門問間聽說樣頭覺見畫書認識語話讀寫傳專屬贊議價較腦親筆訴覺養")
+
   @doc """
   Returns the dominant script of `text` as an ISO 15924 four-letter atom.
 
@@ -90,6 +109,12 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetector do
       iex> Text.Language.Classifier.Fasttext.ScriptDetector.detect("Привет мир")
       :Cyrl
 
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.detect("你好世界，这是中文")
+      :Hans
+
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.detect("你好世界，這是中文")
+      :Hant
+
       iex> Text.Language.Classifier.Fasttext.ScriptDetector.detect("你好世界")
       :Hani
 
@@ -106,13 +131,69 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetector do
     # appearance, not by frequency, so a sentence like "hi мир там"
     # would resolve to Latin if we just took the head. Sort by count
     # descending to actually pick the dominant script.
-    text
-    |> Unicode.script_dominance()
-    |> Enum.reject(fn {script, _} -> script == :common end)
-    |> Enum.max_by(fn {_script, {_first_pos, count}} -> count end, fn -> nil end)
-    |> case do
-      nil -> :Zyyy
-      {script, _} -> Map.get(@iso_15924, script, :Zzzz)
+    iso =
+      text
+      |> Unicode.script_dominance()
+      |> Enum.reject(fn {script, _} -> script == :common end)
+      |> Enum.max_by(fn {_script, {_first_pos, count}} -> count end, fn -> nil end)
+      |> case do
+        nil -> :Zyyy
+        {script, _} -> Map.get(@iso_15924, script, :Zzzz)
+      end
+
+    # Run the second-pass Hans/Hant disambiguation only when the
+    # primary detection settled on generic Han.
+    case iso do
+      :Hani -> han_variant(text)
+      other -> other
+    end
+  end
+
+  @doc """
+  Returns the Han variant (`:Hans`, `:Hant`, or `:Hani`) for the
+  Han-script content of `text`.
+
+  Counts codepoints against curated lists of Simplified-only and
+  Traditional-only characters. The variant with the higher count
+  wins; ties (or text containing only codepoints shared between the
+  variants) return `:Hani`.
+
+  Useful when the caller already knows the script is Han (for
+  instance, after running `detect/1` and seeing `:Hani`) and wants
+  the variant separately. `detect/1` calls this internally.
+
+  ### Examples
+
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.han_variant("国学时来这")
+      :Hans
+
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.han_variant("國學時來這")
+      :Hant
+
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.han_variant("你好世界")
+      :Hani
+
+      iex> Text.Language.Classifier.Fasttext.ScriptDetector.han_variant("Hello world")
+      :Hani
+
+  """
+  @spec han_variant(binary()) :: :Hans | :Hant | :Hani
+  def han_variant(text) when is_binary(text) do
+    {hans, hant} =
+      text
+      |> :unicode.characters_to_list(:utf8)
+      |> Enum.reduce({0, 0}, fn cp, {hans, hant} ->
+        cond do
+          MapSet.member?(@hans_only_codepoints, cp) -> {hans + 1, hant}
+          MapSet.member?(@hant_only_codepoints, cp) -> {hans, hant + 1}
+          true -> {hans, hant}
+        end
+      end)
+
+    cond do
+      hans > hant -> :Hans
+      hant > hans -> :Hant
+      true -> :Hani
     end
   end
 

@@ -129,14 +129,14 @@ the perf script's 50-iteration warmup absorbs that.
 
 ### Per-prediction wall time
 
-| Input (length / script) | Elixir, BinaryBackend (median μs) | Elixir, EXLA + `defn` (median μs) | Reference C++ (median μs) |
+| Input (length / script) | Elixir, BinaryBackend (median μs) | Elixir, EXLA + fully-vectorised `defn` (median μs) | Reference C++ (median μs) |
 |---|---:|---:|---:|
-| short ASCII (3 words) | 569 | **91** | 2 |
-| medium ASCII (10 words) | 772 | **103** | 3 |
-| long sentence (~80 chars) | 1 004 | **115** | 4 |
-| Cyrillic | 808 | **114** | 4 |
-| CJK (Chinese) | 630 | **115** | 4 |
-| CJK (Japanese) | 648 | **107** | 4 |
+| short ASCII (3 words) | 569 | **122** | 2 |
+| medium ASCII (10 words) | 772 | **128** | 3 |
+| long sentence (~80 chars) | 1 004 | **147** | 4 |
+| Cyrillic | 808 | **125** | 4 |
+| CJK (Chinese) | 630 | **126** | 4 |
+| CJK (Japanese) | 648 | **117** | 4 |
 
 The `defn`-fused EXLA pipeline reduces per-prediction time by **6-9×**
 versus pure-Elixir BinaryBackend, but the Elixir port is still
@@ -236,18 +236,19 @@ to within rounding.
 
 ## 6. Future work
 
-The forward pass is already a single fused EXLA graph (see "Folding
-the inference path…" above). The remaining ~100 μs floor is dominated
-by the three unavoidable BEAM ↔ NIF transitions per call (list →
-tensor, fused EXLA call, tensor → list) plus the BEAM-side Huffman
-DFS. Further speedups are possible but require more invasive changes:
+The forward pass is now a fully vectorised EXLA graph: feature
+indices in, per-leaf log-probabilities out, no BEAM-side scoring
+loop. The HS-DFS vectorisation (added after the initial round of
+this report) was a small wash on `lid.176` specifically — the
+176-leaf, 7-deep tree was already cheap enough in BEAM Elixir that
+the extra EXLA kernel ops (`take + multiply + sigmoid + log + sum`
+over a `{176, 15}` matrix) cost about as much as the recursive
+walk it replaced. For larger label spaces (thousands of classes,
+deeper trees), the vectorised path scales as `O(1)` round-trip
+overhead while the recursive DFS scales linearly with explored
+nodes.
 
-* **Vectorise the Huffman DFS inside EXLA.** Encode each leaf's path
-  through the tree as a fixed-length sequence of (node_id, direction)
-  pairs and compute all leaf scores in one matrix multiply. This is a
-  significant rewrite of the HS scoring path but would push the
-  inference into a single end-to-end EXLA graph and cut another
-  20–30 μs.
+What's left:
 
 * **Reuse a pre-allocated index buffer.** Each call constructs a fresh
   s64 indices tensor from the feature list, which crosses the NIF
@@ -259,10 +260,9 @@ DFS. Further speedups are possible but require more invasive changes:
   a substantial multiplier (single-digit μs per prediction at modest
   batch sizes).
 
-Quantized models (`lid.176.ftz`, 917 KB) remain unsupported. Adding
-product-quantization decoding would shrink the resident model from
-~130 MB to ~10 MB at a small (~1%) accuracy cost. This is the natural
-next item if a deployment is memory-constrained.
+* **Quantized models.** `lid.176.ftz` (917 KB) remains unsupported.
+  Adding product-quantization decoding would shrink the resident
+  model from ~130 MB to ~10 MB at a small (~1%) accuracy cost.
 
 ## Reproducibility
 

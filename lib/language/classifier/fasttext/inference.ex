@@ -70,6 +70,27 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
     exps / Nx.sum(exps)
   end
 
+  # Vectorised hierarchical softmax. Replaces the BEAM-side recursive
+  # DFS with one fused EXLA pipeline:
+  #
+  #   1. Compute the hidden vector (`take + mean`).
+  #   2. Project onto the output matrix to get `internal_dots`.
+  #   3. For every leaf, look up its path's internal-node dots,
+  #      multiply by `±1` direction signs, and sum the per-step
+  #      `log(sigmoid(signed_dot) + epsilon)` contributions, masking
+  #      out padding positions.
+  #
+  # The result is a `{nlabels}` vector of leaf log-probabilities,
+  # ready for BEAM-side top-K selection.
+  defnp hs_log_probs_n(feature_indices, input_matrix, output_matrix, paths, signs, mask) do
+    dots = logits_n(feature_indices, input_matrix, output_matrix)
+    signed = Nx.take(dots, paths) * signs
+    sigmoids = 1.0 / (1.0 + Nx.exp(-signed))
+    log_terms = Nx.log(sigmoids + @log_epsilon)
+    masked = log_terms * mask
+    Nx.sum(masked, axes: [1])
+  end
+
   @doc """
   Returns the hidden activation vector for a list of feature indices.
 
@@ -215,100 +236,34 @@ defmodule Text.Language.Classifier.Fasttext.Inference do
   end
 
   defp score_predictions(indices, %Model{args: %{loss: :hs}} = model, k, threshold) do
-    %HuffmanTree{} = tree = model.loss_state
+    %HuffmanTree{vectorised: %{paths: paths, signs: signs, mask: mask}} = model.loss_state
 
-    # The fused `logits_n` runs `take + mean + dot` in a single
-    # EXLA-compiled kernel. The arithmetic stays in f32 to match the
-    # C++ reference's `real = float`, which is critical for the DFS
-    # below (an earlier per-node BEAM-side loop promoted to f64 and
-    # produced tail-label mismatches when nearby probabilities were
-    # within rounding).
-    internal_dots =
+    # Fused vectorised HS scoring: features → hidden → internal_dots →
+    # per-leaf log-probabilities, all inside one EXLA graph. Replaces
+    # the original recursive BEAM-side DFS that read scalars one at
+    # a time and accumulated f32-rounded log/sigmoid by hand.
+    log_probs =
       indices
-      |> logits_n(model.input_matrix, model.output_matrix)
+      |> hs_log_probs_n(model.input_matrix, model.output_matrix, paths, signs, mask)
       |> Nx.to_list()
-      |> List.to_tuple()
 
+    log_threshold = :math.log(threshold + @log_epsilon)
     labels_tuple = List.to_tuple(model.labels)
 
-    candidates =
-      hs_dfs(
-        tree,
-        HuffmanTree.root(tree),
-        0.0,
-        internal_dots,
-        k,
-        :math.log(threshold + @log_epsilon),
+    log_probs
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {score, leaf} ->
+      if score >= log_threshold do
+        [{elem(labels_tuple, leaf), :math.exp(score)}]
+      else
         []
-      )
-
-    candidates
-    |> Enum.sort_by(fn {score, _idx} -> -score end)
+      end
+    end)
+    |> Enum.sort_by(fn {_label, prob} -> -prob end)
     |> Enum.take(k)
-    |> Enum.map(fn {score, leaf} -> {elem(labels_tuple, leaf), :math.exp(score)} end)
   end
 
   defp score_predictions(_indices, %Model{args: %{loss: loss}}, _k, _threshold) do
     raise ArgumentError, "inference for loss #{inspect(loss)} is not implemented yet"
-  end
-
-  # ---- hierarchical-softmax DFS -------------------------------------------
-
-  # Returns a list of `{score, leaf_index}` candidates with at most k
-  # entries, pruned by score and threshold.
-  defp hs_dfs(tree, node_idx, score, internal_dots, k, log_threshold, acc) do
-    cond do
-      score < log_threshold ->
-        acc
-
-      length(acc) >= k and score < min_score(acc) ->
-        acc
-
-      true ->
-        node = HuffmanTree.node_at(tree, node_idx)
-
-        if node.left == -1 and node.right == -1 do
-          insert_candidate(acc, {score, node_idx}, k)
-        else
-          # The C++ reference performs every arithmetic step in float32
-          # (each `real` is `float`; intermediate doubles are narrowed
-          # back). Erlang has only float64, so we round to f32 at every
-          # step the C++ code would. Without this, log/exp accumulation
-          # over the ~7-deep tree drifts by ~1-2% from the reference.
-          dot = elem(internal_dots, node_idx - tree.osz)
-          f = f32(sigmoid(dot))
-          left_score = f32(score + f32(log_with_eps(f32(1.0 - f))))
-          right_score = f32(score + f32(log_with_eps(f)))
-
-          acc = hs_dfs(tree, node.left, left_score, internal_dots, k, log_threshold, acc)
-          hs_dfs(tree, node.right, right_score, internal_dots, k, log_threshold, acc)
-        end
-    end
-  end
-
-  defp sigmoid(x), do: 1.0 / (1.0 + :math.exp(-x))
-
-  defp log_with_eps(x), do: :math.log(x + @log_epsilon)
-
-  # Narrows an Erlang float (f64) to the value it would have as IEEE-754
-  # binary32 (single precision), returned back as an f64. Used to mimic
-  # the C++ reference's per-step f32 rounding without leaving the BEAM's
-  # native float type.
-  defp f32(x) do
-    <<rounded::float-32>> = <<x::float-32>>
-    rounded
-  end
-
-  defp insert_candidate(acc, {_score, _leaf} = entry, k) do
-    cond do
-      length(acc) < k -> [entry | acc]
-      true -> [entry | acc] |> Enum.sort_by(fn {s, _} -> -s end) |> Enum.take(k)
-    end
-  end
-
-  defp min_score(acc) do
-    acc
-    |> Enum.map(fn {s, _} -> s end)
-    |> Enum.min()
   end
 end

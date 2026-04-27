@@ -36,8 +36,27 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetectorTest do
       assert ScriptDetector.detect("สวัสดีชาวโลก") == :Thai
     end
 
-    test "Han script for Chinese ideographs" do
+    test "Han script for Chinese ideographs (only shared codepoints)" do
+      # "你好世界" uses only shared Hans/Hant codepoints, so detection
+      # falls back to the generic :Hani.
       assert ScriptDetector.detect("你好世界") == :Hani
+    end
+
+    test "Simplified Han text resolves to :Hans" do
+      assert ScriptDetector.detect("你好世界，这是简体中文。") == :Hans
+      assert ScriptDetector.detect("国家学校时间") == :Hans
+    end
+
+    test "Traditional Han text resolves to :Hant" do
+      assert ScriptDetector.detect("你好世界，這是繁體中文。") == :Hant
+      assert ScriptDetector.detect("國家學校時間") == :Hant
+    end
+
+    test "han_variant/1 works on already-Han text" do
+      assert ScriptDetector.han_variant("国学时来") == :Hans
+      assert ScriptDetector.han_variant("國學時來") == :Hant
+      assert ScriptDetector.han_variant("你好世界") == :Hani
+      assert ScriptDetector.han_variant("Hello world") == :Hani
     end
 
     test "Hiragana script for predominantly hiragana text" do

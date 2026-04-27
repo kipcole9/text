@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+* `Text.POS` — part-of-speech tagging via the optional `:bumblebee` dependency. English by default (`vblagoje/bert-english-uncased-finetuned-pos`); override `:model` for other checkpoints. Returns coarse-grained tag atoms (`:noun`, `:verb`, `:adj`, …) with confidence scores.
+
+* `Text.NER` — named-entity recognition via the optional `:bumblebee` dependency. Multilingual by default (`Davlan/bert-base-multilingual-cased-ner-hrl`, 10 high-resource languages, CoNLL-2003 tag set). Returns `Text.NER.Entity` structs with span byte offsets, type atom (`:per`, `:org`, `:loc`, `:misc`), and score.
+
+* `Text.Embedding` — load pre-trained word vectors in fastText `.vec` format. Exposes `vector/2`, `similarity/3`, `nearest/3`, and `analogy/5` over an L2-normalised `Nx` matrix. Supports `:filter` and `:max_tokens` options for partial loads.
+
+* `Text.Language.Classifier.Fasttext.ScriptDetector.han_variant/1` — disambiguates Simplified (`:Hans`) from Traditional (`:Hant`) Chinese using a curated codepoint-frequency analysis. `detect/1` now returns `:Hans` or `:Hant` directly for Han text when the input is unambiguous, falling back to `:Hani` otherwise. The script signal flows through to `Text.Language.Classifier.Fasttext.Locale.resolve/2`, producing `zh-Hans-CN` vs `zh-Hant-TW` automatically.
+
 * `Text.Language.normalize/1` and `Text.Language.to_locale_string/1` — every public function in the package that takes a `:language` or `:locale` option now accepts an atom, a string (BCP-47 or otherwise), or a `Localize.LanguageTag` struct (when the optional `:localize` dependency is loaded). The new helpers normalise to the language subtag (atom) or to a canonical BCP-47 string respectively.
 
 * `Text.Sentiment.Backend` behaviour with two shipped backends: `Text.Sentiment.Backends.Lexicon` (the default — lexicon-based, multilingual via AFINN, always available) and `Text.Sentiment.Backends.Bumblebee` (optional — neural via [Bumblebee](https://hex.pm/packages/bumblebee) and XLM-RoBERTa, requires `:bumblebee` and `:exla` deps). Routing via the `:backend` option to `Text.Sentiment.analyze/2` or globally via the `:sentiment_backend` application configuration.
@@ -39,6 +47,8 @@ All notable changes to this project are documented here. The format follows [Kee
 * Added required dependencies on `:nx` and `:unicode`. Optional dependencies on `:exla` (recommended for inference performance) and `:localize` (for CLDR-canonical locale resolution).
 
 * The fastText inference forward pass (`take + mean + dot`, plus the softmax tail for softmax-loss models) is now wrapped in `Nx.Defn` so that an EXLA-compiled execution runs the entire pass as a single fused XLA kernel. With EXLA configured as both backend and `defn` compiler, per-prediction wall time on `lid.176` drops from roughly 200 μs to ~100 μs — about 2× over the unfused EXLA path and 6-9× over `Nx.BinaryBackend`. Bit-equivalent to the pre-fusion form; the test suite passes both ways.
+
+* The hierarchical-softmax scoring path is now also fused into the same `defn` graph: per-leaf paths through the Huffman tree are pre-computed at model load time and stored as fixed-shape tensors on `Text.Language.Classifier.Fasttext.HuffmanTree`. The recursive BEAM-side DFS (and its accompanying f32-rounding workaround) is gone. For `lid.176` specifically the latency is comparable to the previous DFS approach (~125 μs vs ~110 μs) — the win materialises for larger label spaces. The simpler architecture removes a fragile spot.
 
 * Hex package version bumped to `0.3.0`.
 
