@@ -175,9 +175,10 @@ defmodule Text.NER do
     defp build_serving(model, options) do
       compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 256])
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
+      tokenizer_repo = Keyword.get(options, :tokenizer_repo, model)
 
       {:ok, model_info} = Bumblebee.load_model({:hf, model})
-      {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, model})
+      {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, tokenizer_repo})
 
       Bumblebee.Text.token_classification(model_info, tokenizer,
         compile: compile,

@@ -36,6 +36,19 @@ defmodule Text.Sentiment.Backends.Bumblebee do
   then pass `serving: <name_or_pid>` to `analyze/2` to skip the cache
   entirely.
 
+  ### Tokenizer override
+
+  Some fine-tuned models on Hugging Face ship without the
+  `tokenizer.json` Bumblebee expects — they have only the raw
+  SentencePiece or WordPiece data. The default Cardiff sentiment
+  model is one of those, so this backend loads its tokenizer from
+  the base `FacebookAI/xlm-roberta-base` repo instead. Other models
+  fall through to "use the same repo as the model" by default.
+
+  If you point `:model` at a fine-tune that itself lacks a
+  `tokenizer.json`, pass `:tokenizer_repo` to point at a repo that
+  has one (typically the base model the fine-tune was trained on).
+
   ### Result shape
 
   Returns the same map shape every backend produces:
@@ -68,6 +81,15 @@ defmodule Text.Sentiment.Backends.Bumblebee do
     @behaviour Text.Sentiment.Backend
 
     @default_model "cardiffnlp/twitter-xlm-roberta-base-sentiment"
+
+    # The Cardiff sentiment fine-tune ships `sentencepiece.bpe.model`
+    # but not the `tokenizer.json` Bumblebee currently expects, so the
+    # tokenizer has to be loaded from the base XLM-RoBERTa repo
+    # instead. The mapping is per-model — for any other repo we fall
+    # through to "load the tokenizer from the same repo as the model".
+    @tokenizer_overrides %{
+      "cardiffnlp/twitter-xlm-roberta-base-sentiment" => "FacebookAI/xlm-roberta-base"
+    }
 
     @impl true
     def analyze(text, options \\ []) when is_binary(text) do
@@ -120,15 +142,20 @@ defmodule Text.Sentiment.Backends.Bumblebee do
     defp build_serving(model, options) do
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
       compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 128])
+      tokenizer_repo = resolve_tokenizer_repo(model, options)
 
       {:ok, model_info} = Bumblebee.load_model({:hf, model})
-      {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, model})
+      {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, tokenizer_repo})
 
       Bumblebee.Text.text_classification(model_info, tokenizer,
         compile: compile,
         defn_options: defn_options,
         scores_function: :softmax
       )
+    end
+
+    defp resolve_tokenizer_repo(model, options) do
+      Keyword.get(options, :tokenizer_repo) || Map.get(@tokenizer_overrides, model, model)
     end
 
     defp default_defn_options do
