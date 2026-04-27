@@ -88,6 +88,17 @@ defmodule Text.NER do
 
   @default_model "Davlan/bert-base-multilingual-cased-ner-hrl"
 
+  # Some Hugging Face fine-tunes ship without the Rust-compatible
+  # `tokenizer.json` Bumblebee expects — they only have the raw
+  # WordPiece/BPE files. The override maps each such fine-tune to a
+  # base-model repo that does have the right tokenizer file. Models
+  # not in the table use their own repo as both model and tokenizer
+  # source.
+  @tokenizer_overrides %{
+    "Davlan/bert-base-multilingual-cased-ner-hrl" =>
+      "google-bert/bert-base-multilingual-cased"
+  }
+
   if Code.ensure_loaded?(Bumblebee) do
     @doc """
     Extracts named entities from `text`.
@@ -175,7 +186,7 @@ defmodule Text.NER do
     defp build_serving(model, options) do
       compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 256])
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
-      tokenizer_repo = Keyword.get(options, :tokenizer_repo, model)
+      tokenizer_repo = resolve_tokenizer_repo(model, options)
 
       {:ok, model_info} = Bumblebee.load_model({:hf, model})
       {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, tokenizer_repo})
@@ -185,6 +196,10 @@ defmodule Text.NER do
         defn_options: defn_options,
         aggregation: :same
       )
+    end
+
+    defp resolve_tokenizer_repo(model, options) do
+      Keyword.get(options, :tokenizer_repo) || Map.get(@tokenizer_overrides, model, model)
     end
 
     defp default_defn_options do
