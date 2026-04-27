@@ -68,6 +68,8 @@ defmodule Text.MixProject do
       {:nx, "~> 0.7 or ~> 0.8 or ~> 0.9 or ~> 0.10 or ~> 0.11"},
       {:exla, "~> 0.7 or ~> 0.8 or ~> 0.9 or ~> 0.10 or ~> 0.11", optional: true},
       {:unicode, "~> 1.21"},
+      {:unicode_transform, "~> 1.0"},
+      {:unicode_string, "~> 2.0"},
       {:localize, "~> 0.23", optional: true},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
