@@ -13,51 +13,45 @@ defmodule Text.Language.Classifier.Fasttext.LocaleTest do
     }
   end
 
-  describe "resolve/2 — Localize-backed path (when :localize is loaded)" do
-    @describetag :requires_localize
+  if Code.ensure_loaded?(Localize.LanguageTag) do
+    describe "resolve/2 — Localize-backed path (when :localize is loaded)" do
+      @describetag :requires_localize
 
-    setup do
-      if Code.ensure_loaded?(Localize) do
-        :ok
-      else
-        {:skip, "skipping; :localize is not available"}
+      test "expands en to en-Latn-US via likely-subtags" do
+        assert {:ok, "en-Latn-US"} = Locale.resolve(detection("en", :Latn))
       end
-    end
 
-    test "expands en to en-Latn-US via likely-subtags" do
-      assert {:ok, "en-Latn-US"} = Locale.resolve(detection("en", :Latn))
-    end
+      test "expands zh to zh-Hans-CN" do
+        assert {:ok, "zh-Hans-CN"} = Locale.resolve(detection("zh", :Hani))
+      end
 
-    test "expands zh to zh-Hans-CN" do
-      assert {:ok, "zh-Hans-CN"} = Locale.resolve(detection("zh", :Hani))
-    end
+      test "expands ja to ja-Jpan-JP, ignoring the Hira/Kana script signal" do
+        assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Hira))
+        assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Kana))
+        assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Hani))
+      end
 
-    test "expands ja to ja-Jpan-JP, ignoring the Hira/Kana script signal" do
-      assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Hira))
-      assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Kana))
-      assert {:ok, "ja-Jpan-JP"} = Locale.resolve(detection("ja", :Hani))
-    end
+      test "expands ko to ko-Kore-KR, ignoring the Hang script signal" do
+        assert {:ok, "ko-Kore-KR"} = Locale.resolve(detection("ko", :Hang))
+      end
 
-    test "expands ko to ko-Kore-KR, ignoring the Hang script signal" do
-      assert {:ok, "ko-Kore-KR"} = Locale.resolve(detection("ko", :Hang))
-    end
+      test "honours an explicit :region override" do
+        assert {:ok, locale} = Locale.resolve(detection("fr", :Latn), region: :CA)
+        assert locale == "fr-Latn-CA"
+      end
 
-    test "honours an explicit :region override" do
-      assert {:ok, locale} = Locale.resolve(detection("fr", :Latn), region: :CA)
-      assert locale == "fr-Latn-CA"
-    end
+      test "honours an explicit :script override (sr-Latn vs sr-Cyrl)" do
+        assert {:ok, "sr-Latn-RS"} =
+                 Locale.resolve(detection("sr", :Cyrl), script: :Latn)
 
-    test "honours an explicit :script override (sr-Latn vs sr-Cyrl)" do
-      assert {:ok, "sr-Latn-RS"} =
-               Locale.resolve(detection("sr", :Cyrl), script: :Latn)
+        assert {:ok, "sr-Cyrl-RS"} =
+                 Locale.resolve(detection("sr", :Cyrl))
+      end
 
-      assert {:ok, "sr-Cyrl-RS"} =
-               Locale.resolve(detection("sr", :Cyrl))
-    end
-
-    test "Latin-script Serbian text resolves to sr-Latn" do
-      # The script signal (Latn) genuinely disambiguates Serbian.
-      assert {:ok, "sr-Latn-RS"} = Locale.resolve(detection("sr", :Latn))
+      test "Latin-script Serbian text resolves to sr-Latn" do
+        # The script signal (Latn) genuinely disambiguates Serbian.
+        assert {:ok, "sr-Latn-RS"} = Locale.resolve(detection("sr", :Latn))
+      end
     end
   end
 

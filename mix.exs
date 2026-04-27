@@ -63,20 +63,37 @@ defmodule Text.MixProject do
   end
 
   defp deps do
+    base() ++ runtime_optional_deps()
+  end
+
+  defp base do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 0.10"},
-      {:exla, "~> 0.9 or ~> 0.10", optional: true},
-      {:bumblebee, "~> 0.6", optional: true},
       {:unicode, "~> 1.21"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.0"},
-      {:localize, "~> 0.23", optional: true},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
       {:jason, "~> 1.2"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
     ]
+  end
+
+  # Runtime-relevant optional deps. Set the `TEXT_SKIP_OPTIONAL_DEPS=1`
+  # env var to omit these — used by the "without optional deps" CI job
+  # to verify the package compiles and tests pass without them, exercising
+  # the `Code.ensure_loaded?(Bumblebee)` etc. fallbacks.
+  defp runtime_optional_deps do
+    if System.get_env("TEXT_SKIP_OPTIONAL_DEPS") == "1" do
+      []
+    else
+      [
+        {:exla, "~> 0.9 or ~> 0.10", optional: true},
+        {:bumblebee, "~> 0.6", optional: true},
+        {:localize, "~> 0.23", optional: true}
+      ]
+    end
   end
 
   def links do
