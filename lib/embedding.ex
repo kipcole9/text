@@ -136,8 +136,11 @@ defmodule Text.Embedding do
   @spec vector(t(), String.t()) :: Nx.Tensor.t() | nil
   def vector(%__MODULE__{} = embeddings, token) when is_binary(token) do
     case Map.fetch(embeddings.vocab, token) do
-      {:ok, idx} -> Nx.slice_along_axis(embeddings.vectors, idx, 1, axis: 0) |> Nx.squeeze(axes: [0])
-      :error -> nil
+      {:ok, idx} ->
+        Nx.slice_along_axis(embeddings.vectors, idx, 1, axis: 0) |> Nx.squeeze(axes: [0])
+
+      :error ->
+        nil
     end
   end
 

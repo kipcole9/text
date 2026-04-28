@@ -23,3 +23,7 @@ corpus/analysis/~$Accuracy Analysis.xlsx
 # fastText lid.176 model — fetched via `mix text.download_model`, not committed
 /priv/lid_176/lid.176.bin
 /priv/lid_176/lid.176.ftz
+
+# Dev artifacts
+/plans
+/tmp

@@ -230,8 +230,7 @@ defmodule Text.Language.Classifier.Fasttext.ModelLoader do
        ) do
     cond do
       m != expected_m or n != expected_n ->
-        {:error,
-         {mismatch_tag, %{expected: {expected_m, expected_n}, actual: {m, n}}}}
+        {:error, {mismatch_tag, %{expected: {expected_m, expected_n}, actual: {m, n}}}}
 
       true ->
         byte_count = m * n * 4

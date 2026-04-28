@@ -112,8 +112,7 @@ defmodule Text.Language.Classifier.Fasttext.FeaturesTest do
           {:skip, "skipping; download lid.176.bin via the download_model task"}
 
         not File.exists?(@fixture_path) ->
-          {:skip,
-           "skipping; generate via `python3 priv/scripts/generate_features_fixtures.py`"}
+          {:skip, "skipping; generate via `python3 priv/scripts/generate_features_fixtures.py`"}
 
         true ->
           fixture = @fixture_path |> File.read!() |> :json.decode()

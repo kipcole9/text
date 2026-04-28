@@ -154,7 +154,7 @@ defmodule Text.POS do
     end
 
     defp build_serving(model, options) do
-      compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 128])
+      compile = Keyword.get(options, :compile, batch_size: 1, sequence_length: 128)
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
       tokenizer_repo = resolve_tokenizer_repo(model, options)
 

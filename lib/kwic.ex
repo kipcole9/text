@@ -100,7 +100,9 @@ defmodule Text.KWIC do
     tokens = tokenizer.(text)
 
     needle = if case_sensitive?, do: term, else: String.downcase(term)
-    haystack_for_match = if case_sensitive?, do: tokens, else: Enum.map(tokens, &String.downcase/1)
+
+    haystack_for_match =
+      if case_sensitive?, do: tokens, else: Enum.map(tokens, &String.downcase/1)
 
     haystack_for_match
     |> Enum.with_index()

@@ -277,7 +277,10 @@ defmodule Text.Language.Classifier.Fasttext.InferenceTest do
             if delta < 1.0e-3 do
               acc
             else
-              [%{text: entry["text"], expected: expected_prob, actual: ours_prob, delta: delta} | acc]
+              [
+                %{text: entry["text"], expected: expected_prob, actual: ours_prob, delta: delta}
+                | acc
+              ]
             end
         end
 

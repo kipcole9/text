@@ -124,13 +124,16 @@ defmodule Text.Language.Classifier.Fasttext.HuffmanTree do
     total = 2 * osz - 1
 
     initial =
-      :array.new(size: total, default: %{
-        parent: -1,
-        left: -1,
-        right: -1,
-        count: 1_000_000_000_000_000,
-        binary: false
-      })
+      :array.new(
+        size: total,
+        default: %{
+          parent: -1,
+          left: -1,
+          right: -1,
+          count: 1_000_000_000_000_000,
+          binary: false
+        }
+      )
 
     nodes =
       counts

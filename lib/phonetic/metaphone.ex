@@ -269,6 +269,7 @@ defmodule Text.Phonetic.Metaphone do
 
   # SH, SIO, SIA → X
   defp encode_char(?S, <<?H, rest::binary>>, _prev, _acc), do: {"X", rest}
+
   defp encode_char(?S, <<?I, n, _::binary>> = rest, _prev, _acc) when n in ~c"OA",
     do: {"X", rest}
 

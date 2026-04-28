@@ -834,7 +834,9 @@ defmodule Text.Inflect.En do
             |> Enum.drop(3)
             |> Enum.reject(&(&1 == "->"))
             |> Enum.map(&String.replace(&1, " ->", ""))
-            |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
+            |> Enum.map(fn x ->
+              if String.contains?(x, "|"), do: String.split(x, "|"), else: x
+            end)
             |> Enum.chunk_every(2)
             |> Map.new(&List.to_tuple/1)
 

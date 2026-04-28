@@ -42,7 +42,15 @@ defmodule Text.Sentiment.Lexicons.AFINN do
   @external_resource Path.join([__DIR__, "..", "..", "..", "priv", "sentiment", "afinn-pl.tsv"])
   @external_resource Path.join([__DIR__, "..", "..", "..", "priv", "sentiment", "afinn-sv.tsv"])
   @external_resource Path.join([__DIR__, "..", "..", "..", "priv", "sentiment", "afinn-tr.tsv"])
-  @external_resource Path.join([__DIR__, "..", "..", "..", "priv", "sentiment", "afinn-emoticon.tsv"])
+  @external_resource Path.join([
+                       __DIR__,
+                       "..",
+                       "..",
+                       "..",
+                       "priv",
+                       "sentiment",
+                       "afinn-emoticon.tsv"
+                     ])
 
   @priv_dir Path.join([__DIR__, "..", "..", "..", "priv", "sentiment"])
 

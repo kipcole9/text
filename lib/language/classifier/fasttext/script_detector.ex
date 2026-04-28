@@ -81,10 +81,14 @@ defmodule Text.Language.Classifier.Fasttext.ScriptDetector do
   # Traditional equivalents have different codepoints (`国` ↔ `國`,
   # `学` ↔ `學`, …). Curated from the most common ~60 distinguishing
   # function words, pronouns, common verbs, and high-frequency nouns.
-  @hans_only_codepoints MapSet.new(~c"国学时来这个们与为经后还没现实当处应让总极区选议队体点开关龙华爱进发业东车报边长万门问间听说样头觉见画书认识语话读写传专属赞议价较脑亲笔诉觉养")
+  @hans_only_codepoints MapSet.new(
+                          ~c"国学时来这个们与为经后还没现实当处应让总极区选议队体点开关龙华爱进发业东车报边长万门问间听说样头觉见画书认识语话读写传专属赞议价较脑亲笔诉觉养"
+                        )
 
   # Codepoints that exist *only* in Traditional Chinese.
-  @hant_only_codepoints MapSet.new(~c"國學時來這個們與為經後還沒現實當處應讓總極區選議隊體點開關龍華愛進發業東車報邊長萬門問間聽說樣頭覺見畫書認識語話讀寫傳專屬贊議價較腦親筆訴覺養")
+  @hant_only_codepoints MapSet.new(
+                          ~c"國學時來這個們與為經後還沒現實當處應讓總極區選議隊體點開關龍華愛進發業東車報邊長萬門問間聽說樣頭覺見畫書認識語話讀寫傳專屬贊議價較腦親筆訴覺養"
+                        )
 
   @doc """
   Returns the dominant script of `text` as an ISO 15924 four-letter atom.

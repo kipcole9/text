@@ -31,8 +31,7 @@ defmodule Text.Language.Classifier.Fasttext.Detection do
   @type t :: %__MODULE__{
           language: String.t(),
           confidence: float(),
-          script:
-            Text.Language.Classifier.Fasttext.ScriptDetector.script(),
+          script: Text.Language.Classifier.Fasttext.ScriptDetector.script(),
           alternatives: [alternative()],
           text: String.t()
         }

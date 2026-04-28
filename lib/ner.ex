@@ -95,8 +95,7 @@ defmodule Text.NER do
   # not in the table use their own repo as both model and tokenizer
   # source.
   @tokenizer_overrides %{
-    "Davlan/bert-base-multilingual-cased-ner-hrl" =>
-      "google-bert/bert-base-multilingual-cased"
+    "Davlan/bert-base-multilingual-cased-ner-hrl" => "google-bert/bert-base-multilingual-cased"
   }
 
   if Code.ensure_loaded?(Bumblebee) do
@@ -184,7 +183,7 @@ defmodule Text.NER do
     end
 
     defp build_serving(model, options) do
-      compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 256])
+      compile = Keyword.get(options, :compile, batch_size: 1, sequence_length: 256)
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
       tokenizer_repo = resolve_tokenizer_repo(model, options)
 

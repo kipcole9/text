@@ -30,6 +30,7 @@ defmodule Text.CollocationTest do
 
     test "accepts string input via tokenizer" do
       text = "the cat sat. the cat ran."
+
       assert [{[a, b], _} | _] =
                Collocation.bigrams(text, min_count: 2, k: 1)
 

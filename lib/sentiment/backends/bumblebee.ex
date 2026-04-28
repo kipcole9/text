@@ -141,7 +141,7 @@ defmodule Text.Sentiment.Backends.Bumblebee do
 
     defp build_serving(model, options) do
       defn_options = Keyword.get(options, :defn_options, default_defn_options())
-      compile = Keyword.get(options, :compile, [batch_size: 1, sequence_length: 128])
+      compile = Keyword.get(options, :compile, batch_size: 1, sequence_length: 128)
       tokenizer_repo = resolve_tokenizer_repo(model, options)
 
       {:ok, model_info} = Bumblebee.load_model({:hf, model})

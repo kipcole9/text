@@ -1,0 +1,131 @@
+name: Elixir CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  MIX_ENV: test
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: >-
+      Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}${{
+        matrix.no_optional_deps && ' (no optional deps)' || '' }}${{
+        matrix.lint && ' (lint)' || '' }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Full matrix with all optional deps installed (`:exla`,
+          # `:bumblebee`, `:localize`). The Nx version range
+          # (`~> 0.9 or ~> 0.10`) and Bumblebee's compatibility
+          # constraints set the floor at Elixir 1.17 / OTP 26.
+
+          # Elixir 1.17 — supports OTP 26-27
+          - elixir: "1.17-otp-26"
+            otp: "26"
+          - elixir: "1.17-otp-27"
+            otp: "27"
+
+          # Elixir 1.18 — supports OTP 26-27
+          - elixir: "1.18-otp-26"
+            otp: "26"
+          - elixir: "1.18-otp-27"
+            otp: "27"
+
+          # Elixir 1.19 — supports OTP 26-28
+          - elixir: "1.19-otp-26"
+            otp: "26"
+          - elixir: "1.19-otp-27"
+            otp: "27"
+          - elixir: "1.19-otp-28"
+            otp: "28"
+
+          # Elixir 1.20 — supports OTP 27-28. The 1.20/28 entry doubles
+          # as the lint job (format check + dialyzer).
+          - elixir: "1.20.0-rc.4-otp-27"
+            otp: "27"
+          - elixir: "1.20.0-rc.4-otp-28"
+            otp: "28"
+            lint: true
+
+          # Single "no optional deps" entry on the latest combo.
+          # Verifies the `Code.ensure_loaded?(Bumblebee)` and
+          # `Code.ensure_loaded?(Localize.LanguageTag)` fallbacks
+          # compile and behave correctly when the optional packages
+          # aren't present in the host application.
+          - elixir: "1.20.0-rc.4-otp-28"
+            otp: "28"
+            no_optional_deps: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Drop mix.lock for the no-optional-deps run
+        # The lock file references the optional packages we are about
+        # to skip. Removing it lets `mix deps.get` re-resolve against
+        # the slimmer dep list.
+        if: matrix.no_optional_deps
+        run: rm -f mix.lock
+
+      - name: Restore dependency cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            deps
+            _build
+          key: >-
+            mix-${{ matrix.elixir }}-${{ matrix.otp }}${{
+              matrix.no_optional_deps && '-noopt' || '' }}-${{
+              hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ matrix.elixir }}-${{ matrix.otp }}${{ matrix.no_optional_deps && '-noopt' || '' }}-
+
+      - name: Install dependencies
+        env:
+          TEXT_SKIP_OPTIONAL_DEPS: ${{ matrix.no_optional_deps && '1' || '' }}
+        run: mix deps.get
+
+      - name: Check formatting
+        if: matrix.lint
+        run: mix format --check-formatted
+
+      - name: Compile (warnings as errors)
+        env:
+          TEXT_SKIP_OPTIONAL_DEPS: ${{ matrix.no_optional_deps && '1' || '' }}
+        run: mix compile --warnings-as-errors
+
+      - name: Run tests
+        env:
+          TEXT_SKIP_OPTIONAL_DEPS: ${{ matrix.no_optional_deps && '1' || '' }}
+        run: mix test
+
+      - name: Restore PLT cache
+        if: matrix.lint
+        uses: actions/cache@v5
+        with:
+          path: _build/dev/dialyxir_*
+          key: plt-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            plt-${{ matrix.elixir }}-${{ matrix.otp }}-
+
+      - name: Run dialyzer
+        if: matrix.lint
+        env:
+          MIX_ENV: dev
+        run: mix dialyzer

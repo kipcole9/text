@@ -92,6 +92,7 @@ defmodule Text.Language.Classifier.Fasttext.Subwords do
   def compute_ngrams(word, minn, maxn) when minn >= 1 and maxn >= minn do
     framed = @bow <> word <> @eow
     size = byte_size(framed)
+
     do_outer(framed, size, 0, minn, maxn, [])
     |> Enum.reverse()
   end

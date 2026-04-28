@@ -111,7 +111,7 @@ defmodule Text.Distance do
     cost = if a_char == b_char, do: 0, else: 1
 
     curr =
-      next_prev + 1
+      (next_prev + 1)
       |> min(last_curr + 1)
       |> min(prev_diag + cost)
 
@@ -195,7 +195,7 @@ defmodule Text.Distance do
     cost = if a_i == b_j, do: 0, else: 1
 
     base =
-      Map.fetch!(d, {i - 1, j}) + 1
+      (Map.fetch!(d, {i - 1, j}) + 1)
       |> min(Map.fetch!(d, {i, j - 1}) + 1)
       |> min(Map.fetch!(d, {i - 1, j - 1}) + cost)
 
