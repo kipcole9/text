@@ -91,7 +91,8 @@ defmodule Text.MixProject do
       [
         {:exla, "~> 0.9 or ~> 0.10", optional: true},
         {:bumblebee, "~> 0.6", optional: true},
-        {:localize, "~> 0.23", optional: true}
+        {:localize, "~> 0.23", optional: true},
+        {:color, "~> 0.12", optional: true}
       ]
     end
   end

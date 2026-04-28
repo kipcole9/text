@@ -334,6 +334,25 @@ placements = Text.WordCloud.Layout.layout(terms,
 #=> [%{term: "machine learning", x: 400.0, y: 300.0, font_size: 96.0, rotation: 0, ...}, ...]
 ```
 
+#### SVG rendering
+
+`Text.WordCloud.SVG.render/2` turns placements into a self-contained SVG document. Per-word colour comes from a pluggable palette: a list of hex strings, a `Color.Palette.Tonal` scale, or a `Color.Palette.Theme` (when the optional [`color`](https://hex.pm/packages/color) dependency is present).
+
+```elixir
+palette = Color.Palette.tonal("#3b82f6", name: "blue")
+
+svg = Text.WordCloud.SVG.render(placements,
+  width: 800,
+  height: 600,
+  palette: palette,
+  background: "#fafafa"
+)
+
+File.write!("cloud.svg", svg)
+```
+
+Three colour-mapping strategies are supported via `:color_strategy`: `:by_weight` (default; top weight gets the darkest tonal stop), `:by_index` (round-robin through the palette), and `:by_hash` (deterministic per term — identical terms always pick the same colour).
+
 ## Roadmap
 
 Near-term improvements aimed at the fastText path:

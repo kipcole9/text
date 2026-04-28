@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `Text.WordCloud.Layout` — Wordle-style Archimedean-spiral packing that produces renderer-agnostic `(x, y, width, height, font_size, rotation)` placements. Pluggable `:font_metrics` callback so callers can supply pixel-accurate metrics from their actual font stack.
 
+* `Text.WordCloud.SVG` — renders placements as a self-contained SVG document. Pluggable `:palette` (list of hex strings, a `Color.Palette.Tonal` scale, a `Color.Palette.Theme`, or `nil` for single-colour) plus three mapping strategies (`:by_weight`, `:by_index`, `:by_hash`). Hex-string palettes work without optional deps; `Color.Palette` structs require the optional `:color` dependency.
+
 * `Text.Stopwords` — bundled multilingual stopword lists from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso) (~60 languages, MIT license). Public API: `for/1`, `contains?/2`, `available_languages/0`, `available?/1`, `union/2`, `extend/2`. Generation tooling lives in `mix text.gen_stopwords`.
 
 * `mix text.download_models --keybert` — pre-fetches the multilingual MiniLM sentence-transformer used by `Text.WordCloud.Backends.KeyBERT` (~470 MB). The `--bumblebee` shorthand now includes `--keybert` alongside `--sentiment --pos --ner`.
