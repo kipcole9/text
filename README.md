@@ -25,6 +25,8 @@ Text & language processing for Elixir.
 * **Collocation extraction** (`Text.Collocation`) — bigrams ranked by frequency, PMI, or Dunning's log-likelihood.
 * **Concordance** (`Text.KWIC`) — keyword-in-context lookup.
 * **Word embeddings** (`Text.Embedding`) — load fastText-format `.vec` files, then cosine similarity, nearest neighbours, and analogies (`king - man + woman ≈ queen`).
+* **Word clouds** (`Text.WordCloud`) — multilingual keyword extraction with five scoring algorithms (YAKE!, frequency, RAKE, TextRank, TF-IDF, KeyBERT), plus spiral layout (`Text.WordCloud.Layout`) for any rendering surface.
+* **Stopwords** (`Text.Stopwords`) — bundled stopword lists for ~60 languages from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso).
 
 ### Inflection
 
@@ -283,6 +285,54 @@ Override the default model via `:model` to use a language-specific or domain-spe
 ### N-Gram generation
 
 The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
+
+### Word clouds
+
+`Text.WordCloud.terms/2` extracts a weighted list of terms from text, suitable for rendering as a word cloud. Default scoring is YAKE! (Campos et al. 2020) — unsupervised, statistical, multilingual by construction; no reference corpus required.
+
+```elixir
+text = """
+Machine learning is a subset of artificial intelligence. Machine learning
+algorithms build a model based on sample data, known as training data,
+in order to make predictions or decisions.
+"""
+
+Text.WordCloud.terms(text, language: :en, max_terms: 5)
+#=> [
+#=>   %{term: "machine learning", weight: 1.0,   count: 2, kind: :phrase},
+#=>   %{term: "machine",          weight: 0.52,  count: 3, kind: :word},
+#=>   %{term: "learning",         weight: 0.29,  count: 3, kind: :word},
+#=>   %{term: "artificial intelligence", weight: 0.23, count: 1, kind: :phrase},
+#=>   %{term: "training data",    weight: 0.10,  count: 1, kind: :phrase}
+#=> ]
+```
+
+Six scoring backends, selectable via the `:scoring` option:
+
+* **`:yake`** *(default)* — unsupervised, multilingual, no reference corpus. Best out-of-the-box quality.
+* **`:frequency`** — raw counts after stopword filtering. Baseline.
+* **`:rake`** — phrase-bounded scoring (Rose et al. 2010).
+* **`:text_rank`** — PageRank over a word co-occurrence graph (Mihalcea & Tarau 2004).
+* **`:tf_idf`** — distinctive terms relative to a `:reference_corpus`.
+* **`:key_bert`** — neural cosine similarity via a multilingual sentence-transformer (requires `:bumblebee`; ~470 MB model download).
+
+Stopwords come from `Text.Stopwords` (bundled stopwords-iso, ~60 languages). The `:language` option drives stopword selection; pass `{:auto, model}` for fastText auto-detection. See `Text.WordCloud` for the full option list.
+
+#### Layout
+
+`Text.WordCloud.Layout.layout/2` takes the term list and produces `(x, y, width, height, font_size, rotation)` placements via Wordle-style Archimedean-spiral packing. Output is renderer-agnostic — feed it to SVG, Canvas, PDF, or any other surface.
+
+```elixir
+terms = Text.WordCloud.terms(text, language: :en)
+
+placements = Text.WordCloud.Layout.layout(terms,
+  width: 800,
+  height: 600,
+  font_size_range: {12, 96},
+  rotations: [0, 90]
+)
+#=> [%{term: "machine learning", x: 400.0, y: 300.0, font_size: 96.0, rotation: 0, ...}, ...]
+```
 
 ## Roadmap
 

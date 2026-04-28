@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+* `Text.WordCloud` — multilingual keyword extraction returning a weighted term list suitable for rendering as a word cloud. Six backends: YAKE! (default, unsupervised statistical), frequency, RAKE, TextRank, TF-IDF (requires `:reference_corpus`), and KeyBERT (neural, requires `:bumblebee`).
+
+* `Text.WordCloud.Layout` — Wordle-style Archimedean-spiral packing that produces renderer-agnostic `(x, y, width, height, font_size, rotation)` placements. Pluggable `:font_metrics` callback so callers can supply pixel-accurate metrics from their actual font stack.
+
+* `Text.Stopwords` — bundled multilingual stopword lists from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso) (~60 languages, MIT license). Public API: `for/1`, `contains?/2`, `available_languages/0`, `available?/1`, `union/2`, `extend/2`. Generation tooling lives in `mix text.gen_stopwords`.
+
+* `mix text.download_models --keybert` — pre-fetches the multilingual MiniLM sentence-transformer used by `Text.WordCloud.Backends.KeyBERT` (~470 MB). The `--bumblebee` shorthand now includes `--keybert` alongside `--sentiment --pos --ner`.
+
 * `Text.POS` — part-of-speech tagging via the optional `:bumblebee` dependency. English by default (`vblagoje/bert-english-uncased-finetuned-pos`); override `:model` for other checkpoints. Returns coarse-grained tag atoms (`:noun`, `:verb`, `:adj`, …) with confidence scores.
 
 * `Text.NER` — named-entity recognition via the optional `:bumblebee` dependency. Multilingual by default (`Davlan/bert-base-multilingual-cased-ner-hrl`, 10 high-resource languages, CoNLL-2003 tag set). Returns `Text.NER.Entity` structs with span byte offsets, type atom (`:per`, `:org`, `:loc`, `:misc`), and score.

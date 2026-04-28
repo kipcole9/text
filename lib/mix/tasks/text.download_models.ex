@@ -46,7 +46,11 @@ defmodule Mix.Tasks.Text.DownloadModels do
 
   * `--ner` — fetch the default `Text.NER` model and tokenizer.
 
-  * `--bumblebee` — shorthand for `--sentiment --pos --ner`.
+  * `--keybert` — fetch the default `Text.WordCloud.Backends.KeyBERT`
+    multilingual sentence-transformer model and tokenizer
+    (~470 MB).
+
+  * `--bumblebee` — shorthand for `--sentiment --pos --ner --keybert`.
 
   * `--all` — download every model. This is the default when no
     selection flag is given.
@@ -99,6 +103,11 @@ defmodule Mix.Tasks.Text.DownloadModels do
       module: Text.NER,
       model: "Davlan/bert-base-multilingual-cased-ner-hrl",
       tokenizer: "google-bert/bert-base-multilingual-cased"
+    },
+    keybert: %{
+      module: Text.WordCloud.Backends.KeyBERT,
+      model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      tokenizer: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     }
   }
 
@@ -107,6 +116,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
     sentiment: :boolean,
     pos: :boolean,
     ner: :boolean,
+    keybert: :boolean,
     bumblebee: :boolean,
     all: :boolean,
     force: :boolean,
@@ -124,6 +134,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
     if selection.sentiment, do: download_bumblebee_stack(:sentiment, options)
     if selection.pos, do: download_bumblebee_stack(:pos, options)
     if selection.ner, do: download_bumblebee_stack(:ner, options)
+    if selection.keybert, do: download_bumblebee_stack(:keybert, options)
 
     :ok
   end
@@ -131,7 +142,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
   # ---- selection ---------------------------------------------------------
 
   defp expand_selection(options) do
-    explicit_flags = [:lid176, :sentiment, :pos, :ner, :bumblebee, :all]
+    explicit_flags = [:lid176, :sentiment, :pos, :ner, :keybert, :bumblebee, :all]
     any_explicit? = Enum.any?(explicit_flags, &Keyword.get(options, &1, false))
 
     if any_explicit? do
@@ -148,11 +159,15 @@ defmodule Mix.Tasks.Text.DownloadModels do
         ner:
           Keyword.get(options, :ner, false) or
             Keyword.get(options, :bumblebee, false) or
+            Keyword.get(options, :all, false),
+        keybert:
+          Keyword.get(options, :keybert, false) or
+            Keyword.get(options, :bumblebee, false) or
             Keyword.get(options, :all, false)
       }
     else
       # No selection flags → download everything.
-      %{lid176: true, sentiment: true, pos: true, ner: true}
+      %{lid176: true, sentiment: true, pos: true, ner: true, keybert: true}
     end
   end
 
@@ -223,6 +238,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
   defp label_for(:sentiment), do: "Sentiment (Bumblebee)"
   defp label_for(:pos), do: "POS (Bumblebee)"
   defp label_for(:ner), do: "NER (Bumblebee)"
+  defp label_for(:keybert), do: "KeyBERT (Bumblebee)"
 
   # `Bumblebee.load_model/2` and `load_tokenizer/2` populate the cache
   # as a side effect of loading; we discard the loaded artefact since
