@@ -60,6 +60,8 @@ mix text.download_model
 
 The file is written to `priv/lid_176/lid.176.bin` inside this project. It is added to `.gitignore` and is **not** part of the Hex package payload — every install fetches its own copy.
 
+For production deployments that also use `Text.Sentiment.Backends.Bumblebee`, `Text.POS`, or `Text.NER`, run `mix text.download_models` (plural) instead — it pre-fetches `lid.176.bin` plus every default Hugging Face model into the Bumblebee cache so subsequent calls run with no network access. See `mix help text.download_models` for selection flags.
+
 ### Detecting a language
 
 ```elixir

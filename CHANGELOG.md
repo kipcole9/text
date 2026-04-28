@@ -36,6 +36,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `mix text.download_model` task that fetches `lid.176.bin` into `priv/lid_176/`. The model file is gitignored and not part of the Hex package.
 
+* `mix text.download_models` task (plural) that pre-fetches every external model used by `:text` — `lid.176.bin` plus the default Hugging Face checkpoints behind `Text.Sentiment.Backends.Bumblebee`, `Text.POS`, and `Text.NER` — for production environments that need every artefact present at boot. Selection flags (`--lid176`, `--sentiment`, `--pos`, `--ner`, `--bumblebee`) limit the download to a subset.
+
 * `mix text.gen_subword_fixtures`, `mix text.gen_features_fixtures`, `mix text.gen_predict_fixtures` (via `priv/scripts/*.py`) for regenerating the differential test fixtures against the reference `fasttext` Python bindings.
 
 * `docs/lid176_binary_format.md` — full byte-layout specification of fastText's model file, derived from the C++ source.
