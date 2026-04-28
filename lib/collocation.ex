@@ -88,6 +88,10 @@ defmodule Text.Collocation do
       [{["a", "a"], 2}]
 
   """
+  # Dialyzer can't always trace the opacity of `MapSet`s constructed at
+  # runtime from caller-supplied options through the `Enum.reject/2`
+  # boundary; the warning is benign.
+  @dialyzer {:nowarn_function, bigrams: 1, bigrams: 2}
   @spec bigrams(String.t() | [String.t()], keyword()) :: [{bigram(), number()}]
   def bigrams(input, options \\ []) do
     measure = Keyword.get(options, :measure, :log_likelihood)

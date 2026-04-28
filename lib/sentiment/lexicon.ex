@@ -206,6 +206,10 @@ defmodule Text.Sentiment.Lexicon do
 
   # ---- internal: scoring adjustments -------------------------------------
 
+  # Dialyzer can't trace the opacity of MapSets passed through helper
+  # function args; the call sites build them via `MapSet.new/1` at the
+  # public entry point.
+  @dialyzer {:nowarn_function, apply_intensifier: 7, has_negator_in_window?: 4}
   defp apply_intensifier(base, tokens, idx, intensifiers, diminishers, boost, diminish) do
     case prev_token(tokens, idx) do
       nil ->

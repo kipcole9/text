@@ -164,8 +164,14 @@ defmodule Text.Slug do
     end
   end
 
+  # Call `Unicode.Script.script/1` directly rather than the
+  # `Unicode.script/1` wrapper: the wrapper carries an `@spec`
+  # claiming a string return, which masks the per-codepoint atom
+  # return that the underlying implementation actually produces and
+  # makes dialyzer flag every downstream `script in [...]` test as
+  # un-matchable.
   defp codepoint_script(codepoint) when is_integer(codepoint) do
-    case Unicode.script(codepoint) do
+    case Unicode.Script.script(codepoint) do
       atom when is_atom(atom) -> atom
       _ -> :unknown
     end

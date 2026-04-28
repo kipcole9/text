@@ -96,6 +96,10 @@ defmodule Text.Similarity do
       0.25
 
   """
+  # The MapSets returned by `to_sets/3` lose dialyzer's opacity tag
+  # at the function-call boundary; the warnings on `MapSet.size/1`
+  # and `MapSet.intersection/2` are benign.
+  @dialyzer {:nowarn_function, jaccard: 2, jaccard: 3, dice: 2, dice: 3, overlap: 2, overlap: 3}
   @spec jaccard(bag(), bag(), keyword()) :: float()
   def jaccard(a, b, options \\ []) do
     {a_set, b_set} = to_sets(a, b, options)

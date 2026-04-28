@@ -31,7 +31,9 @@ defmodule Text.Sentiment.Backend do
           optional(:tokens) => non_neg_integer(),
           optional(:matched) => non_neg_integer(),
           optional(:language) => atom() | nil,
-          optional(:backend) => module()
+          optional(:backend) => module(),
+          optional(:model) => String.t(),
+          optional(:scores) => %{atom() => float()}
         }
 
   @doc """

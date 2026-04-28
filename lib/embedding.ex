@@ -387,6 +387,9 @@ defmodule Text.Embedding do
     Nx.divide(vector, norm)
   end
 
+  # Dialyzer doesn't trace the opacity of the runtime-constructed
+  # MapSet through the `Enum.reject/2` boundary.
+  @dialyzer {:nowarn_function, top_k_against: 4}
   defp top_k_against(%__MODULE__{} = embeddings, normalised_query, k, exclude_indices) do
     sims = Nx.dot(embeddings.norms, normalised_query) |> Nx.to_list()
     exclude = MapSet.new(exclude_indices)

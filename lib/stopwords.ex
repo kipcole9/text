@@ -165,6 +165,9 @@ defmodule Text.Stopwords do
       true
 
   """
+  # `for/1`'s return value loses dialyzer's opaque tag through the
+  # `__MODULE__.` qualified-call boundary; the warning is benign.
+  @dialyzer {:nowarn_function, contains?: 2, union: 2}
   @spec contains?(language_input(), String.t()) :: boolean()
   def contains?(language, token) when is_binary(token) do
     MapSet.member?(__MODULE__.for(language), token)
