@@ -129,10 +129,7 @@ defmodule Text.MixProject do
         {:bumblebee, "~> 0.6", optional: true, skip: "TEXT_SKIP_BUMBLEBEE"},
         {:localize, "~> 0.23", optional: true, skip: "TEXT_SKIP_LOCALIZE"},
         {:color, "~> 0.12", optional: true, skip: "TEXT_SKIP_COLOR"},
-        # Path dep until `:text_stemmer` is published to Hex. Switch
-        # to `{:text_stemmer, "~> 0.1", optional: true, skip: ...}`
-        # then.
-        {:text_stemmer, path: "../text_stemmer", optional: true, skip: "TEXT_SKIP_TEXT_STEMMER"}
+        {:text_stemmer, "~> 0.1", optional: true, skip: "TEXT_SKIP_TEXT_STEMMER"}
       ]
       |> Enum.reject(&dep_skipped?/1)
       |> Enum.map(&strip_skip_key/1)
