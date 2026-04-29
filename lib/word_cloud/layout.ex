@@ -80,8 +80,20 @@ defmodule Text.WordCloud.Layout do
     Default `{12, 96}`.
 
   * `:rotations` — list of rotation angles (degrees) to choose from
-    per term. Default `[0]` (horizontal only). Common alternatives
-    are `[0, 90]` or `[-30, 0, 30]`.
+    per term, or one of the atoms `:radial` or `:spiral`. Default `[0]`
+    (horizontal only). Common list alternatives are `[0, 90]` or
+    `[-30, 0, 30]`.
+
+    * `:radial` orients each word along the angle from canvas centre
+      to its placement (sunburst style — words point outward like
+      spokes).
+
+    * `:spiral` orients each word **tangent** to the radial spoke
+      (vortex style — words flow around concentric arcs, the way the
+      eye reads a logarithmic-spiral logo).
+
+    Both modes clamp final rotations to `[-90°, 90°]` so words always
+    read left-to-right rather than upside-down.
 
   * `:padding` — pixel padding added to every bounding box for
     collision testing. Default `2`.
@@ -131,22 +143,23 @@ defmodule Text.WordCloud.Layout do
     {placed, _boxes} =
       Enum.reduce(sorted, {[], []}, fn term, {placed_acc, boxes_acc} ->
         font_size = font_size_for(term.weight, min_fs, max_fs)
-        rotation = pick_rotation(term, rotations)
         {raw_w, raw_h} = metrics.(term.term, font_size)
-        {bw, bh} = rotated_box(raw_w, raw_h, rotation)
+        rotation_pick = build_rotation_picker(term, rotations)
 
         case find_position(
-               bw + padding,
-               bh + padding,
+               raw_w,
+               raw_h,
+               padding,
                boxes_acc,
                centre_x,
                centre_y,
                width,
                height,
                spiral_step,
-               max_radius
+               max_radius,
+               rotation_pick
              ) do
-          {:ok, x, y} ->
+          {:ok, x, y, rotation, bw, bh} ->
             placement = %{
               term: term.term,
               weight: term.weight,
@@ -177,14 +190,49 @@ defmodule Text.WordCloud.Layout do
     min_fs + weight * (max_fs - min_fs)
   end
 
-  # Deterministically pick a rotation: hash the term so repeated layouts
-  # produce identical output. Avoids the seeded-randomness footgun.
-  defp pick_rotation(_term, [single]), do: single
-
-  defp pick_rotation(%{term: term}, rotations) do
-    index = :erlang.phash2(term, length(rotations))
-    Enum.at(rotations, index)
+  # Returns a `(theta, x, y, cx, cy) -> rotation` callback. For a fixed
+  # rotation list, the rotation is picked deterministically by hashing
+  # the term and ignores the position. For `:radial` mode, the rotation
+  # tracks the angle from canvas centre to the spiral position, clamped
+  # to `[-90°, 90°]` so words always read left-to-right.
+  defp build_rotation_picker(_term, :radial) do
+    fn _theta, x, y, cx, cy -> radial_rotation(x, y, cx, cy) end
   end
+
+  defp build_rotation_picker(_term, :spiral) do
+    fn _theta, x, y, cx, cy -> spiral_rotation(x, y, cx, cy) end
+  end
+
+  defp build_rotation_picker(_term, [single]) do
+    fn _theta, _x, _y, _cx, _cy -> single end
+  end
+
+  defp build_rotation_picker(%{term: term}, rotations) when is_list(rotations) do
+    index = :erlang.phash2(term, length(rotations))
+    fixed = Enum.at(rotations, index)
+    fn _theta, _x, _y, _cx, _cy -> fixed end
+  end
+
+  defp radial_rotation(x, y, cx, cy) do
+    degrees = :math.atan2(y - cy, x - cx) * 180.0 / :math.pi()
+    clamp_legible(degrees)
+  end
+
+  # Tangent-to-the-spoke orientation: 90° offset from the radial angle,
+  # then legibility-clamped. At any non-trivial radius this approximates
+  # the tangent of the underlying Archimedean spiral.
+  defp spiral_rotation(x, y, cx, cy) do
+    degrees = :math.atan2(y - cy, x - cx) * 180.0 / :math.pi() + 90.0
+    degrees = if degrees > 180.0, do: degrees - 360.0, else: degrees
+    clamp_legible(degrees)
+  end
+
+  # Words rotated past ±90° read upside-down. Reflect angles in those
+  # ranges through 180° so every word still reads left-to-right while
+  # preserving the radial alignment to within ±90° of the spoke.
+  defp clamp_legible(degrees) when degrees > 90.0, do: degrees - 180.0
+  defp clamp_legible(degrees) when degrees < -90.0, do: degrees + 180.0
+  defp clamp_legible(degrees), do: degrees
 
   # ---- bounding box rotation -------------------------------------------
 
@@ -207,25 +255,85 @@ defmodule Text.WordCloud.Layout do
   # ---- spiral search ---------------------------------------------------
 
   # Samples points along an Archimedean spiral r = a*θ, with `a` chosen
-  # so the spiral expands at roughly 1 pixel per radian — fine-grained
-  # enough that the search rarely overshoots a feasible placement.
-  defp find_position(box_w, box_h, boxes, cx, cy, canvas_w, canvas_h, step, max_radius) do
-    do_spiral(0.0, box_w, box_h, boxes, cx, cy, canvas_w, canvas_h, step, max_radius)
+  # so the spiral expands at roughly 1 pixel per radian. The `rotation`
+  # callback returns the rotation degrees to use at each candidate
+  # position — fixed for hashed-list rotations, position-dependent for
+  # `:radial` mode. The bounding box is recomputed per candidate so
+  # radial mode's varying rotation produces correct collision tests.
+  defp find_position(
+         raw_w,
+         raw_h,
+         padding,
+         boxes,
+         cx,
+         cy,
+         canvas_w,
+         canvas_h,
+         step,
+         max_radius,
+         rotation_pick
+       ) do
+    do_spiral(
+      0.0,
+      raw_w,
+      raw_h,
+      padding,
+      boxes,
+      cx,
+      cy,
+      canvas_w,
+      canvas_h,
+      step,
+      max_radius,
+      rotation_pick
+    )
   end
 
-  defp do_spiral(theta, _bw, _bh, _boxes, _cx, _cy, _cw, _ch, _step, max_r) when theta > max_r do
+  defp do_spiral(theta, _rw, _rh, _pad, _boxes, _cx, _cy, _cw, _ch, _step, max_r, _pick)
+       when theta > max_r do
     :no_fit
   end
 
-  defp do_spiral(theta, bw, bh, boxes, cx, cy, canvas_w, canvas_h, step, max_radius) do
+  defp do_spiral(
+         theta,
+         raw_w,
+         raw_h,
+         padding,
+         boxes,
+         cx,
+         cy,
+         canvas_w,
+         canvas_h,
+         step,
+         max_radius,
+         rotation_pick
+       ) do
     r = theta
     x = cx + r * :math.cos(theta)
     y = cy + r * :math.sin(theta)
+    rotation = rotation_pick.(theta, x, y, cx, cy)
+    {bw, bh} = rotated_box(raw_w, raw_h, rotation)
+    padded_w = bw + padding
+    padded_h = bh + padding
 
-    if within_canvas?(x, y, bw, bh, canvas_w, canvas_h) and not collides?(x, y, bw, bh, boxes) do
-      {:ok, x, y}
+    if within_canvas?(x, y, padded_w, padded_h, canvas_w, canvas_h) and
+         not collides?(x, y, padded_w, padded_h, boxes) do
+      {:ok, x, y, rotation, bw, bh}
     else
-      do_spiral(theta + step, bw, bh, boxes, cx, cy, canvas_w, canvas_h, step, max_radius)
+      do_spiral(
+        theta + step,
+        raw_w,
+        raw_h,
+        padding,
+        boxes,
+        cx,
+        cy,
+        canvas_w,
+        canvas_h,
+        step,
+        max_radius,
+        rotation_pick
+      )
     end
   end
 
