@@ -58,6 +58,7 @@ defmodule Text.MixProject do
       source_ref: "v#{@version}",
       main: "readme",
       logo: "logo.png",
+      formatters: ["html", "markdown"],
       skip_undefined_reference_warnings_on: [
         "changelog",
         "CHANGELOG.md",
@@ -68,6 +69,9 @@ defmodule Text.MixProject do
         "CHANGELOG.md",
         "LICENSE.md",
         "guides/word_clouds.md"
+      ],
+      groups_for_extras: [
+        Guides: ~r"guides/.*"
       ],
       assets: %{"guides/word_clouds_assets" => "word_clouds_assets"}
     ]
