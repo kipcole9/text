@@ -103,6 +103,15 @@ defmodule Text.MixProject do
   #
   # Recognised per-dep flags: `TEXT_SKIP_EXLA`, `TEXT_SKIP_BUMBLEBEE`,
   # `TEXT_SKIP_LOCALIZE`, `TEXT_SKIP_COLOR`.
+  # Mix dep tuples come in two shapes: `{name, requirement, opts}` for
+  # Hex deps and `{name, opts}` for path/git deps. Both carry our
+  # private `:skip` key in `opts`; extract it uniformly.
+  defp dep_skipped?({_name, _req, opts}), do: System.get_env(opts[:skip]) == "1"
+  defp dep_skipped?({_name, opts}), do: System.get_env(opts[:skip]) == "1"
+
+  defp strip_skip_key({name, req, opts}), do: {name, req, Keyword.delete(opts, :skip)}
+  defp strip_skip_key({name, opts}), do: {name, Keyword.delete(opts, :skip)}
+
   defp runtime_optional_deps do
     if System.get_env("TEXT_SKIP_OPTIONAL_DEPS") == "1" do
       []
@@ -111,10 +120,14 @@ defmodule Text.MixProject do
         {:exla, "~> 0.9 or ~> 0.10", optional: true, skip: "TEXT_SKIP_EXLA"},
         {:bumblebee, "~> 0.6", optional: true, skip: "TEXT_SKIP_BUMBLEBEE"},
         {:localize, "~> 0.23", optional: true, skip: "TEXT_SKIP_LOCALIZE"},
-        {:color, "~> 0.12", optional: true, skip: "TEXT_SKIP_COLOR"}
+        {:color, "~> 0.12", optional: true, skip: "TEXT_SKIP_COLOR"},
+        # Path dep until `:text_stemmer` is published to Hex. Switch
+        # to `{:text_stemmer, "~> 0.1", optional: true, skip: ...}`
+        # then.
+        {:text_stemmer, path: "../text_stemmer", optional: true, skip: "TEXT_SKIP_TEXT_STEMMER"}
       ]
-      |> Enum.reject(fn {_name, _req, opts} -> System.get_env(opts[:skip]) == "1" end)
-      |> Enum.map(fn {name, req, opts} -> {name, req, Keyword.delete(opts, :skip)} end)
+      |> Enum.reject(&dep_skipped?/1)
+      |> Enum.map(&strip_skip_key/1)
     end
   end
 

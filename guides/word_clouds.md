@@ -174,6 +174,43 @@ The same corpus with the bundled English list active:
 
 Default `true`. When on, terms are lowercased before counting and rendering, so `Vogon` and `vogon` collapse to one bucket. Set to `false` to preserve case — useful when proper nouns matter (e.g. distinguishing `apple` the fruit from `Apple` the company).
 
+### `:stem`
+
+Default `false`. When `true`, candidate terms are bucketed by their Snowball stem, so morphological variants collapse into a single entry. Without it, the HHGTTG corpus's `demolish` / `demolished` / `demolishing` cluster shows up as four small entries:
+
+![Stemming off](word_clouds_assets/stemming_off.svg)
+
+With `stem: true`, those variants consolidate. The bucket is labelled with the most-frequent surface form, and the count and raw score are summed across members:
+
+```elixir
+Text.WordCloud.terms(text, scoring: :frequency, language: :en, stem: true)
+```
+
+![Stemming on](word_clouds_assets/stemming_on.svg)
+
+`demolished` jumps up the rankings because the underlying concept now has 7 evidence points instead of being split four ways. Other recurring topics like `model` / `models` and `learn` / `learning` consolidate similarly.
+
+**When to use it.** Stemming is most valuable for long-form prose in inflected languages (English, German, Romance, Slavic, Finnish, Turkish, Arabic — Snowball covers ~30). It's mostly off-by-default because:
+
+* **Short conversational text** rarely has enough morphological variation to benefit.
+* **Proper nouns** can occasionally get mangled (`Vogons` is fine but coverage isn't perfect).
+* **CJK languages** don't have inflection in the morphological sense.
+
+`:stem` requires the optional `:text_stemmer` dependency. Without it, passing `stem: true` raises with installation instructions.
+
+The bucketing language defaults to the resolved `:language`. Override with `:stem_language` for mixed-language corpora where you want only one language consolidated:
+
+```elixir
+Text.WordCloud.terms(text,
+  scoring: :frequency,
+  language: :en,
+  stem: true,
+  stem_language: :en  # only English variants — leave other languages alone
+)
+```
+
+A subtle but important point: Snowball is a **morphological** stemmer, not a semantic one. It will collapse `demolish` / `demolished` / `demolishing` (same morphological pattern) but **not** consolidate `demolish` with `demolition` (different derivation — verb vs derived noun). That's correct linguistic behaviour, even though both relate to the same concept.
+
 ## Layout
 
 `Text.WordCloud.Layout.layout/2` takes weighted terms and returns positioned, sized, rotated placements ready for any rendering surface. The interesting options are `:rotations`, `:font_size_range`, and `:padding`.

@@ -223,7 +223,28 @@ for strategy <- [:by_weight, :by_index, :by_hash] do
   )
 end
 
-# ---- 8. complete showcase ---------------------------------------------
+# ---- 8. stemming ------------------------------------------------------
+
+# Use a corpus with deliberate inflectional variation so the
+# bucketing effect is obvious. The HHGTTG corpus has a
+# `demolish/demolished/demolishing` cluster that consolidates
+# nicely under stemming.
+stem_terms_off = Text.WordCloud.terms(corpus, [{:scoring, :frequency} | defaults])
+
+stem_terms_on =
+  Text.WordCloud.terms(corpus, [{:scoring, :frequency}, {:stem, true} | defaults])
+
+write.(
+  "stemming_off",
+  render_simple.(Text.WordCloud.Layout.layout(stem_terms_off, wide), wide)
+)
+
+write.(
+  "stemming_on",
+  render_simple.(Text.WordCloud.Layout.layout(stem_terms_on, wide), wide)
+)
+
+# ---- 9. complete showcase ---------------------------------------------
 
 showcase_terms = Text.WordCloud.terms(corpus, [{:max_terms, 60} | defaults])
 

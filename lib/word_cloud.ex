@@ -83,6 +83,20 @@ defmodule Text.WordCloud do
 
   * `:case_fold` — boolean, default `true`.
 
+  * `:stem` — boolean, default `false`. When `true`, candidate terms
+    are bucketed by their Snowball stem so morphological variants
+    (`demolish`, `demolished`, `demolishing`, `demolition`) collapse
+    into a single entry. The most-frequent surface form represents
+    the bucket; counts and raw scores are summed across members.
+    Requires the optional `:text_stemmer` dependency. The stemmer
+    language defaults to the resolved `:language`; override with
+    `:stem_language`.
+
+  * `:stem_language` — atom override for the stemmer language. Useful
+    when the corpus language differs from the bucketing language
+    (e.g. mixed-language text where you want only English variants
+    consolidated). Defaults to `:language`.
+
   * `:include` — `:all` (default), `:words` only, or `:phrases` only.
 
   * `:reference_corpus` — used by `:tf_idf` and `:log_likelihood`.
@@ -107,6 +121,7 @@ defmodule Text.WordCloud do
 
     text
     |> backend.score(options)
+    |> maybe_bucket_by_stem(options)
     |> finalise(options)
   end
 
@@ -187,6 +202,77 @@ defmodule Text.WordCloud do
                 "unknown :scoring backend #{inspect(scoring)}. " <>
                   "Built-ins: #{inspect(Map.keys(@builtin_backends))}, or pass " <>
                   "a module implementing Text.WordCloud.Backend."
+        end
+    end
+  end
+
+  # ---- stemming bucketing ---------------------------------------------
+
+  # `Text.Stemmer` is an optional dependency. The references inside
+  # `bucket_by_stem/2` only run when `:stem` is true and the dep is
+  # loaded; the compile-time AST walk still warns without this hint.
+  @compile {:no_warn_undefined, [Text.Stemmer]}
+
+  defp maybe_bucket_by_stem(scored, options) do
+    case Keyword.get(options, :stem, false) do
+      true -> bucket_by_stem(scored, resolve_stem_language!(options))
+      _ -> scored
+    end
+  end
+
+  # Group every candidate by the joined-stem-tuple of its tokens.
+  # Within each bucket: pick the highest-count member's surface form
+  # as the bucket label, sum counts, sum raw scores. Summing both
+  # mirrors what `:frequency` does naturally — for other backends it
+  # consolidates evidence across morphological variants, which is the
+  # entire point of stemming for word clouds.
+  defp bucket_by_stem(scored, language) do
+    scored
+    |> Enum.group_by(fn {term, _r, _c, _k} -> stem_key(term, language) end)
+    |> Enum.map(fn {_key, members} ->
+      total_count = members |> Enum.map(&elem(&1, 2)) |> Enum.sum()
+      total_raw = members |> Enum.map(&elem(&1, 1)) |> Enum.sum()
+      {best_term, _, _, kind} = Enum.max_by(members, fn {_, _, c, _} -> c end)
+      {best_term, total_raw, total_count, kind}
+    end)
+  end
+
+  # Stems each whitespace-separated token and joins them with ``
+  # so phrases like `"machine learning"` and `"machines learning"`
+  # bucket together (both stem to `"machinlearn"`) but never
+  # collide with single-word stems.
+  defp stem_key(term, language) do
+    term
+    |> String.split(" ", trim: true)
+    |> Enum.map(&Text.Stemmer.stem(&1, language))
+    |> Enum.join("")
+  end
+
+  # `:stem_language` falls back to `:language`. We require Text.Stemmer
+  # to be loaded and the language to be supported; raise loudly if
+  # either fails so users discover the misconfiguration immediately.
+  defp resolve_stem_language!(options) do
+    if not Code.ensure_loaded?(Text.Stemmer) do
+      raise ArgumentError,
+            ":stem requires the optional :text_stemmer dependency. " <>
+              "Add `{:text_stemmer, \"~> 0.1\"}` to your mix.exs."
+    end
+
+    language = Keyword.get(options, :stem_language) || Keyword.get(options, :language)
+
+    case language do
+      nil ->
+        raise ArgumentError,
+              ":stem requires a :language or :stem_language. Without it, " <>
+                "the orchestrator can't choose a Snowball algorithm."
+
+      atom when is_atom(atom) ->
+        if atom in Text.Stemmer.supported_languages() do
+          atom
+        else
+          raise ArgumentError,
+                "Text.Stemmer does not support language #{inspect(atom)}. " <>
+                  "Supported: #{inspect(Text.Stemmer.supported_languages())}."
         end
     end
   end

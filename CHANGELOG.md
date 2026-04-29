@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
-* `Text.WordCloud` — multilingual keyword extraction returning a weighted term list suitable for rendering as a word cloud. Six backends: YAKE! (default, unsupervised statistical), frequency, RAKE, TextRank, TF-IDF (requires `:reference_corpus`), and KeyBERT (neural, requires `:bumblebee`).
+* `Text.WordCloud` — multilingual keyword extraction returning a weighted term list suitable for rendering as a word cloud. Six backends: YAKE! (default, unsupervised statistical), frequency, RAKE, TextRank, TF-IDF (requires `:reference_corpus`), and KeyBERT (neural, requires `:bumblebee`). The `:stem` option (requires the optional `:text_stemmer` dependency) buckets morphological variants — `demolish`, `demolished`, `demolishing` — into a single entry labelled with the most-frequent surface form.
 
 * `Text.WordCloud.Layout` — Wordle-style Archimedean-spiral packing that produces renderer-agnostic `(x, y, width, height, font_size, rotation)` placements. Pluggable `:font_metrics` callback so callers can supply pixel-accurate metrics from their actual font stack.
 
