@@ -2,7 +2,7 @@
 #
 # Run with:
 #
-#     mix text.download_model       # one-time, fetches lid.176.bin
+#     mix text.download_lid176       # one-time, fetches lid.176.bin
 #     mix run bench/fasttext_inference.exs
 #
 # The benchmark loads the model once (taking 1-2 seconds and ~128 MB of
@@ -24,7 +24,7 @@ model_path =
 unless File.exists?(model_path) do
   Mix.shell().error("""
   lid.176.bin not found at #{model_path}.
-  Run `mix text.download_model` first.
+  Run `mix text.download_lid176` first.
   """)
 
   System.halt(1)
@@ -42,8 +42,7 @@ inputs = %{
   "medium ASCII (10 words)" => "the quick brown fox jumps over the lazy dog now",
   "long ASCII (~80 chars)" =>
     "Hello world. This is an English sentence used for language identification testing.",
-  "mixed-script" =>
-    "Привет мир, hello world, 你好世界, مرحبا بالعالم.",
+  "mixed-script" => "Привет мир, hello world, 你好世界, مرحبا بالعالم.",
   "CJK (Chinese)" => "这是一个用于语言识别的中文句子。",
   "CJK (Japanese)" => "これは言語識別のための日本語の文です。",
   "Cyrillic (Russian)" => "Это русское предложение для определения языка."

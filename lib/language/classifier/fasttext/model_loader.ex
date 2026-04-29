@@ -81,7 +81,7 @@ defmodule Text.Language.Classifier.Fasttext.ModelLoader do
 
   ### Examples
 
-      # Loading the official lid.176 model (after running mix text.download_model):
+      # Loading the official lid.176 model (after running mix text.download_lid176):
       # iex> path = Path.expand("priv/lid_176/lid.176.bin")
       # iex> {:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(path)
       # iex> model.dictionary.nlabels

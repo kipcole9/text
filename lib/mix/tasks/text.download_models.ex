@@ -88,7 +88,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
 
   use Mix.Task
 
-  alias Mix.Tasks.Text.DownloadModel
+  alias Mix.Tasks.Text.DownloadLid176
 
   # Single source of truth for the default model + tokenizer per stack.
   # Mirrors the `@default_model` / `@tokenizer_overrides` constants in
@@ -187,7 +187,7 @@ defmodule Mix.Tasks.Text.DownloadModels do
       |> maybe_forward(options, :force)
       |> maybe_forward(options, :quantized)
 
-    DownloadModel.run(forwarded)
+    DownloadLid176.run(forwarded)
   end
 
   defp maybe_forward(args, options, key) do

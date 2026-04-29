@@ -57,7 +57,7 @@ It supports 176 languages, runs in pure BEAM (no NIFs, no Python sidecar), and p
 The `lid.176.bin` model is approximately 126 MB and is **not** shipped with this package. Fetch it once after installing:
 
 ```sh
-mix text.download_model
+mix text.download_lid176
 ```
 
 The file is written to `priv/lid_176/lid.176.bin` inside this project. It is added to `.gitignore` and is **not** part of the Hex package payload — every install fetches its own copy.
@@ -131,7 +131,7 @@ The 917 KB quantized variant `lid.176.ftz` is **not yet supported** — product-
 The package's test suite includes golden fixtures generated from the official `fasttext` Python bindings against `lid.176`, covering hashing, subword extraction, feature assembly, and predictions across 24 languages. The tests are skipped by default (the model is not present in CI); run them locally with:
 
 ```sh
-mix text.download_model               # one-time
+mix text.download_lid176               # one-time
 pip install fasttext                  # one-time, for fixture regeneration
 mix test --include requires_lid_176
 ```

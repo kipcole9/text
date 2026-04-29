@@ -268,7 +268,7 @@ What's left:
 
 ```sh
 # One-time setup
-mix text.download_model
+mix text.download_lid176
 pip install fasttext
 
 # Run both sides

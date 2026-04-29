@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Text.DownloadModel do
+defmodule Mix.Tasks.Text.DownloadLid176 do
   @shortdoc "Downloads the fastText lid.176.bin language identification model"
 
   @moduledoc """
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Text.DownloadModel do
 
   ## Usage
 
-      mix text.download_model
+      mix text.download_lid176
 
   ## Options
 

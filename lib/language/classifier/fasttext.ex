@@ -12,7 +12,7 @@ defmodule Text.Language.Classifier.Fasttext do
   The `lid.176.bin` model file is approximately 126 MB and is **not**
   shipped with this package. Fetch it once after installing the library:
 
-      mix text.download_model
+      mix text.download_lid176
 
   Then load it at application startup:
 

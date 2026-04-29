@@ -37,15 +37,13 @@ case Code.ensure_loaded?(EXLA.Backend) do
     IO.puts("Backend: EXLA (defn compiler: EXLA)")
 
   false ->
-    IO.puts(
-      "Backend: Nx.BinaryBackend (EXLA not available — install :exla for full speed)"
-    )
+    IO.puts("Backend: Nx.BinaryBackend (EXLA not available — install :exla for full speed)")
 end
 
 model_path = Path.join([File.cwd!(), "priv", "lid_176", "lid.176.bin"])
 
 unless File.exists?(model_path) do
-  IO.puts(:stderr, "lid.176.bin not found. Run `mix text.download_model` first.")
+  IO.puts(:stderr, "lid.176.bin not found. Run `mix text.download_lid176` first.")
   System.halt(1)
 end
 
@@ -63,8 +61,7 @@ reference_predictions =
 
 bench_inputs = %{
   "short ASCII (3 words)" => "the cat sat",
-  "medium ASCII (10 words)" =>
-    "the quick brown fox jumps over the lazy dog now",
+  "medium ASCII (10 words)" => "the quick brown fox jumps over the lazy dog now",
   "long sentence (~80 chars)" =>
     "Hello world. This is an English sentence used for language identification testing.",
   "Cyrillic" => "Это русское предложение для определения языка.",
@@ -89,7 +86,10 @@ load_mb = Float.round((mem_after_load - mem_before_load) / 1024 / 1024, 1)
 IO.puts("Load time: #{load_ms} ms")
 IO.puts("Resident model memory: #{load_mb} MB")
 IO.puts("nwords=#{model.dictionary.nwords} nlabels=#{model.dictionary.nlabels}")
-IO.puts("input matrix: #{inspect(Nx.shape(model.input_matrix))} #{inspect(Nx.type(model.input_matrix))}")
+
+IO.puts(
+  "input matrix: #{inspect(Nx.shape(model.input_matrix))} #{inspect(Nx.type(model.input_matrix))}"
+)
 
 # ---- Accuracy: curated test set ----------------------------------------
 
@@ -113,6 +113,7 @@ curated_results =
 
 correct = Enum.count(curated_results, & &1.correct?)
 total = length(curated_results)
+
 mean_conf =
   curated_results
   |> Enum.map(& &1.confidence)
@@ -264,7 +265,10 @@ IO.puts("--------------------------------------- -----------")
 
 for {label, fun} <- stages do
   median = bench.(fun)
-  IO.puts("#{String.pad_trailing(label, 39)} #{String.pad_leading(Integer.to_string(median), 11)}")
+
+  IO.puts(
+    "#{String.pad_trailing(label, 39)} #{String.pad_leading(Integer.to_string(median), 11)}"
+  )
 end
 
 IO.puts("\n=== Done ===")

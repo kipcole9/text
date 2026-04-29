@@ -9,7 +9,7 @@ It runs entirely in the BEAM — no NIFs, no Python sidecar, no model server. Th
 The `lid.176.bin` model file is **not** part of the Hex package — every install fetches its own copy. Run once after adding `:text` to your dependencies:
 
 ```sh
-mix text.download_model
+mix text.download_lid176
 ```
 
 The file lands at `priv/lid_176/lid.176.bin` inside the project. It's gitignored and not committed.

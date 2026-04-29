@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Text.GenGoldenFixtures do
   `test/fixtures/golden_predictions.json`.
 
   Acts as a thin wrapper over `priv/scripts/generate_golden_fixtures.py` so
-  the workflow is consistent with `mix text.download_model`. The wrapper
+  the workflow is consistent with `mix text.download_lid176`. The wrapper
   simply ensures the prerequisites exist and shells out to Python; it does
   not embed any model logic itself.
 
@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Text.GenGoldenFixtures do
   * The `fasttext` Python package: `pip install fasttext`.
 
   * The `lid.176.bin` model file present in `priv/lid_176/` — run
-    `mix text.download_model` first.
+    `mix text.download_lid176` first.
 
   ## Usage
 
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Text.GenGoldenFixtures do
     if not File.exists?(model_path) do
       Mix.raise(
         "lid.176.bin not found at #{model_path}. " <>
-          "Run `mix text.download_model` first."
+          "Run `mix text.download_lid176` first."
       )
     end
 

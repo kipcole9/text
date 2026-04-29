@@ -44,7 +44,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `Text.Language.Classifier.Fasttext.Locale.resolve/2` for CLDR-canonical locale assembly via likely-subtags. Uses the optional [`localize`](https://hex.pm/packages/localize) dependency when present, with a built-in fallback table for the most common languages otherwise.
 
-* `mix text.download_model` task that fetches `lid.176.bin` into `priv/lid_176/`. The model file is gitignored and not part of the Hex package.
+* `mix text.download_lid176` task that fetches `lid.176.bin` into `priv/lid_176/`. The model file is gitignored and not part of the Hex package.
 
 * `mix text.download_models` task (plural) that pre-fetches every external model used by `:text` — `lid.176.bin` plus the default Hugging Face checkpoints behind `Text.Sentiment.Backends.Bumblebee`, `Text.POS`, and `Text.NER` — for production environments that need every artefact present at boot. Selection flags (`--lid176`, `--sentiment`, `--pos`, `--ner`, `--bumblebee`) limit the download to a subset.
 
