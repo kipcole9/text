@@ -86,19 +86,21 @@ defmodule Text.NER do
     defstruct [:text, :type, :start, :end, :score]
   end
 
+  @compile {:no_warn_undefined, [Bumblebee, Bumblebee.Text, EXLA, Nx.Serving]}
+
   @default_model "Davlan/bert-base-multilingual-cased-ner-hrl"
 
-  # Some Hugging Face fine-tunes ship without the Rust-compatible
-  # `tokenizer.json` Bumblebee expects — they only have the raw
-  # WordPiece/BPE files. The override maps each such fine-tune to a
-  # base-model repo that does have the right tokenizer file. Models
-  # not in the table use their own repo as both model and tokenizer
-  # source.
-  @tokenizer_overrides %{
-    "Davlan/bert-base-multilingual-cased-ner-hrl" => "google-bert/bert-base-multilingual-cased"
-  }
-
   if Code.ensure_loaded?(Bumblebee) do
+    # Some Hugging Face fine-tunes ship without the Rust-compatible
+    # `tokenizer.json` Bumblebee expects — they only have the raw
+    # WordPiece/BPE files. The override maps each such fine-tune to a
+    # base-model repo that does have the right tokenizer file. Models
+    # not in the table use their own repo as both model and tokenizer
+    # source.
+    @tokenizer_overrides %{
+      "Davlan/bert-base-multilingual-cased-ner-hrl" => "google-bert/bert-base-multilingual-cased"
+    }
+
     @doc """
     Extracts named entities from `text`.
 
@@ -224,7 +226,8 @@ defmodule Text.NER do
   else
     def extract(_text, _options \\ []) do
       raise """
-      Text.NER.extract/2 requires the :bumblebee dependency.
+      Text.NER.extract/2 requires the :bumblebee dependency to load
+      the default model #{@default_model}.
 
       Add to your mix.exs:
 

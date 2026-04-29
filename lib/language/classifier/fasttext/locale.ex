@@ -43,6 +43,11 @@ defmodule Text.Language.Classifier.Fasttext.Locale do
 
   """
 
+  # `Localize` is an optional dependency. References below sit inside
+  # `if Code.ensure_loaded?(Localize)` blocks but the compiler still
+  # walks the AST for warnings.
+  @compile {:no_warn_undefined, [Localize, Localize.LanguageTag]}
+
   alias Text.Language.Classifier.Fasttext.Detection
   alias Text.Language.Classifier.Fasttext.ScriptDetector
 

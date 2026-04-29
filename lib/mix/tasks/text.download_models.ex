@@ -80,6 +80,12 @@ defmodule Mix.Tasks.Text.DownloadModels do
 
   """
 
+  # `Bumblebee` is optional. The references inside
+  # `download_bumblebee_artefact/3` are guarded with
+  # `Code.ensure_loaded?(Bumblebee)` at runtime, but the compiler
+  # still warns about undefined modules during AST analysis.
+  @compile {:no_warn_undefined, [Bumblebee]}
+
   use Mix.Task
 
   alias Mix.Tasks.Text.DownloadModel

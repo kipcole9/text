@@ -65,13 +65,20 @@ defmodule Text.WordCloud.Backends.KeyBERT do
 
   """
 
-  alias Text.WordCloud.Tokens
+  # `Bumblebee` is an optional dependency. The references below live
+  # inside `if Code.ensure_loaded?(Bumblebee) do` blocks, but the
+  # compiler still walks the AST and warns about undefined modules
+  # before the conditional is evaluated.
+  @compile {:no_warn_undefined, [Bumblebee, Bumblebee.Text, EXLA, Nx.Serving]}
 
   @default_model "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-  @default_pool 200
 
   if Code.ensure_loaded?(Bumblebee) do
     @behaviour Text.WordCloud.Backend
+
+    alias Text.WordCloud.Tokens
+
+    @default_pool 200
 
     @impl true
     def score(input, options) do
@@ -210,7 +217,8 @@ defmodule Text.WordCloud.Backends.KeyBERT do
   else
     def score(_input, _options) do
       raise """
-      Text.WordCloud.Backends.KeyBERT requires the :bumblebee dependency.
+      Text.WordCloud.Backends.KeyBERT requires the :bumblebee dependency
+      to load the default model #{@default_model}.
 
       Add to your mix.exs:
 

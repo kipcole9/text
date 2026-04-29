@@ -58,7 +58,11 @@ defmodule Text.MixProject do
       source_ref: "v#{@version}",
       main: "readme",
       logo: "logo.png",
-      skip_undefined_reference_warnings_on: ["changelog", "CHANGELOG.md"],
+      skip_undefined_reference_warnings_on: [
+        "changelog",
+        "CHANGELOG.md",
+        "README.md"
+      ],
       extras: [
         "README.md",
         "CHANGELOG.md",
@@ -87,20 +91,30 @@ defmodule Text.MixProject do
     ]
   end
 
-  # Runtime-relevant optional deps. Set the `TEXT_SKIP_OPTIONAL_DEPS=1`
-  # env var to omit these — used by the "without optional deps" CI job
-  # to verify the package compiles and tests pass without them, exercising
-  # the `Code.ensure_loaded?(Bumblebee)` etc. fallbacks.
+  # Runtime-relevant optional deps. CI uses two sets of env vars:
+  #
+  # * `TEXT_SKIP_OPTIONAL_DEPS=1` — skip every optional dep. Verifies
+  #   the package compiles and tests pass with all `Code.ensure_loaded?`
+  #   fallbacks active.
+  #
+  # * `TEXT_SKIP_<DEP>=1` — per-dep granular skips. Useful for
+  #   reproducing a specific consumer setup (e.g. `TEXT_SKIP_BUMBLEBEE=1`
+  #   simulates installs that don't want the heavy ML stack).
+  #
+  # Recognised per-dep flags: `TEXT_SKIP_EXLA`, `TEXT_SKIP_BUMBLEBEE`,
+  # `TEXT_SKIP_LOCALIZE`, `TEXT_SKIP_COLOR`.
   defp runtime_optional_deps do
     if System.get_env("TEXT_SKIP_OPTIONAL_DEPS") == "1" do
       []
     else
       [
-        {:exla, "~> 0.9 or ~> 0.10", optional: true},
-        {:bumblebee, "~> 0.6", optional: true},
-        {:localize, "~> 0.23", optional: true},
-        {:color, "~> 0.12", optional: true}
+        {:exla, "~> 0.9 or ~> 0.10", optional: true, skip: "TEXT_SKIP_EXLA"},
+        {:bumblebee, "~> 0.6", optional: true, skip: "TEXT_SKIP_BUMBLEBEE"},
+        {:localize, "~> 0.23", optional: true, skip: "TEXT_SKIP_LOCALIZE"},
+        {:color, "~> 0.12", optional: true, skip: "TEXT_SKIP_COLOR"}
       ]
+      |> Enum.reject(fn {_name, _req, opts} -> System.get_env(opts[:skip]) == "1" end)
+      |> Enum.map(fn {name, req, opts} -> {name, req, Keyword.delete(opts, :skip)} end)
     end
   end
 

@@ -58,6 +58,10 @@ defmodule Text.WordCloud.SVG do
 
   """
 
+  # `Color` is an optional dependency; `normalise_color/1` only calls
+  # `Color.to_hex/1` after a runtime `Code.ensure_loaded?(Color)` check.
+  @compile {:no_warn_undefined, [Color, Color.Palette.Tonal, Color.Palette.Theme]}
+
   @type placement :: Text.WordCloud.Layout.placement()
   @type color_input :: String.t() | struct() | atom() | tuple()
 
