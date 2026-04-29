@@ -68,6 +68,10 @@ defmodule Text.MixProject do
         "README.md",
         "CHANGELOG.md",
         "LICENSE.md",
+        "guides/text_classification.md",
+        "guides/sentiment.md",
+        "guides/pos_ner.md",
+        "guides/kwic.md",
         "guides/word_clouds.md"
       ],
       groups_for_extras: [
