@@ -43,7 +43,14 @@ defmodule Text.MixProject do
       links: links(),
       files: [
         "lib",
-        "priv",
+        # Ship only the priv subdirs that contain compile-time
+        # `@external_resource` data; deliberately exclude `priv/lid_176`
+        # (the 125 MB model is a user-downloaded runtime asset, fetched
+        # via `mix text.download_lid176`) and `priv/scripts` (dev-only
+        # fixture generators).
+        "priv/inflection",
+        "priv/sentiment",
+        "priv/stopwords",
         "guides",
         "mix.exs",
         "README*",
