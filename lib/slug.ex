@@ -164,16 +164,8 @@ defmodule Text.Slug do
     end
   end
 
-  # Calls `Unicode.Script.script/1` directly rather than the
-  # `Unicode.script/1` wrapper. The wrapper's `@spec` references the
-  # `Unicode.script()` type, which in `unicode 1.21.2` was declared
-  # with commas instead of pipes between continuation lines — so
-  # dialyzer narrowed the return to a fragment of the full set and
-  # flagged `script in [:latin, :common, :inherited]` as un-matchable.
-  # Fixed upstream; drop this workaround and switch back to
-  # `Unicode.script/1` when `unicode > 1.21.2` is released.
   defp codepoint_script(codepoint) when is_integer(codepoint) do
-    case Unicode.Script.script(codepoint) do
+    case Unicode.script(codepoint) do
       atom when is_atom(atom) -> atom
       _ -> :unknown
     end
