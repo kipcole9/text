@@ -2,39 +2,38 @@
 
 Text & language processing for Elixir.
 
+A toolkit for tokenization, language identification, sentiment analysis, named-entity recognition, word clouds, phonetic encoding, search ranking, and the supporting plumbing — all in pure BEAM, with optional ML backends behind feature flags.
+
+## Capabilities
+
 ### Detection and analysis
 
-* **Language identification** (`Text.Language.Classifier.Fasttext`) — pure-Elixir port of fastText's `lid.176`, supporting 176 languages.
-* **Locale resolution** (`Text.Language.Classifier.Fasttext.Locale`) — CLDR likely-subtags via the optional [`localize`](https://hex.pm/packages/localize) dep, with Simplified / Traditional Chinese (`Hans` / `Hant`) disambiguation from script analysis.
-* **Sentiment analysis** (`Text.Sentiment`) — multilingual, two backends: bundled AFINN lexicons (default, 7 languages) or Bumblebee + XLM-RoBERTa (optional, ~30 languages).
-* **Part-of-speech tagging** (`Text.POS`) — via Bumblebee; English by default.
-* **Named-entity recognition** (`Text.NER`) — via Bumblebee; multilingual by default (10 languages).
+* *Language identification* ([`Text.Language.Classifier.Fasttext`](https://hexdocs.pm/text/Text.Language.Classifier.Fasttext.html)) — pure-Elixir port of fastText's `lid.176`, 176 languages, validated bit-for-bit against the reference. ~100 µs per prediction with EXLA.
+* *Sentiment analysis* ([`Text.Sentiment`](https://hexdocs.pm/text/Text.Sentiment.html)) — multilingual; bundled AFINN lexicons (default, 7 languages + emoticons) or XLM-RoBERTa via Bumblebee (optional, ~30 languages).
+* *Part-of-speech tagging* ([`Text.POS`](https://hexdocs.pm/text/Text.POS.html)) — via Bumblebee, English by default.
+* *Named-entity recognition* ([`Text.NER`](https://hexdocs.pm/text/Text.NER.html)) — via Bumblebee, multilingual (10 high-resource languages).
 
 ### Strings
 
-* **String distance** (`Text.Distance`) — Levenshtein, Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler.
-* **Set similarity** (`Text.Similarity`) — Jaccard, Dice, overlap, cosine.
-* **Phonetic encoding** (`Text.Phonetic.Soundex`, `Text.Phonetic.Metaphone`).
-* **Slugification** (`Text.Slug`) — locale-aware Unicode folding via [`unicode_transform`](https://hex.pm/packages/unicode_transform), with cross-script transliteration.
-* **Segmentation** (`Text.Segment`) — UAX #29 word and sentence boundaries via [`unicode_string`](https://hex.pm/packages/unicode_string), with CLDR abbreviation suppressions.
+* *String distance* ([`Text.Distance`](https://hexdocs.pm/text/Text.Distance.html)) — Levenshtein, Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler.
+* *Set similarity* ([`Text.Similarity`](https://hexdocs.pm/text/Text.Similarity.html)) — Jaccard, Dice, overlap, cosine.
+* *Phonetic encoding* ([`Text.Phonetic.Soundex`](https://hexdocs.pm/text/Text.Phonetic.Soundex.html), [`Text.Phonetic.Metaphone`](https://hexdocs.pm/text/Text.Phonetic.Metaphone.html)).
+* *Slugification* ([`Text.Slug`](https://hexdocs.pm/text/Text.Slug.html)) — locale-aware Unicode folding with cross-script transliteration.
+* *Segmentation* ([`Text.Segment`](https://hexdocs.pm/text/Text.Segment.html)) — UAX #29 word/sentence boundaries with CLDR abbreviation suppressions.
 
 ### Statistics and search
 
-* **N-grams and word counts** (`Text.Ngram`, `Text.Word`).
-* **TF-IDF and BM25** (`Text.IR`) — indexed corpus with scoring and top-K search.
-* **Collocation extraction** (`Text.Collocation`) — bigrams ranked by frequency, PMI, or Dunning's log-likelihood.
-* **Concordance** (`Text.KWIC`) — keyword-in-context lookup.
-* **Word embeddings** (`Text.Embedding`) — load fastText-format `.vec` files, then cosine similarity, nearest neighbours, and analogies (`king - man + woman ≈ queen`).
-* **Word clouds** (`Text.WordCloud`) — multilingual keyword extraction with five scoring algorithms (YAKE!, frequency, RAKE, TextRank, TF-IDF, KeyBERT), plus spiral layout (`Text.WordCloud.Layout`) for any rendering surface.
-* **Stopwords** (`Text.Stopwords`) — bundled stopword lists for ~60 languages from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso).
+* *N-grams and word counts* ([`Text.Ngram`](https://hexdocs.pm/text/Text.Ngram.html), [`Text.Word`](https://hexdocs.pm/text/Text.Word.html)).
+* *TF-IDF and BM25* ([`Text.IR`](https://hexdocs.pm/text/Text.IR.html)) — indexed corpus with scoring and top-K search.
+* *Collocation extraction* ([`Text.Collocation`](https://hexdocs.pm/text/Text.Collocation.html)) — bigrams ranked by frequency, PMI, or log-likelihood.
+* *Concordance* ([`Text.KWIC`](https://hexdocs.pm/text/Text.KWIC.html)) — keyword-in-context lookup.
+* *Word embeddings* ([`Text.Embedding`](https://hexdocs.pm/text/Text.Embedding.html)) — load fastText `.vec` files, then cosine similarity, nearest neighbours, and analogies.
+* *Word clouds* ([`Text.WordCloud`](https://hexdocs.pm/text/Text.WordCloud.html)) — multilingual keyword extraction (six scoring backends) plus spiral layout and SVG rendering.
+* *Stopwords* ([`Text.Stopwords`](https://hexdocs.pm/text/Text.Stopwords.html)) — bundled lists for ~60 languages from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso).
 
 ### Inflection
 
-* **English pluralization** (`Text.Inflect.En`) — modern and classical modes.
-
-### Language input
-
-Every public function that takes a `:language` (or `:locale`) option accepts an atom (`:fr`), a string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`), or a `Localize.LanguageTag` struct (when `:localize` is loaded). See `Text.Language` for the normalisation helpers.
+* *English pluralization* ([`Text.Inflect.En`](https://hexdocs.pm/text/Text.Inflect.En.html)) — modern and classical modes.
 
 ## Installation
 
@@ -46,325 +45,72 @@ def deps do
 end
 ```
 
-## fastText `lid.176` Language Identification
-
-`Text.Language.Classifier.Fasttext` is a pure-Elixir reimplementation of fastText's [`lid.176`](https://fasttext.cc/docs/en/language-identification.html) model, validated bit-for-bit against the official C++ / Python reference for hashing, n-gram generation, feature extraction, and tree traversal.
-
-It supports 176 languages, runs in pure BEAM (no NIFs, no Python sidecar), and produces predictions that match the reference within rounding for inputs whose probability is above the noise floor.
-
-### One-time setup
-
-The `lid.176.bin` model is approximately 126 MB and is **not** shipped with this package. Fetch it once after installing:
+For the language identifier, fetch the `lid.176.bin` model once after install:
 
 ```sh
 mix text.download_lid176
 ```
 
-The file is written to `priv/lid_176/lid.176.bin` inside this project. It is added to `.gitignore` and is **not** part of the Hex package payload — every install fetches its own copy.
+For production environments using the optional Bumblebee-backed modules, `mix text.download_models` (plural) pre-fetches every external artefact — `lid.176.bin` plus the default Hugging Face checkpoints — so the first call to each module never hits the network.
 
-For production deployments that also use `Text.Sentiment.Backends.Bumblebee`, `Text.POS`, or `Text.NER`, run `mix text.download_models` (plural) instead — it pre-fetches `lid.176.bin` plus every default Hugging Face model into the Bumblebee cache so subsequent calls run with no network access. See `mix help text.download_models` for selection flags.
-
-### Detecting a language
+## A taste
 
 ```elixir
+# Sentiment — multilingual, no model download by default.
+Text.Sentiment.analyze("J'adore ce livre.", language: :fr).label
+#=> :positive
+
+# Language identification — load the fastText model once.
 {:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(
   Path.join(:code.priv_dir(:text), "lid_176/lid.176.bin")
 )
 
-{:ok, det} = Text.Language.Classifier.Fasttext.detect("Bonjour le monde", model)
-det.language    #=> "fr"
-det.script      #=> :Latn
-det.confidence  #=> 0.984...
-det.alternatives
-#=> [{"en", 0.0035}, {"it", 0.0024}, {"oc", 0.0009}, {"ca", 0.0006}]
+{:ok, "es"} = Text.Language.Classifier.Fasttext.classify("Hola, ¿cómo estás?", model)
+
+# Word cloud → SVG file in four piped steps.
+text
+|> Text.WordCloud.terms(language: :en)
+|> Text.WordCloud.Layout.layout(width: 800, height: 600, rotations: :radial)
+|> Text.WordCloud.SVG.render(palette: Color.Palette.tonal("#3b82f6"))
+|> then(&File.write!("cloud.svg", &1))
 ```
 
-### Just the language code
+## Guides
 
-```elixir
-{:ok, "es"} = Text.Language.Classifier.Fasttext.classify("Hola mundo", model)
-```
+In-depth walkthroughs with worked examples:
 
-### Resolving to a CLDR locale
+* *[Text classification (language identification)](https://hexdocs.pm/text/text_classification.html)* — setup, `detect/3`, CLDR locale resolution, Hans/Hant disambiguation, performance tuning.
 
-When the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded, detections expand into full CLDR-canonical locale strings via likely-subtags. The script signal from `ScriptDetector` is used to disambiguate Latin vs Cyrillic Serbian and similar multi-script cases.
+* *[Sentiment analysis](https://hexdocs.pm/text/sentiment.html)* — lexicon vs Bumblebee backends, multilingual lexicons, custom lexicons, threshold tuning, production wiring.
 
-For Chinese, `ScriptDetector` runs a second-pass codepoint-frequency analysis to distinguish Simplified (`Hans`) from Traditional (`Hant`) using curated lists of distinguishing characters. Inputs containing only shared Han codepoints fall back to the generic `Hani` and likely-subtags then picks `Hans` (the mainland-China default).
+* *[Part-of-speech tagging and NER](https://hexdocs.pm/text/pos_ner.html)* — Bumblebee setup, tag sets, model pre-download, named `Nx.Serving`s for high-QPS workloads.
 
-```elixir
-{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界，这是简体中文。", model)
-{:ok, "zh-Hans-CN"} = Text.Language.Classifier.Fasttext.to_locale(det)
+* *[Keyword-in-context concordance](https://hexdocs.pm/text/kwic.html)* — `Text.KWIC.concordance/3`, formatting, collocate scans, sense disambiguation patterns.
 
-{:ok, det} = Text.Language.Classifier.Fasttext.detect("你好世界，這是繁體中文。", model)
-{:ok, "zh-Hant-TW"} = Text.Language.Classifier.Fasttext.to_locale(det)
+* *[Word clouds](https://hexdocs.pm/text/word_clouds.html)* — six scoring backends (YAKE!, frequency, RAKE, TextRank, TF-IDF, KeyBERT), Wordle-style layouts (`:radial`/`:spiral`), SVG rendering with `Color.Palette` integration.
 
-{:ok, det} = Text.Language.Classifier.Fasttext.detect("Bonjour le monde", model)
-{:ok, "fr-Latn-CA"} = Text.Language.Classifier.Fasttext.to_locale(det, region: :CA)
-```
+## Optional dependencies
 
-Without `localize` a built-in fallback table covers ~60 of the most common languages.
+The package works without any optional deps. Adding them enables progressively heavier capabilities:
 
-### Tensor backend
+| Dep | Enables |
+|---|---|
+| [`:exla`](https://hex.pm/packages/exla) | Order-of-magnitude faster inference for Fasttext and the Bumblebee-backed modules. Strongly recommended in production. |
+| [`:bumblebee`](https://hex.pm/packages/bumblebee) | Neural sentiment, POS, NER, and the KeyBERT word-cloud backend. |
+| [`:localize`](https://hex.pm/packages/localize) | CLDR-canonical locale resolution (`fr-Latn-CA`, `zh-Hans-CN`) and `Localize.LanguageTag` input shapes. |
+| [`:color`](https://hex.pm/packages/color) | `Color.Palette.Tonal` and `Theme` palettes for SVG word-cloud rendering. |
+| `:text_stemmer` | Snowball stemming (~30 languages) for word-cloud morphological-variant consolidation. |
 
-The model's input matrix is approximately 128 MB of `float32` data held in an `Nx` tensor. `Nx.BinaryBackend` works out of the box. The inference forward pass (`take + mean + dot`, plus `softmax` for softmax-loss models) is wrapped in `defn` so an EXLA-compiled execution runs the whole pass as a single fused kernel — three BEAM ↔ NIF transitions per prediction instead of seven. For production throughput add `:exla` to your deps and configure it as both the default backend and the default `defn` compiler:
+Calls that need a missing optional dep raise with installation instructions; the rest of the package keeps working.
 
-```elixir
-# config/config.exs
-config :nx, default_backend: EXLA.Backend
-config :nx, :default_defn_options, compiler: EXLA
-```
-
-This configuration matters even more for the Bumblebee-backed
-modules (`Text.Sentiment.Backends.Bumblebee`, `Text.POS`, `Text.NER`)
-— without EXLA, every layer of the underlying transformer runs on
-the interpreted backend, slowing each prediction by an order of
-magnitude.
-
-`exla` is declared as an optional dependency of `:text`. Without it the package still works correctly — `Nx.Defn.Evaluator` runs the same `defn` graph against `Nx.BinaryBackend` — but per-prediction wall time is roughly an order of magnitude higher. See [docs/comparative_performance_report.md](docs/comparative_performance_report.md) for measured numbers.
-
-### Quantized model
-
-The 917 KB quantized variant `lid.176.ftz` is **not yet supported** — product-quantization decoding is on the v2 follow-up list. The 126 MB `lid.176.bin` works today and produces identical results to fastText's own predictions on it.
-
-### Reference fixtures and differential tests
-
-The package's test suite includes golden fixtures generated from the official `fasttext` Python bindings against `lid.176`, covering hashing, subword extraction, feature assembly, and predictions across 24 languages. The tests are skipped by default (the model is not present in CI); run them locally with:
-
-```sh
-mix text.download_lid176               # one-time
-pip install fasttext                  # one-time, for fixture regeneration
-mix test --include requires_lid_176
-```
-
-The fixture-generation scripts live under `priv/scripts/` and are wired up as `mix text.gen_*_fixtures` tasks for convenience.
-
-## Other capabilities
-
-### Word Counting
-
-`text` contains an implementation of word counting that is oriented towards large streams of words rather than discrete strings. Input to `Text.Word.word_count/2` can be a `String.t`, `File.Stream.t` or `Flow.t` allowing flexible streaming of text.
-
-### English Pluralization
-
-`text` includes an inflector for the English language that takes an approach based upon  [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html). See the module `Text.Inflect.En` and the functions:
-
-* `Text.Inflect.En.pluralize/2`
-* `Text.Inflect.En.pluralize_noun/2`
-* `Text.Inflect.En.pluralize_verb/1`
-* `Text.Inflect.En.pluralize_adjective/1`
-
-### Sentiment analysis
-
-`Text.Sentiment` runs sentiment analysis with multilingual support. Two backends are shipped:
-
-* **`Text.Sentiment.Backends.Lexicon`** (the default) — lexicon-based scoring backed by the bundled [AFINN](https://github.com/fnielsen/afinn) lexicons (Apache 2.0) for **English, Danish, Finnish, French, Polish, Swedish, and Turkish**, plus a language-agnostic emoticon lexicon. Sub-millisecond per call, fully deterministic, no model download.
-
-* **`Text.Sentiment.Backends.Bumblebee`** (optional) — neural sentiment via [Bumblebee](https://hex.pm/packages/bumblebee) and a pre-trained multilingual XLM-RoBERTa model (`cardiffnlp/twitter-xlm-roberta-base-sentiment` by default). Higher quality, particularly on idiom and sarcasm, at the cost of a 10–30 s cold start and a ~280 MB model download. Add `{:bumblebee, "~> 0.6"}` and `{:exla, "~> 0.9"}` to your deps to enable it.
-
-Switch backends globally:
-
-```elixir
-# config/config.exs
-config :text, :sentiment_backend, Text.Sentiment.Backends.Bumblebee
-```
-
-…or per call:
-
-```elixir
-Text.Sentiment.analyze(text, backend: Text.Sentiment.Backends.Bumblebee)
-```
-
-Custom backends are supported via the `Text.Sentiment.Backend` behaviour.
-
-#### Default usage (lexicon backend)
-
-```elixir
-Text.Sentiment.analyze("This is a great day, I love it!").label
-#=> :positive
-
-Text.Sentiment.analyze("Ce produit est excellent et magnifique!", language: :fr).label
-#=> :positive
-
-Text.Sentiment.analyze("Detta är en mycket dålig idé.", language: :sv).label
-#=> :negative
-```
-
-The scoring engine handles **negation** (`"not good"` → negative) and **intensifiers** (`"very good"` scores higher than `"good"`) using simple, well-understood scalars from VADER. The full result includes a raw sum, a normalised compound score in `[-1.0, +1.0]`, the matched-token count, and the resolved language tag.
-
-For informal text containing emoticons, merge the bundled emoticon lexicon:
-
-```elixir
-lex = Text.Sentiment.lexicon_for(:en, with_emoticons: true)
-Text.Sentiment.analyze("That movie was awful :-(", lexicon: lex).label
-#=> :negative
-```
-
-When the input language is unknown, detect it first with `Text.Language.Classifier.Fasttext` and route to the matching lexicon:
-
-```elixir
-{:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(model_path)
-{:ok, detection} = Text.Language.Classifier.Fasttext.detect(text, model)
-lang = String.to_atom(detection.language)
-Text.Sentiment.analyze(text, language: lang)
-```
-
-Detected languages outside the bundled set fall back to English by default. For unsupported languages, supply your own `%{token => number}` lexicon via the `:lexicon` option — anything `Map`-like works.
-
-The lexicon-based approach trades sophistication for speed and determinism: it produces useful labels in a few microseconds with no model download, but doesn't capture sarcasm, idiom, or context. When you need that, switch to the Bumblebee backend.
-
-#### Bumblebee backend (neural multilingual)
-
-```elixir
-# Add to mix.exs:
-#   {:bumblebee, "~> 0.6"}
-#   {:exla, "~> 0.9"}
-
-result = Text.Sentiment.analyze(
-  "J'adore ce produit, c'est excellent!",
-  backend: Text.Sentiment.Backends.Bumblebee
-)
-result.label    #=> :positive
-result.compound #=> 0.94...
-result.scores   #=> %{positive: 0.95, neutral: 0.04, negative: 0.01}
-```
-
-The first call downloads the model (~280 MB) and traces the inference graph through EXLA. Subsequent calls in the same VM hit a cached `Nx.Serving` and return in single-digit milliseconds. For production deployments where cold-start is unacceptable, start a named serving at boot (see `Bumblebee.Text.text_classification/3` + `Nx.Serving.start_link/1`) and pass `serving: <name>` to `analyze/2`.
-
-#### Language input
-
-Every function that takes a `:language` (or `:locale`) accepts:
-
-* an atom (`:fr`),
-* a string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`),
-* or a `Localize.LanguageTag` struct when the optional [`localize`](https://hex.pm/packages/localize) dependency is loaded.
-
-The full BCP-47 form is normalised to its language subtag for sentiment-lexicon lookup, so `"fr-CA"`, `"FR"`, `:fr`, and `%Localize.LanguageTag{language: :fr, ...}` all route to the French lexicon.
-
-### Word embeddings
-
-`Text.Embedding` loads pre-trained word vectors in fastText `.vec` format and exposes lookup, cosine similarity, nearest-neighbour search, and analogies:
-
-```elixir
-{:ok, emb} = Text.Embedding.load("path/to/cc.en.300.vec")
-
-Text.Embedding.similarity(emb, "king", "queen")
-#=> 0.84
-
-Text.Embedding.nearest(emb, "king", k: 3)
-#=> [{"queen", 0.84}, {"prince", 0.79}, {"monarch", 0.77}]
-
-Text.Embedding.analogy(emb, "king", "man", "woman", k: 1)
-#=> [{"queen", 0.71}]
-```
-
-A typical pre-trained fastText vector file is several gigabytes; pass `:filter` to load only a domain-specific vocabulary, or `:max_tokens` for tests and quick experiments. The matrix is held as a single `Nx` tensor of shape `{n, dim}`.
-
-### Part-of-speech tagging and named-entity recognition
-
-`Text.POS` and `Text.NER` wrap [Bumblebee](https://hex.pm/packages/bumblebee)'s `token_classification` serving with sensible defaults — English POS, multilingual NER (10 high-resource languages):
-
-```elixir
-# Add to mix.exs:
-#   {:bumblebee, "~> 0.6"}
-#   {:exla, "~> 0.9"}
-
-Text.POS.tag("The cat sat on the mat.")
-#=> [{"the", :det, 0.99}, {"cat", :noun, 0.99}, ...]
-
-Text.NER.extract("Barack Obama visited Berlin in 2013.")
-#=> [
-#=>   %Text.NER.Entity{text: "Barack Obama", type: :per, start: 0, end: 12, score: 0.99},
-#=>   %Text.NER.Entity{text: "Berlin", type: :loc, start: 21, end: 27, score: 0.99}
-#=> ]
-```
-
-Both modules are no-op (compile to a runtime-raise) without `:bumblebee`. First call downloads and compiles the model (~440 MB POS, ~700 MB NER); subsequent calls hit a cached `Nx.Serving`.
-
-Override the default model via `:model` to use a language-specific or domain-specific checkpoint.
-
-### N-Gram generation
-
-The `Text.Ngram` module supports efficient generation of n-grams of length `2` to `7`. See `Text.Ngram.ngram/2`.
-
-### Word clouds
-
-`Text.WordCloud.terms/2` extracts a weighted list of terms from text, suitable for rendering as a word cloud. Default scoring is YAKE! (Campos et al. 2020) — unsupervised, statistical, multilingual by construction; no reference corpus required.
-
-```elixir
-text = """
-Machine learning is a subset of artificial intelligence. Machine learning
-algorithms build a model based on sample data, known as training data,
-in order to make predictions or decisions.
-"""
-
-Text.WordCloud.terms(text, language: :en, max_terms: 5)
-#=> [
-#=>   %{term: "machine learning", weight: 1.0,   count: 2, kind: :phrase},
-#=>   %{term: "machine",          weight: 0.52,  count: 3, kind: :word},
-#=>   %{term: "learning",         weight: 0.29,  count: 3, kind: :word},
-#=>   %{term: "artificial intelligence", weight: 0.23, count: 1, kind: :phrase},
-#=>   %{term: "training data",    weight: 0.10,  count: 1, kind: :phrase}
-#=> ]
-```
-
-Six scoring backends, selectable via the `:scoring` option:
-
-* **`:yake`** *(default)* — unsupervised, multilingual, no reference corpus. Best out-of-the-box quality.
-* **`:frequency`** — raw counts after stopword filtering. Baseline.
-* **`:rake`** — phrase-bounded scoring (Rose et al. 2010).
-* **`:text_rank`** — PageRank over a word co-occurrence graph (Mihalcea & Tarau 2004).
-* **`:tf_idf`** — distinctive terms relative to a `:reference_corpus`.
-* **`:key_bert`** — neural cosine similarity via a multilingual sentence-transformer (requires `:bumblebee`; ~470 MB model download).
-
-Stopwords come from `Text.Stopwords` (bundled stopwords-iso, ~60 languages). The `:language` option drives stopword selection; pass `{:auto, model}` for fastText auto-detection. See `Text.WordCloud` for the full option list.
-
-#### Layout
-
-`Text.WordCloud.Layout.layout/2` takes the term list and produces `(x, y, width, height, font_size, rotation)` placements via Wordle-style Archimedean-spiral packing. Output is renderer-agnostic — feed it to SVG, Canvas, PDF, or any other surface.
-
-```elixir
-terms = Text.WordCloud.terms(text, language: :en)
-
-placements = Text.WordCloud.Layout.layout(terms,
-  width: 800,
-  height: 600,
-  font_size_range: {12, 96},
-  rotations: [0, 90]
-)
-#=> [%{term: "machine learning", x: 400.0, y: 300.0, font_size: 96.0, rotation: 0, ...}, ...]
-```
-
-#### SVG rendering
-
-`Text.WordCloud.SVG.render/2` turns placements into a self-contained SVG document. Per-word colour comes from a pluggable palette: a list of hex strings, a `Color.Palette.Tonal` scale, or a `Color.Palette.Theme` (when the optional [`color`](https://hex.pm/packages/color) dependency is present).
-
-```elixir
-palette = Color.Palette.tonal("#3b82f6", name: "blue")
-
-svg = Text.WordCloud.SVG.render(placements,
-  width: 800,
-  height: 600,
-  palette: palette,
-  background: "#fafafa"
-)
-
-File.write!("cloud.svg", svg)
-```
-
-Three colour-mapping strategies are supported via `:color_strategy`: `:by_weight` (default; top weight gets the darkest tonal stop), `:by_index` (round-robin through the palette), and `:by_hash` (deterministic per term — identical terms always pick the same colour).
+Every public function that takes a `:language` (or `:locale`) accepts an atom (`:fr`), a string (`"fr"`, `"fr-CA"`, `"zh-Hans-CN"`), or a `Localize.LanguageTag` struct (when `:localize` is loaded). See [`Text.Language`](https://hexdocs.pm/text/Text.Language.html) for the normalisation helpers.
 
 ## Roadmap
 
-Near-term improvements aimed at the fastText path:
+* *Quantized model support* for `lid.176.ftz` (917 KB variant).
+* *`Nx.Serving` for batched inference* for throughput-bound workloads.
+* *CLDR-tailored segmentation* once the [`unicode_set`](https://github.com/elixir-unicode/unicode_set) regex engine matures.
 
-* **Quantized model support.** Decode the 917 KB `lid.176.ftz` variant via product quantization to enable smaller deployments. Today only the 126 MB `lid.176.bin` is supported.
+## License
 
-* **`Nx.Serving` for batched inference.** When throughput matters more than latency, batching predictions into a single EXLA call is a substantial multiplier.
-
-Beyond the fastText classifier, the longer-running interest is locale-aware text segmentation:
-
-* Finish the [Unicode regular expression](http://unicode.org/reports/tr18/) engine in [unicode_set](https://github.com/elixir-unicode/unicode_set), then implement basic Unicode word and sentence segmentation in [unicode_string](https://github.com/elixir-unicode/unicode_string), with CLDR tailorings on top.
-
-* Snowball-based stemming, once the segmentation primitives exist to drive it.
-
-These segmentation pieces live outside this package and are tracked in the linked repositories.
+Apache 2.0 — see [LICENSE.md](https://github.com/kipcole9/text/blob/v0.3.0/LICENSE.md).
