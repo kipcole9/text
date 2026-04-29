@@ -44,6 +44,7 @@ defmodule Text.MixProject do
       files: [
         "lib",
         "priv",
+        "guides",
         "mix.exs",
         "README*",
         "CHANGELOG*",
@@ -58,7 +59,13 @@ defmodule Text.MixProject do
       main: "readme",
       logo: "logo.png",
       skip_undefined_reference_warnings_on: ["changelog", "CHANGELOG.md"],
-      extras: ["README.md", "CHANGELOG.md", "LICENSE.md"]
+      extras: [
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE.md",
+        "guides/word_clouds.md"
+      ],
+      assets: %{"guides/word_clouds_assets" => "word_clouds_assets"}
     ]
   end
 
