@@ -98,7 +98,7 @@ defmodule Text.MixProject do
       {:nx, "~> 0.9 or ~> 0.10"},
       {:unicode, "~> 1.21"},
       {:unicode_transform, "~> 1.0"},
-      {:unicode_string, "~> 2.0"},
+      {:unicode_string, path: "../unicode/unicode_string", override: true},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
       {:jason, "~> 1.2"},
