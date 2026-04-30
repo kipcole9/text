@@ -57,7 +57,7 @@ defmodule Text.Sentiment.Backends.Lexicon do
           |> Keyword.get(:language, :custom)
           |> normalize_or_default(:custom)
 
-        {language, lexicon, scoring_opts}
+        {language, lexicon, with_default_negators(scoring_opts, language)}
 
       true ->
         language =
@@ -71,7 +71,17 @@ defmodule Text.Sentiment.Backends.Lexicon do
           |> normalize_or_default(@default_language)
 
         {used, lexicon} = bundled_or_fallback(language, fallback)
-        {used, lexicon, scoring_opts}
+        {used, lexicon, with_default_negators(scoring_opts, used)}
+    end
+  end
+
+  # Inject the per-language negator list as a default for `Lexicon.score/3`
+  # unless the caller has supplied their own `:negators` list.
+  defp with_default_negators(scoring_opts, language) do
+    if Keyword.has_key?(scoring_opts, :negators) do
+      scoring_opts
+    else
+      Keyword.put(scoring_opts, :negators, Lexicons.AFINN.negators(language))
     end
   end
 

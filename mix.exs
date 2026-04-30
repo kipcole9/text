@@ -1,7 +1,7 @@
 defmodule Text.MixProject do
   use Mix.Project
 
-  @version "0.3.0"
+  @version "0.4.0"
 
   def project do
     [
@@ -48,9 +48,12 @@ defmodule Text.MixProject do
         # (the 125 MB model is a user-downloaded runtime asset, fetched
         # via `mix text.download_lid176`) and `priv/scripts` (dev-only
         # fixture generators).
+        "priv/hyphenation",
         "priv/inflection",
+        "priv/lemma",
         "priv/sentiment",
         "priv/stopwords",
+        "priv/wordfreq",
         "guides",
         "mix.exs",
         "README*",
@@ -98,7 +101,7 @@ defmodule Text.MixProject do
       {:nx, "~> 0.9 or ~> 0.10"},
       {:unicode, "~> 1.21"},
       {:unicode_transform, "~> 1.0"},
-      {:unicode_string, path: "../unicode/unicode_string", override: true},
+      {:unicode_string, "~> 2.1"},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
       {:jason, "~> 1.2"},

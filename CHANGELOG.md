@@ -2,6 +2,46 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] — 2026-05-01
+
+### Added
+
+* `Text.Truecase` — case restoration for ALL-CAPS or lowercased text using POS-aware heuristics for proper nouns, acronyms, and sentence starts.
+
+* `Text.Clean` — pipeline-style normalization (whitespace, control characters, smart-quotes, dashes, NFC/NFKC) with a composable `clean/2` API.
+
+* `Text.Emoji` — emoji detection, stripping, and counting. Uses the `:unicode` package's emoji property tables; no external data required.
+
+* `Text.Hyphenation` — Knuth–Liang TeX-pattern hyphenation. Ships en-US patterns (~5k); other languages can be loaded via `Text.Hyphenation.Parser` from any `hyph-*.tex` file.
+
+* `Text.PII` — pattern-based detection and redaction of phone numbers, emails, credit-card-shaped digits, IBANs, IPv4/IPv6, and US SSNs.
+
+* `Text.Spell` — Norvig-style edit-distance spelling suggestions backed by `Text.WordFreq`. Returns ranked candidates with their corpus frequency.
+
+* `Text.Summarize` — extractive summarization via a sentence-graph TextRank with configurable similarity (`:cosine` or `:jaccard`) and target length.
+
+* `Text.Syllable` — English syllable counting using a vowel-group heuristic with override exceptions. Used as the per-word syllable signal feeding `Text.Readability`.
+
+* `Text.Readability` — Flesch, Flesch–Kincaid, Gunning-Fog, SMOG, Coleman–Liau, ARI, and Linsear-Write scores plus a unified `analyze/2` summary.
+
+* `Text.WordFreq` — frequency lookup over a 30k-word English corpus shipped in `priv/wordfreq/en.tsv`. Provides `rank/2`, `frequency/2`, `is_common?/2`, and `top/2`.
+
+* `Text.Lemma` — dictionary-based lemmatization. Ships an en-US table of ~42k inflected→base mappings; `lookup/2` falls back to the input when no entry exists.
+
+* `Text.Inflect.En.Pluralize` and `Text.Inflect.En.Singularize` — English noun inflection covering ~1.6 KLoC of irregular-form rules and exceptions, with `Text.Inflect.En.Helpers` for shared morphology utilities.
+
+* `Text.Sentiment.Lexicons.AFINN` now ships sentiment lexicons for **104 languages** (up from 7), an Emoji Sentiment Ranking 1.0 lexicon (`:emoji`, ~840 entries derived from the upstream corpus and rescaled onto AFINN's −5..+5 integer range), and per-language negator lists (`negators/1`). The seven hand-curated 0.3.0 lexicons (`:en`, `:da`, `:fi`, `:fr`, `:pl`, `:sv`, `:tr`) are preserved unchanged; the other ~95 are upstream machine-translated and ship as a baseline.
+
+* `Text.Sentiment.Backends.Lexicon` automatically resolves per-language negators from `Text.Sentiment.Lexicons.AFINN.negators/1` based on the requested `:language` option, so non-English text gets negation handling out of the box. Callers can still override with an explicit `:negators` list.
+
+* `mix text.gen_afinn_lexicons` regenerates `priv/sentiment/` from the vendored `data/affin/` source files. Hand-curated TSVs are preserved unless `--overwrite` is passed.
+
+### Changed
+
+* The `:unicode_string` dependency requirement is `~> 2.1`. The 2.1 release replaces its regex evaluator with a single-pass DFA engine; benchmarks show ~17× faster word-cloud builds for typical English prose, with linear (rather than O(N²)) scaling on long unbroken inputs.
+
+* `Text.Word.word_count/2` documentation now explicitly calls out that the default `&String.split/1` splitter does not implement UAX #29 segmentation and does not work for languages without inter-word whitespace (Chinese, Japanese, Korean, Thai, Lao, Khmer, Burmese). Examples show how to pass a UAX-aware or dictionary-aware splitter for those cases.
+
 ## [0.3.0] — 2026-04-29
 
 ### Added
