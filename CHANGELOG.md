@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.5.0] — unreleased
+## [0.5.0] — 2026-05-02
 
 ### Added
 
