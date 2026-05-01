@@ -12,14 +12,14 @@ defmodule Text do
   @doc """
   Pluralize a noun.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English noun.
 
   * `options` is a keyword list
     of options.
 
-  ## Options
+  ### Options
 
   * `:mode` is either `:modern` or `:classical`. The
     default is `:modern`.
@@ -28,17 +28,17 @@ defmodule Text do
     to be used. The default and ony option is
     `Text.Inflect.En`
 
-  ## Returns
+  ### Returns
 
   * a `String` representing the pluralized noun
 
-  ## Notes
+  ### Notes
 
   `mode` when `:classical` applies pluralization
   on latin nouns used in english but with latin
   suffixes.
 
-  ## Examples
+  ### Examples
 
       iex> Text.pluralize_noun "Major general"
       "Major generals"

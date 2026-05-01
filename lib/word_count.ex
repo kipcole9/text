@@ -57,7 +57,7 @@ defmodule Text.Word do
   Counts the number of words in a string,
   `File.Stream`, or `Flow`.
 
-  ## Arguments
+  ### Arguments
 
   * `text` is either a `String.t`, `Flow.t`,
     `File.Stream.t` or a list of strings.
@@ -66,12 +66,12 @@ defmodule Text.Word do
     returns a list of tokens. The default is `&String.split/1`,
     which splits only on Unicode whitespace.
 
-  ## Returns
+  ### Returns
 
   * A list of 2-tuples of the form `{word, count}`,
     referred to as a frequency list.
 
-  ## Important: the default splitter
+  ### Notes on the default splitter
 
   The default `&String.split/1` is fast but **does not** implement
   Unicode word segmentation (UAX #29) and **does not** work for
@@ -83,7 +83,7 @@ defmodule Text.Word do
   See the module documentation for a full discussion of splitter
   choices.
 
-  ## Examples
+  ### Examples
 
       # English / Western prose — default splitter is fine.
       Text.Word.word_count("the quick brown fox the lazy dog")
@@ -141,16 +141,16 @@ defmodule Text.Word do
   @doc """
   Counts the total number of words in a frequency list.
 
-  ## Arguments
+  ### Arguments
 
   * `frequency_list` is a list of frequencies returned from
     `Text.Word.word_count/2`.
 
-  ## Returns
+  ### Returns
 
   * An integer number of words.
 
-  ## Notes
+  ### Notes
 
   The total reflects whatever tokenization was used to build
   `frequency_list`. With the default `String.split/1` splitter the
@@ -165,7 +165,7 @@ defmodule Text.Word do
     single token. Use a UAX/dictionary-aware splitter via
     `word_count/2` for those languages.
 
-  ## Examples
+  ### Examples
 
   """
   @spec total_word_count(frequency_list) :: pos_integer
@@ -177,17 +177,16 @@ defmodule Text.Word do
   Counts the average word length in a
   frequency list.
 
-  ## Arguments
+  ### Arguments
 
   * `frequency_list` is a list of frequencies
-    returned from `Text.Word.word_count/2`
+    returned from `Text.Word.word_count/2`.
 
-   ## Returns
+  ### Returns
 
-   * An float representing the
-     average word length
+  * A float representing the average word length.
 
-  ## Examples
+  ### Examples
 
   """
   @spec average_word_length(frequency_list) :: float
@@ -203,23 +202,20 @@ defmodule Text.Word do
   end
 
   @doc """
-  Sorts the words in words in a
-  frequency list.
+  Sorts the words in a frequency list by frequency.
 
-  ## Arguments
+  ### Arguments
 
-  * `frequency_list` is a list of frequencies
-    returned from `Text.Word.word_count/2`
+  * `frequency_list` is a list of frequencies returned from
+    `Text.Word.word_count/2`.
 
-  * `directions` is either `:asc` or
-    `:desc`. The default is `:desc`.
+  * `direction` is either `:asc` or `:desc`. The default is `:desc`.
 
-   ## Returns
+  ### Returns
 
-  * The `frequency_list` sorted in the
-   direction specified
+  * The `frequency_list` sorted in the direction specified.
 
-  ## Examples
+  ### Examples
 
   """
   @spec sort(frequency_list, :asc | :desc) :: frequency_list

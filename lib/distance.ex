@@ -363,14 +363,25 @@ defmodule Text.Distance do
   character n-grams (shingles).
 
   Defined as `1 - |A ∩ B| / |A ∪ B|` where `A` and `B` are the
-  multisets of n-grams of each string. Returns `0.0` for identical
-  strings, `1.0` when the n-gram sets are completely disjoint.
+  sets of n-grams of each string.
 
-  ## Options
+  ### Arguments
 
-  * `:n` — n-gram size (default `2`, i.e. character bigrams).
+  * `a` is a string.
 
-  ## Examples
+  * `b` is a string.
+
+  ### Options
+
+  * `:n` — n-gram size in graphemes. Defaults to `2` (character
+    bigrams).
+
+  ### Returns
+
+  * A float in `[0.0, 1.0]`. `0.0` for identical strings; `1.0`
+    when the n-gram sets are completely disjoint.
+
+  ### Examples
 
       iex> Text.Distance.jaccard("night", "nacht")
       0.8571428571428572
@@ -401,11 +412,22 @@ defmodule Text.Distance do
   but weights matches more heavily; widely used for fuzzy string
   matching where a slightly more forgiving score is desirable.
 
-  ## Options
+  ### Arguments
 
-  * `:n` — n-gram size (default `2`).
+  * `a` is a string.
 
-  ## Examples
+  * `b` is a string.
+
+  ### Options
+
+  * `:n` — n-gram size in graphemes. Defaults to `2`.
+
+  ### Returns
+
+  * A float in `[0.0, 1.0]`. `0.0` for identical strings; `1.0`
+    when the n-gram sets are completely disjoint.
+
+  ### Examples
 
       iex> Text.Distance.sorensen_dice("night", "nacht")
       0.75
@@ -434,11 +456,26 @@ defmodule Text.Distance do
   n-grams.
 
   For binary feature vectors (which is what we have when treating
-  n-grams as set membership) Tanimoto reduces to Jaccard — so this is
-  an alias maintained for callers who specifically want the Tanimoto
-  name. See `jaccard/3` for the implementation and complexity.
+  n-grams as set membership) Tanimoto reduces to Jaccard — so this
+  is an alias maintained for callers who specifically want the
+  Tanimoto name.
 
-  ## Examples
+  ### Arguments
+
+  * `a` is a string.
+
+  * `b` is a string.
+
+  ### Options
+
+  Same as `jaccard/3`.
+
+  ### Returns
+
+  * A float in `[0.0, 1.0]`. Identical to the result of
+    `jaccard/3` with the same arguments.
+
+  ### Examples
 
       iex> Text.Distance.tanimoto("night", "nacht") == Text.Distance.jaccard("night", "nacht")
       true
@@ -449,15 +486,26 @@ defmodule Text.Distance do
 
   @doc """
   Returns the cosine distance between `a` and `b` over character
-  n-grams treated as a binary bag of words.
+  n-grams treated as a binary bag of features.
 
   Defined as `1 - |A ∩ B| / sqrt(|A| · |B|)`.
 
-  ## Options
+  ### Arguments
 
-  * `:n` — n-gram size (default `2`).
+  * `a` is a string.
 
-  ## Examples
+  * `b` is a string.
+
+  ### Options
+
+  * `:n` — n-gram size in graphemes. Defaults to `2`.
+
+  ### Returns
+
+  * A float in `[0.0, 1.0]`. `0.0` for identical strings; `1.0`
+    when the n-gram sets are completely disjoint.
+
+  ### Examples
 
       iex> Text.Distance.cosine("night", "nacht")
       0.75

@@ -127,7 +127,7 @@ defmodule Text.Sentiment.Lexicons.AFINN do
 
   Raises `ArgumentError` if `tag` is not in `available/0`.
 
-  ## Examples
+  ### Examples
 
       iex> Text.Sentiment.Lexicons.AFINN.lexicon(:en) |> Map.get("good")
       3
@@ -161,7 +161,7 @@ defmodule Text.Sentiment.Lexicons.AFINN do
   The list always includes the synthetic `:emoticon` and `:emoji`
   lexicons.
 
-  ## Examples
+  ### Examples
 
       iex> :en in Text.Sentiment.Lexicons.AFINN.available()
       true
@@ -181,7 +181,7 @@ defmodule Text.Sentiment.Lexicons.AFINN do
   Falls back to a built-in English negator list when the tag has no
   curated entry.
 
-  ## Examples
+  ### Examples
 
       iex> "not" in Text.Sentiment.Lexicons.AFINN.negators(:en)
       true
@@ -198,7 +198,7 @@ defmodule Text.Sentiment.Lexicons.AFINN do
   @doc """
   Returns `true` if `tag` has a curated negator list.
 
-  ## Examples
+  ### Examples
 
       iex> Text.Sentiment.Lexicons.AFINN.has_negators?(:en)
       true

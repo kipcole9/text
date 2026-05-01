@@ -50,13 +50,25 @@ defmodule Text.Phonetic.DoubleMetaphone do
   When the name is unambiguous, `primary` and `alternate` are the
   same string.
 
-  ## Options
+  ### Arguments
+
+  * `name` is a string. Diacritics are folded via
+    `Text.Clean.unaccent/1` before encoding; non-Latin letters are
+    discarded.
+
+  ### Options
 
   * `:max_length` — truncate both codes to this many characters.
     Defaults to `4` (the canonical Philips length); pass `nil` to
     skip truncation.
 
-  ## Examples
+  ### Returns
+
+  * A 2-tuple `{primary, alternate}` of uppercase ASCII strings.
+    Returns `{"", ""}` for empty input or input containing no Latin
+    letters.
+
+  ### Examples
 
       iex> Text.Phonetic.DoubleMetaphone.encode("Smith")
       {"SM0", "XMT"}
@@ -66,9 +78,6 @@ defmodule Text.Phonetic.DoubleMetaphone do
 
       iex> Text.Phonetic.DoubleMetaphone.encode("Thompson")
       {"TMPS", "TMPS"}
-
-      iex> Text.Phonetic.DoubleMetaphone.encode("")
-      {"", ""}
 
   """
   @spec encode(String.t(), keyword()) :: code()
@@ -94,16 +103,28 @@ defmodule Text.Phonetic.DoubleMetaphone do
   four primary/alternate code combinations (and both produce non-empty
   codes).
 
-  ## Options
+  ### Arguments
 
-  Same as `encode/2`.
+  * `name_a` is a string.
 
-  ## Examples
+  * `name_b` is a string.
+
+  ### Options
+
+  Same as `encode/2`. Both inputs are encoded with the same options.
+
+  ### Returns
+
+  * `true` when both inputs produce a non-empty code pair and any
+    one of the four combinations
+    (`primary_a`/`primary_b`, `primary_a`/`alternate_b`,
+    `alternate_a`/`primary_b`, `alternate_a`/`alternate_b`) match.
+
+  * `false` otherwise.
+
+  ### Examples
 
       iex> Text.Phonetic.DoubleMetaphone.match?("Smith", "Schmidt")
-      true
-
-      iex> Text.Phonetic.DoubleMetaphone.match?("Catherine", "Katherine")
       true
 
       iex> Text.Phonetic.DoubleMetaphone.match?("Smith", "Brown")

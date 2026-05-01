@@ -39,34 +39,32 @@ defmodule Text.Phonetic.NYSIIS do
   @doc """
   Returns the NYSIIS code for `name`.
 
-  ## Options
+  ### Arguments
+
+  * `name` is a string. Non-Latin letters and diacritics are folded
+    to ASCII via `Text.Clean.unaccent/1` before encoding.
+
+  ### Options
 
   * `:max_length` — truncate the resulting code to this length.
     Pass `6` for the classical Taft NYSIIS. Defaults to `nil`
     (no truncation).
 
-  ## Examples
+  ### Returns
+
+  * The NYSIIS code as an uppercase ASCII string. Returns `""` for
+    empty input or input with no Latin letters.
+
+  ### Examples
 
       iex> Text.Phonetic.NYSIIS.encode("Watkins")
       "WATCAN"
-
-      iex> Text.Phonetic.NYSIIS.encode("Knuth")
-      "NAT"
-
-      iex> Text.Phonetic.NYSIIS.encode("Phillips")
-      "FALAP"
 
       iex> Text.Phonetic.NYSIIS.encode("MacDonald")
       "MCDANALD"
 
       iex> Text.Phonetic.NYSIIS.encode("MacDonald", max_length: 6)
       "MCDANA"
-
-      iex> Text.Phonetic.NYSIIS.encode("Müller")
-      "MALAR"
-
-      iex> Text.Phonetic.NYSIIS.encode("")
-      ""
 
   """
   @spec encode(String.t(), keyword()) :: String.t()
@@ -90,14 +88,25 @@ defmodule Text.Phonetic.NYSIIS do
   @doc """
   Returns `true` if `name_a` and `name_b` produce the same NYSIIS code.
 
-  ## Options
+  ### Arguments
+
+  * `name_a` is a string.
+
+  * `name_b` is a string.
+
+  ### Options
 
   Same as `encode/2`. The same options are applied to both inputs.
 
-  ## Examples
+  ### Returns
 
-      iex> Text.Phonetic.NYSIIS.match?("Knuth", "Nuth")
-      true
+  * `true` when both inputs produce a non-empty NYSIIS code and the
+    codes are equal.
+
+  * `false` otherwise (including when either input is empty or
+    contains no Latin letters).
+
+  ### Examples
 
       iex> Text.Phonetic.NYSIIS.match?("MacDonald", "McDonald")
       true

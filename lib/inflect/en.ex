@@ -19,7 +19,7 @@ defmodule Text.Inflect.En do
   Pluralize an english noun, pronoun,
   verb or adjective.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English word.
 
@@ -27,17 +27,17 @@ defmodule Text.Inflect.En do
     default is `:modern`. This applies to
     nouns only.
 
-  ## Returns
+  ### Returns
 
   * a `String` representing the pluralized word.
 
-  ## Notes
+  ### Notes
 
   `mode` when `:classical` applies pluralization
   on latin nouns in english but with latin
   suffixes.
 
-  ## Examples
+  ### Examples
 
       iex> Text.Inflect.En.pluralize "fish"
       "fish"
@@ -93,24 +93,24 @@ defmodule Text.Inflect.En do
   @doc """
   Pluralize an english noun.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English noun.
 
   * `mode` is `:modern` or `:classical`. The
     default is `:modern`.
 
-  ## Returns
+  ### Returns
 
   * a `String` representing the pluralized noun
 
-  ## Notes
+  ### Notes
 
   `mode` when `:classical` applies pluralization
   on latin nouns used in english but with latin
   suffixes.
 
-  ## Examples
+  ### Examples
 
       iex> Text.Inflect.En.pluralize_noun "Major general"
       "Major generals"
@@ -504,15 +504,15 @@ defmodule Text.Inflect.En do
   @doc """
   Pluralize an english verb.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English verb.
 
-  ## Returns
+  ### Returns
 
   * a `String` representing the pluralized verb
 
-  ## Examples
+  ### Examples
 
       iex> Text.Inflect.En.pluralize_verb "has"
       "have"
@@ -634,16 +634,16 @@ defmodule Text.Inflect.En do
   @doc """
   Pluralize an english adjective.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English adjective.
 
-  ## Returns
+  ### Returns
 
   * a `String` representing the pluralized
     adjective
 
-  ## Examples
+  ### Examples
 
       iex> Text.Inflect.En.pluralize_adjective "a"
       "some"

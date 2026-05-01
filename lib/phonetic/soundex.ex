@@ -146,6 +146,20 @@ defmodule Text.Phonetic.Soundex do
   Returns `true` if `name_a` and `name_b` produce the same Soundex
   code (and both produce a non-empty code).
 
+  ### Arguments
+
+  * `name_a` is a string.
+
+  * `name_b` is a string.
+
+  ### Returns
+
+  * `true` when both inputs produce a non-empty Soundex code and the
+    codes are equal.
+
+  * `false` otherwise (including when either input is empty or
+    contains no letters).
+
   ### Examples
 
       iex> Text.Phonetic.Soundex.match?("Robert", "Rupert")

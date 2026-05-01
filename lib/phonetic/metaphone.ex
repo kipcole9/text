@@ -95,9 +95,22 @@ defmodule Text.Phonetic.Metaphone do
   Returns `true` if `word_a` and `word_b` produce the same Metaphone
   code (and both produce a non-empty code).
 
+  ### Arguments
+
+  * `word_a` is a string.
+
+  * `word_b` is a string.
+
   ### Options
 
   Same as `encode/2`. The same options are applied to both inputs.
+
+  ### Returns
+
+  * `true` when both inputs produce a non-empty Metaphone code and
+    the codes are equal.
+
+  * `false` otherwise.
 
   ### Examples
 

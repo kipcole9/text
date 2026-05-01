@@ -84,15 +84,24 @@ defmodule Text.Phonetic.Cologne do
   @doc """
   Returns the Kölner-Phonetik code for `name`.
 
-  Returns the empty string if `name` contains no Latin letters.
+  ### Arguments
 
-  ## Examples
+  * `name` is a string. German umlauts (`Ä Ö Ü ß`) are normalised
+    before encoding, and other diacritics are folded via
+    `Text.Clean.unaccent/1`.
+
+  ### Returns
+
+  * A digit string. The first character is always `0`–`8`. Returns
+    `""` for empty input or input containing no Latin letters.
+
+  ### Examples
 
       iex> Text.Phonetic.Cologne.encode("Schmitt")
       "862"
 
-      iex> Text.Phonetic.Cologne.encode("")
-      ""
+      iex> Text.Phonetic.Cologne.encode("Wikipedia")
+      "3412"
 
   """
   @spec encode(String.t()) :: String.t()
@@ -107,7 +116,20 @@ defmodule Text.Phonetic.Cologne do
   Returns `true` if `name_a` and `name_b` produce the same Kölner
   code (and both produce a non-empty code).
 
-  ## Examples
+  ### Arguments
+
+  * `name_a` is a string.
+
+  * `name_b` is a string.
+
+  ### Returns
+
+  * `true` when both inputs produce a non-empty Kölner code and the
+    codes are equal.
+
+  * `false` otherwise.
+
+  ### Examples
 
       iex> Text.Phonetic.Cologne.match?("Müller", "Mueller")
       true

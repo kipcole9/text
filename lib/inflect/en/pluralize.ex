@@ -472,16 +472,16 @@ defmodule Text.Inflect.En.Pluralize do
   @doc """
   Pluralize an english adjective.
 
-  ## Arguments
+  ### Arguments
 
   * `word` is any English adjective.
 
-  ## Returns
+  ### Returns
 
   * a `t:String.t/0` representing the pluralized
     adjective
 
-  ## Examples
+  ### Examples
 
       iex> Text.Inflect.En.pluralize_adjective "a"
       "some"
