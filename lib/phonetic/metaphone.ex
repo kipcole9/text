@@ -91,6 +91,32 @@ defmodule Text.Phonetic.Metaphone do
     |> maybe_truncate(max_length)
   end
 
+  @doc """
+  Returns `true` if `word_a` and `word_b` produce the same Metaphone
+  code (and both produce a non-empty code).
+
+  ### Options
+
+  Same as `encode/2`. The same options are applied to both inputs.
+
+  ### Examples
+
+      iex> Text.Phonetic.Metaphone.match?("knight", "night")
+      true
+
+      iex> Text.Phonetic.Metaphone.match?("Wright", "Right")
+      true
+
+      iex> Text.Phonetic.Metaphone.match?("Smith", "Schmidt")
+      false
+
+  """
+  @spec match?(String.t(), String.t(), keyword()) :: boolean()
+  def match?(word_a, word_b, options \\ []) when is_binary(word_a) and is_binary(word_b) do
+    code_a = encode(word_a, options)
+    code_a != "" and code_a == encode(word_b, options)
+  end
+
   # ---- preprocessing -----------------------------------------------------
 
   # Words starting with "AE", "GN", "KN", "PN", "WR" have a silent

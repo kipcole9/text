@@ -142,6 +142,31 @@ defmodule Text.Phonetic.Soundex do
     IO.iodata_to_binary([first_letter | digits ++ pad])
   end
 
+  @doc """
+  Returns `true` if `name_a` and `name_b` produce the same Soundex
+  code (and both produce a non-empty code).
+
+  ### Examples
+
+      iex> Text.Phonetic.Soundex.match?("Robert", "Rupert")
+      true
+
+      iex> Text.Phonetic.Soundex.match?("Smith", "Schmidt")
+      true
+
+      iex> Text.Phonetic.Soundex.match?("Roberts", "Doberts")
+      false
+
+      iex> Text.Phonetic.Soundex.match?("anything", "")
+      false
+
+  """
+  @spec match?(String.t(), String.t()) :: boolean()
+  def match?(name_a, name_b) when is_binary(name_a) and is_binary(name_b) do
+    code_a = encode(name_a)
+    code_a != "" and code_a == encode(name_b)
+  end
+
   defp classify_letters(letters) do
     Enum.map(letters, fn letter ->
       cond do
