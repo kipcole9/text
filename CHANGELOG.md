@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] — unreleased
+
+### Added
+
+* `Text.Phonetic.NYSIIS` — New York State Identification and Intelligence System phonetic encoding (Taft, 1970). Designed as a Soundex successor for English personal-name matching; produces pronounceable letter codes rather than digits and is more discriminating than Soundex on common name variations.
+
+* `Text.Phonetic.Cologne` — Kölner Phonetik (Postel, 1969), the German-language counterpart to Soundex. Optimized for German spelling variants — `Müller` / `Mueller` / `Muller` and `Meyer` / `Mayer` / `Maier` / `Meier` collapse to single codes.
+
+* `match?/2` (and `match?/3` where options apply) on `Text.Phonetic.Soundex`, `Text.Phonetic.Metaphone`, `Text.Phonetic.NYSIIS`, and `Text.Phonetic.Cologne` for direct equality comparison without manual `encode/2 == encode/2` boilerplate.
+
+* `Text.Clean.unaccent/1` — strip diacritics and fold non-decomposable Latin letters (`Þ` → `Th`, `ß` → `ss`, `Æ` → `AE`, `ł` → `l`, `đ` → `d`) by delegating to `Unicode.Transform.LatinAscii.transform/1`. Also exposed as the `:unaccent` option on `Text.Clean.clean/2`.
+
+* `Text.Distance` gains four set-based similarity metrics over character n-grams: `jaccard/3`, `sorensen_dice/3`, `tanimoto/3` (alias for `jaccard/3`), and `cosine/3`. All accept an `:n` option for configurable shingle size (default 2). Operate at the grapheme level for Unicode correctness.
+
+### Notes
+
+* `Text.Phonetic.DoubleMetaphone` was scoped for this release but deferred to a future version. Lawrence Philips' algorithm has hundreds of context-sensitive rules across several language families; the current `Soundex` + `Metaphone` + `NYSIIS` + `Cologne` quartet covers English and German use cases competitively in the meantime.
+
 ## [0.4.0] — 2026-05-01
 
 ### Added
