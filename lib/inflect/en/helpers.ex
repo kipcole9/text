@@ -116,6 +116,43 @@ defmodule Text.Inflect.En.Helpers do
 
   @non_inflecting_suffix ["fish", "ois", "sheep", "deer", "pox", "itis"]
 
+  ## ── Reverse (plural → singular) lookup tables for singularization.
+  ## Built once at compile time from the same source data.
+
+  @irregular_to_singular_modern (
+                                  for {singular, [modern, _classical]} <- @irregular,
+                                      into: %{},
+                                      do: {modern, singular}
+                                )
+
+  @irregular_to_singular_classical (
+                                     for {singular, [_modern, classical]} <- @irregular,
+                                         into: %{},
+                                         do: {classical, singular}
+                                   )
+
+  # Pronoun entries are stored as `{singular, plural}` tuples (no
+  # modern/classical distinction). The same map serves both modes.
+  @pronoun_to_singular (
+                         for {singular, plural} <- @pronouns,
+                             into: %{},
+                             do: {plural, singular}
+                       )
+
+  @doc false
+  def irregular_singular(word, :modern), do: Map.get(@irregular_to_singular_modern, word)
+  def irregular_singular(word, :classical), do: Map.get(@irregular_to_singular_classical, word)
+
+  @doc false
+  def pronoun_singular(word), do: Map.get(@pronoun_to_singular, word)
+
+  @doc false
+  def known_irregular_plural?(word, :modern), do: Map.has_key?(@irregular_to_singular_modern, word)
+  def known_irregular_plural?(word, :classical), do: Map.has_key?(@irregular_to_singular_classical, word)
+
+  @doc false
+  def known_pronoun_plural?(word), do: Map.has_key?(@pronoun_to_singular, word)
+
   def pluralize_auxillary_irregular do
     @pluralize_auxillary_irregular
   end
@@ -217,7 +254,7 @@ defmodule Text.Inflect.En.Helpers do
   end
 
   def replace_suffix(word, suffix, replacement) do
-    String.replace_trailing(word, suffix, replacement)
+    String.replace_suffix(word, suffix, replacement)
   end
 
   def non_inflecting_nouns do

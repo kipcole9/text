@@ -18,6 +18,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `Text.Distance` gains four set-based similarity metrics over character n-grams: `jaccard/3`, `sorensen_dice/3`, `tanimoto/3` (alias for `jaccard/3`), and `cosine/3`. All accept an `:n` option for configurable shingle size (default 2). Operate at the grapheme level for Unicode correctness.
 
+* `Text.Inflect.En.singularize/2` and `Text.Inflect.En.singularize_noun/2` — invert the existing pluralizer. Combines reverse lookup of Conway's irregular tables, explicit suffix rules for unambiguous English plural forms (`-ies`, `-shes`/`-ches`/`-xes`/`-zes`/`-sses`), small whitelists for Greek-derived `-is`/`-es` plurals (`analyses → analysis`) and English `-us` plurals (`geniuses → genius`), and a `pluralize/2` round-trip search to validate other candidates.
+
+### Fixed
+
+* `Text.Inflect.En.Helpers.replace_suffix/3` now actually replaces only the trailing suffix instead of all repeated trailing occurrences, fixing cases like `theses` (which previously transformed to `thisis` instead of `thesis` because both `es` occurrences were rewritten). Affects rule output where the suffix repeats inside the base word.
+
 ## [0.4.0] — 2026-05-01
 
 ### Added

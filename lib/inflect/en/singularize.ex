@@ -47,28 +47,16 @@ defmodule Text.Inflect.En.Singularize do
   #         if the word is of the form: "<preposition> <pronoun>",
   #                 return "<preposition> <specified plural of pronoun>"
 
-  def is_pronoun(word, mode) do
-    cond do
-      category?(word, "pronoun", mode) ->
-        pronoun(word, mode)
-
-      true ->
-        nil
-    end
+  def is_pronoun(word, _mode) do
+    pronoun_singular(word)
   end
 
   # Handle standard irregular plurals (mongooses, oxen, etc. - see table A.1)...
   #         if the word has an irregular plural,
-  #                 return the specified plural
+  #                 return the specified singular
 
   def is_irregular_noun(word, mode) do
-    cond do
-      category?(word, "irregular_noun", mode) ->
-        irregular_noun(word, mode)
-
-      true ->
-        nil
-    end
+    irregular_singular(word, mode)
   end
 
   # Singularize is the INVERSE of this
@@ -83,38 +71,46 @@ defmodule Text.Inflect.En.Singularize do
 
   def is_irregular_suffix(word, _mode) do
     cond do
-     suffix?(word, "men") ->
-       replace_suffix(word, "men", "man")
+      suffix?(word, "men") ->
+        replace_suffix(word, "men", "man")
 
-     suffix?(word, "lice") ->
-       replace_suffix(word, "lice", "louse")
+      suffix?(word, "lice") ->
+        replace_suffix(word, "lice", "louse")
 
-     suffix?(word, "mice") ->
-       replace_suffix(word, "mice", "mouse")
+      suffix?(word, "mice") ->
+        replace_suffix(word, "mice", "mouse")
 
-     suffix?(word, "teeth") ->
-       replace_suffix(word, "teeth", "tooth")
+      suffix?(word, "teeth") ->
+        replace_suffix(word, "teeth", "tooth")
 
-     suffix?(word, "geese") ->
-       replace_suffix(word, "geese", "goose")
+      suffix?(word, "geese") ->
+        replace_suffix(word, "geese", "goose")
 
-     suffix?(word, "feet") ->
-       replace_suffix(word, "feet", "foot")
+      suffix?(word, "feet") ->
+        replace_suffix(word, "feet", "foot")
 
-     suffix?(word, "zoa") ->
-       replace_suffix(word, "zoa", "zoon")
-
-     suffix?(word, "ces") ->
-       replace_suffix(word, "ces", "cis")
-
-     suffix?(word, "ses") ->
-       replace_suffix(word, "ses", "sis")
-
-     suffix?(word, "xes") ->
-       replace_suffix(word, "xes", "xis")
+      suffix?(word, "zoa") ->
+        replace_suffix(word, "zoa", "zoon")
 
       true ->
         nil
+    end
+  end
+
+  # Greek/Latin -es/-ces/-xes plurals (analyses → analysis, axes → axis,
+  # appendices → appendix). Conservative: only fires when stripping the
+  # plural suffix yields a known classical singular.
+  @classical_is_es_plurals (
+                             for w <- Text.Inflect.En.Helpers.is_ides(),
+                                 String.ends_with?(w, "is"),
+                                 do:
+                                   String.replace_suffix(w, "is", "es")
+                           )
+                           |> MapSet.new()
+
+  def is_classical_is_plural(word, _mode) do
+    if word in @classical_is_es_plurals do
+      String.replace_suffix(word, "es", "is")
     end
   end
 
@@ -385,8 +381,47 @@ defmodule Text.Inflect.En.Singularize do
   # Singularize is the INVERSE of this
   # Otherwise, assume that the plural just adds -s (cats, programmes, trees, etc.)...
   #         otherwise, return inflection(-,-s)
+  #
+  # We pattern-match the common English plural suffixes in order of
+  # specificity:
+  #
+  #   * `-ies`  → `-y`     (cities → city)
+  #   * `-ves`  → `-fe`    (knives → knife)
+  #   * `-shes`/`-ches`/`-sses`/`-zes`/`-xes`/`-oes` → trim `-es`
+  #     (boxes → box, kisses → kiss, churches → church, potatoes → potato)
+  #   * `-s`    → trim `-s` (cats → cat, houses → house)
   def is_regular(word, _mode) do
-    replace_suffix(word, "s", "")
+    cond do
+      String.length(word) <= 2 ->
+        word
+
+      suffix?(word, "ies") ->
+        replace_suffix(word, "ies", "y")
+
+      suffix?(word, "ves") ->
+        replace_suffix(word, "ves", "fe")
+
+      suffix?(word, "sses") ->
+        replace_suffix(word, "sses", "ss")
+
+      suffix?(word, "shes") or suffix?(word, "ches") ->
+        replace_suffix(word, "es", "")
+
+      suffix?(word, "xes") or suffix?(word, "zes") ->
+        replace_suffix(word, "es", "")
+
+      # -oes after a consonant (potato, hero) → trim -es. After a
+      # vowel (shoes, toes) we want to trim only the -s, which the
+      # final -s rule below handles.
+      suffix?(word, "oes") and not vowel?(word, String.length(word) - 4) ->
+        replace_suffix(word, "es", "")
+
+      suffix?(word, "s") ->
+        replace_suffix(word, "s", "")
+
+      true ->
+        word
+    end
   end
 
   # Check if the verb is being used as an auxiliary and has a known irregular inflection (has seen,

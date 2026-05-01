@@ -91,6 +91,288 @@ defmodule Text.Inflect.En do
   end
 
   @doc """
+  Singularize an English word.
+
+  Inverts `pluralize/2`: given a plural noun (or pronoun), returns its
+  singular form. Inputs that are already singular, or that aren't
+  recognised as a plural, are returned unchanged.
+
+  ### Arguments
+
+  * `word` is the word to singularize.
+
+  * `mode` is one of `:modern` (default) or `:classical`. The
+    classical mode uses Latin/Greek classical singulars where
+    applicable (e.g. `octopodes → octopus` in classical, vs.
+    `octopuses → octopus` in modern).
+
+  ### Returns
+
+  * The singular form as a string. Words that don't appear plural
+    (or that have no known singular) are returned unchanged.
+
+  ### Examples
+
+      iex> Text.Inflect.En.singularize "mice"
+      "mouse"
+
+      iex> Text.Inflect.En.singularize "children"
+      "child"
+
+      iex> Text.Inflect.En.singularize "octopuses"
+      "octopus"
+
+      iex> Text.Inflect.En.singularize "octopodes", :classical
+      "octopus"
+
+      iex> Text.Inflect.En.singularize "cities"
+      "city"
+
+      iex> Text.Inflect.En.singularize "knives"
+      "knife"
+
+  """
+  def singularize(word, mode \\ :modern) do
+    Text.Inflect.En.Singularize.is_pronoun(word, mode) ||
+      Text.Inflect.En.Singularize.is_non_inflecting(word, mode) ||
+      Text.Inflect.En.Singularize.is_irregular_noun(word, mode) ||
+      explicit_singular(word) ||
+      round_trip_candidate(word, mode) ||
+      singularize_noun(word, mode)
+  end
+
+  # Unambiguous English plural-suffix rewrites. These take priority
+  # over the round-trip search because the original `pluralize_noun/2`
+  # has known gaps for some sibilant-ending bases (`box`, `kiss`).
+  # Common Greek-derived singulars whose plurals are formed by
+  # `-is` → `-es` (analyses → analysis, crises → crisis). Without
+  # this whitelist the round-trip would prefer the shorter
+  # `analyse`/`crise` form because the original `pluralize_noun/2`
+  # accepts both as valid singulars.
+  @greek_is_es_singulars MapSet.new(
+                           ~w(
+                             analysis axis basis crisis diagnosis ellipsis
+                             emphasis genesis hypothesis nemesis oasis
+                             paralysis prognosis psychosis synopsis thesis
+                           )
+                         )
+
+  # Common English `-us` nouns whose plurals are formed by `-uses`.
+  # Used in `explicit_singular/1` because the original Conway-style
+  # `pluralize_noun/2` doesn't reliably round-trip these (it returns
+  # e.g. `statuss` for `status`).
+  @us_base_singulars MapSet.new(
+                       ~w(
+                         abacus apparatus apropos asparagus bonus bus cactus
+                         calculus campus census circus citrus consensus
+                         corpus cosmos crocus crocus discus eros
+                         exodus focus fungus genius genus hippopotamus
+                         impetus iris isthmus locus lotus nautilus
+                         nimbus nucleus omnibus opus prospectus radius
+                         status stimulus stylus surplus syllabus terminus
+                         thesaurus typhus uterus virus walrus
+                       )
+                     )
+
+  # Common English words ending in `-oe` whose plurals are formed by a
+  # plain `-s` (`shoe`/`shoes`, `toe`/`toes`). Used to disambiguate
+  # `-oes` inputs: when the trim-`-s` candidate is in this list, prefer
+  # it over the trim-`-es` form. Without this list `shoes` would
+  # wrongly land at `sho` because `sho + es = shoes` is a valid
+  # round-trip.
+  @oe_base_singulars MapSet.new(
+                       ~w(
+                         shoe toe canoe foe doe hoe woe oboe horseshoe
+                         tiptoe overshoe snowshoe
+                       )
+                     )
+
+  defp explicit_singular(word) do
+    cond do
+      String.length(word) <= 3 ->
+        nil
+
+      # `-ies` → `-y` (cities → city, parties → party)
+      String.ends_with?(word, "ies") ->
+        String.replace_suffix(word, "ies", "y")
+
+      # `-sses` → `-ss` (kisses → kiss, masses → mass)
+      String.ends_with?(word, "sses") ->
+        String.replace_suffix(word, "sses", "ss")
+
+      # `-shes` / `-ches` → trim `-es` (wishes → wish, churches → church)
+      String.ends_with?(word, "shes") or String.ends_with?(word, "ches") ->
+        String.replace_suffix(word, "es", "")
+
+      # `-xes` / `-zes` → trim `-es` (boxes → box, buzzes → buzz)
+      String.ends_with?(word, "xes") or String.ends_with?(word, "zes") ->
+        String.replace_suffix(word, "es", "")
+
+      # `-uses` from a whitelisted `-us` base (geniuses → genius,
+      # statuses → status, viruses → virus). The whitelist exists
+      # because the original `pluralize_noun/2` doesn't round-trip
+      # these reliably.
+      String.ends_with?(word, "uses") and
+          MapSet.member?(@us_base_singulars, String.replace_suffix(word, "es", "")) ->
+        String.replace_suffix(word, "es", "")
+
+      # Greek `-es` plurals on whitelisted singulars
+      # (analyses → analysis, crises → crisis).
+      candidate = greek_is_singular(word) ->
+        candidate
+
+      # `-oe` bases whose plurals add a plain `-s` (shoes → shoe,
+      # toes → toe, canoes → canoe).
+      String.ends_with?(word, "oes") and
+          MapSet.member?(@oe_base_singulars, String.replace_suffix(word, "s", "")) ->
+        String.replace_suffix(word, "s", "")
+
+      # `-oes` from a consonant-final `-o` base (potatoes → potato,
+      # heroes → hero, tomatoes → tomato). Conway's algorithm
+      # pluralizes any `-Co` (consonant + o) word to `-oes` by default,
+      # so the inverse rule is also default-applicable.
+      String.ends_with?(word, "oes") and consonant_before_oes?(word) ->
+        String.replace_suffix(word, "es", "")
+
+      true ->
+        nil
+    end
+  end
+
+  defp greek_is_singular(word) do
+    if String.ends_with?(word, "es") do
+      candidate = String.replace_suffix(word, "es", "is")
+      if MapSet.member?(@greek_is_es_singulars, candidate), do: candidate
+    end
+  end
+
+  # `true` if the character immediately before the trailing `oes` is a
+  # consonant — distinguishing `potato-es`, `hero-es` (consonant + o
+  # base) from `aloes` (a-l-o-es, vowel before).
+  defp consonant_before_oes?(word) do
+    n = String.length(word)
+
+    if n >= 4 do
+      char = String.at(word, n - 4)
+      char != nil and char not in ["a", "e", "i", "o", "u"]
+    else
+      false
+    end
+  end
+
+  # Generate plausible singular candidates from `word` and return the
+  # first whose `pluralize_noun/2` round-trips back to `word`. This
+  # leverages the existing pluralization data tables to validate
+  # candidates rather than trying to enumerate every English plural
+  # ending.
+  defp round_trip_candidate(word, mode) do
+    word
+    |> singular_candidates()
+    |> Enum.find(fn candidate ->
+      candidate != word and pluralize_noun(candidate, mode) == word
+    end)
+  end
+
+  # The candidate suffix transformations, in roughly most-to-least
+  # specific order. Each candidate is one of the plausible base forms
+  # for an English plural ending in `-s`.
+  defp singular_candidates(word) do
+    cond do
+      String.length(word) <= 2 ->
+        [word]
+
+      true ->
+        [
+          # `-ies` → `-y` (cities → city)
+          if(String.ends_with?(word, "ies"),
+            do: String.replace_suffix(word, "ies", "y")
+          ),
+
+          # `-ves` → `-fe` (knives → knife)
+          if(String.ends_with?(word, "ves"),
+            do: String.replace_suffix(word, "ves", "fe")
+          ),
+
+          # `-ves` → `-f`  (leaves → leaf)
+          if(String.ends_with?(word, "ves"),
+            do: String.replace_suffix(word, "ves", "f")
+          ),
+
+          # `-uses` → `-us` (genius → geniuses, status → statuses).
+          # Tried before plain `-s` trim so that `-us` bases beat
+          # `-use` bases when `pluralize_noun/2` accepts both. The
+          # round-trip filters out cases where the `-us` candidate
+          # doesn't pluralize back to the input (`hous` → not
+          # `houses`).
+          if(String.ends_with?(word, "uses"),
+            do: String.replace_suffix(word, "es", "")
+          ),
+
+          # `-s` → trim (cats → cat, houses → house, shoes → shoe).
+          # Tried before `-es` trim so that bases ending in `-e`
+          # (`shoe`, `toe`) win over the dictionary-less alternative
+          # `sho`/`to`. Cases that genuinely need `-es` trim (potato,
+          # hero) are caught upstream by `explicit_singular/1`.
+          if(String.ends_with?(word, "s"),
+            do: String.replace_suffix(word, "s", "")
+          ),
+
+          # `-es` → trim (kisses → kiss, geniuses → genius). Last
+          # resort — most -es cases are handled by explicit_singular.
+          if(String.ends_with?(word, "es"),
+            do: String.replace_suffix(word, "es", "")
+          )
+        ]
+        |> Enum.reject(&is_nil/1)
+        |> Enum.uniq()
+    end
+  end
+
+  @doc """
+  Singularize an English noun.
+
+  Lower-level than `singularize/2`: skips the pronoun and
+  non-inflecting checks. Useful when callers have already filtered
+  the input to nouns.
+
+  ### Arguments
+
+  * `word` is the noun to singularize.
+
+  * `mode` is `:modern` (default) or `:classical`.
+
+  ### Returns
+
+  * The singular form as a string.
+
+  ### Examples
+
+      iex> Text.Inflect.En.singularize_noun "octopuses"
+      "octopus"
+
+      iex> Text.Inflect.En.singularize_noun "platypodes", :classical
+      "platypus"
+
+  """
+  def singularize_noun(word, mode \\ :modern) do
+    s = Text.Inflect.En.Singularize
+
+    s.is_irregular_noun(word, mode) ||
+      s.is_irregular_suffix(word, mode) ||
+      s.is_classical_is_plural(word, mode) ||
+      s.is_assimilated_classical(word, mode) ||
+      s.is_classical(word, mode) ||
+      s.is_compound_plural(word, mode) ||
+      s.is_ves_plural(word, mode) ||
+      s.is_word_ending_in_y(word, mode) ||
+      s.is_o_suffix(word, mode) ||
+      explicit_singular(word) ||
+      round_trip_candidate(word, mode) ||
+      s.is_general(word, mode) ||
+      s.is_regular(word, mode)
+  end
+
+  @doc """
   Pluralize an english noun.
 
   ### Arguments
@@ -975,7 +1257,7 @@ defmodule Text.Inflect.En do
   end
 
   defp replace_suffix(word, suffix, replacement) do
-    String.replace_trailing(word, suffix, replacement)
+    String.replace_suffix(word, suffix, replacement)
   end
 
   @vowels ["a", "e", "i", "o", "u"]
