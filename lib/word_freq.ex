@@ -10,20 +10,27 @@ defmodule Text.WordFreq do
 
   ### Bundled and on-demand language packs
 
-  English is bundled at compile time (top ~30,000 American English
-  words from the Google Web Trillion Word Corpus, via Peter
-  Norvig's distribution at <https://norvig.com/ngrams/>) and
-  loaded with zero I/O. Other languages are resolved through
-  `Text.Data` from the cache directory (`:data_dir`/`wordfreq/`,
-  default `~/.cache/text/wordfreq/`).
+  Seven frequency tables are bundled at compile time and loaded
+  with zero I/O on first lookup:
 
-  Unlike `Text.Hyphenation` and `Text.Lemma`, there is no canonical
-  per-language download URL for word-frequency data — the upstream
-  Python `wordfreq` library packages its data internally. Set
-  `auto_download_wordfreq_data: true` and call `load_language/2`
-  with an explicit URL/path when you have a frequency table to
-  register, or drop pre-built `<lang>.tsv` files into the cache
-  directory.
+  * `en` — top 30,000 American English words from the Google Web
+    Trillion Word Corpus (Peter Norvig's distribution at
+    <https://norvig.com/ngrams/>).
+
+  * `de`, `fr`, `es`, `it`, `nl`, `pt` — top 30,000 entries each
+    from Hermit Dave's MIT-licensed
+    [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
+    OpenSubtitles 2018 corpus.
+
+  Other languages are resolved through `Text.Data` from the cache
+  directory (`:data_dir`/`wordfreq/`, default
+  `~/.cache/text/wordfreq/`). There is no canonical per-language
+  download URL for word-frequency data, so auto-download is not
+  configured by default; set `auto_download_wordfreq_data: true`
+  and call `load_language/2` with an explicit URL/path when you
+  have a frequency table to register, or drop pre-built
+  `<lang>.tsv` files (with `<word>\\t<count>` per line) into the
+  cache directory.
 
   Frequency tables are loaded lazily on first access and cached in
   `:persistent_term` for the lifetime of the runtime, so subsequent
@@ -51,8 +58,20 @@ defmodule Text.WordFreq do
 
   alias Text.Data
 
-  @data_path "priv/wordfreq/en.tsv"
-  @external_resource @data_path
+  # Languages with bundled compile-time frequency tables. Each
+  # `priv/wordfreq/<lang>.tsv` is read at compile time and embedded
+  # into `@bundled` so first-call lookup is zero-I/O.
+  #
+  # English data is from Peter Norvig's distribution of the Google
+  # Web Trillion Word Corpus. The other six are derived from
+  # Hermit Dave's MIT-licensed
+  # [FrequencyWords](https://github.com/hermitdave/FrequencyWords)
+  # OpenSubtitles 2018 corpus, trimmed to the top 30,000 entries.
+  @bundled_langs ~w(en de fr es it nl pt)
+
+  for lang <- @bundled_langs do
+    @external_resource "priv/wordfreq/#{lang}.tsv"
+  end
 
   @doc """
   Returns the raw corpus count of a word in the chosen language.
@@ -307,16 +326,20 @@ defmodule Text.WordFreq do
     end
   end
 
-  defp load_for_key("en") do
-    @data_path
-    |> Path.relative_to("priv")
-    |> then(&Path.join(:code.priv_dir(:text), &1))
-    |> File.read!()
-    |> parse_tsv()
-  end
-
+  # Bundled tables are read from `priv/` and parsed on first use,
+  # then cached in `:persistent_term` for the lifetime of the
+  # runtime. Compile-time embedding is deliberately avoided here:
+  # seven 30,000-entry maps as compile-time literals balloon the
+  # BEAM file to ~15 MB and slow Dialyzer / OTP load times
+  # significantly. First-call parsing is a one-shot ~30 ms.
   defp load_for_key(lang_key) do
-    fetch_and_parse_key(lang_key)
+    if lang_key in @bundled_langs do
+      Path.join(:code.priv_dir(:text), "wordfreq/#{lang_key}.tsv")
+      |> File.read!()
+      |> parse_tsv()
+    else
+      fetch_and_parse_key(lang_key)
+    end
   end
 
   defp fetch_and_parse(input) do

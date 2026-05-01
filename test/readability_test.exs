@@ -90,6 +90,27 @@ defmodule Text.ReadabilityTest do
       complex = Readability.lix(@paragraph)
       assert complex > simple
     end
+
+    test "dale_chall rises with proportion of difficult words" do
+      simple = Readability.dale_chall(@short)
+      complex = Readability.dale_chall(@paragraph)
+      assert complex > simple
+    end
+
+    test "dale_chall applies the +3.6365 adjustment when PDW > 0.05" do
+      # @paragraph has many words outside the 3000-word easy list.
+      stats = Readability.statistics(@paragraph)
+      assert stats.difficult_words / stats.words > 0.05
+      raw_part = 0.1579 * (stats.difficult_words / stats.words * 100) +
+                 0.0496 * (stats.words / stats.sentences)
+      assert_in_delta Readability.dale_chall(@paragraph), raw_part + 3.6365, 0.001
+    end
+
+    test "spache rises with proportion of unfamiliar words" do
+      simple = Readability.spache(@short)
+      complex = Readability.spache(@paragraph)
+      assert complex > simple
+    end
   end
 
   describe "edge cases" do
@@ -101,13 +122,16 @@ defmodule Text.ReadabilityTest do
       assert Readability.ari("") == 0.0
       assert Readability.coleman_liau("") == 0.0
       assert Readability.lix("") == 0.0
+      assert Readability.dale_chall("") == 0.0
+      assert Readability.spache("") == 0.0
     end
 
     test "metrics/2 returns all keys" do
       m = Readability.metrics(@short)
 
       assert Map.keys(m) |> Enum.sort() ==
-               [:ari, :coleman_liau, :flesch, :flesch_kincaid, :gunning_fog, :lix, :smog]
+               [:ari, :coleman_liau, :dale_chall, :flesch, :flesch_kincaid,
+                :gunning_fog, :lix, :smog, :spache]
     end
 
     test "metrics/2 matches individual functions" do

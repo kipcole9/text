@@ -18,17 +18,25 @@ All 11 land in this batch. Each is implemented, doctested, unit-tested, and pass
 * **`Text.PII`** — pattern-based detection and redaction for emails, phones, IBANs, credit cards (Luhn-validated), SSNs, IPv4, IPv6, and URLs. `detect/2`, `redact/2`, `types/0`.
 * **`Text.Summarize`** — extractive summarization via TextRank and LexRank with Jaccard-similarity sentence graphs. `summarize/2`, `summarize_sentences/2`, `scores/2`.
 
-## Active follow-up — bundled-data extensions
+## Done — bundled-data extensions (2026-05-02, in 0.5.0)
 
-Improvements to the modules above that don't change their public API.
+* **Dale-Chall + Spache** — bundled `priv/readability/dale_chall.txt` (2,949 words) and `priv/readability/spache.txt` (1,063 words) from the MIT-licensed `py-readability-metrics` distribution. `Text.Readability.dale_chall/2` and `spache/2` shipped; `statistics/2` now also returns `:difficult_words` and `:unfamiliar_words`.
 
-* **`Text.Readability.dale_chall/2` and `Text.Readability.spache/2`** — bundle the Dale-Chall easy-words list (~3,000 words) and the Spache list (~1,000 words) so the two remaining classic indices ship.
-* **`Text.Hyphenation` language packs** — bundle `hyph-de`, `hyph-fr`, `hyph-es`, `hyph-it`, `hyph-pt`, `hyph-nl` patterns alongside `en-us`.
-* **`Text.Lemma` language packs** — bundle the other top-tier `lemmatization-lists` languages (de, fr, es, it, nl, pt).
-* **`Text.WordFreq` language packs** — bundle frequency tables for the same set, sourced from the `wordfreq` upstream.
-* **`Text.Emoji.sentiment/1`** — bundle the Kralj Novak et al. (2015) emoji sentiment ranking and expose a per-emoji score.
+* **Hyphenation language packs** — bundled `de-1996`, `fr`, `es`, `it`, `nl`, `pt` `.tex` pattern files from hyph-utf8 (each under its upstream MIT/X11/BSD/LPPL license, headers preserved). All compile-time, zero-I/O.
+
+* **WordFreq language packs** — bundled top-30,000 entries each for `de`, `fr`, `es`, `it`, `nl`, `pt` from Hermit Dave's MIT-licensed FrequencyWords (OpenSubtitles 2018 corpus). Compile-time, zero-I/O.
+
+* **Emoji Sentiment Ranking** — bundled v1.0 (Kralj Novak et al., 2015, CC-BY-SA 3.0) at `priv/emoji_sentiment/`. `Text.Emoji.sentiment/1` and `text_sentiment/1` shipped.
+
+* **Lemma packs deferred** — non-English `lemmatization-lists` files were evaluated but not bundled; the smallest (French, 4.7 MB raw) by itself would push the package near hex's 8 MB limit. Mitigation: added `mix text.download_lemma_data <lang>` to fetch from upstream into the `Text.Data` cache without requiring the per-app `auto_download_lemma_data` flag, and the `Text.Lemma` moduledoc now enumerates the ~20 upstream-available languages and notes the absence of any Dutch (`nl`) dictionary upstream.
+
+## Active follow-up
+
 * **`unicode_emoji` package** — extract a standalone hex package (mirroring `unicode_string`, `unicode_set`) that ships the full CLDR emoji annotations: short names, keywords, presentation/component flags, ZWJ sequence definitions, and skin-tone modifier handling. Once published, `Text.Emoji` drops its hand-curated in-module lookup and sources every name from `unicode_emoji`, gaining full coverage of the emoji repertoire and proper handling of ZWJ sequences (e.g. `👨‍👩‍👧‍👦` as one entity rather than four pictographs).
+
 * **`Text.Summarize` similarity backends** — option to use TF-IDF cosine instead of Jaccard, and (when `Text.Embedding` is loaded) static-embedding cosine.
+
+* **Lemma data as separate hex packages** — long-term answer to the lemma-bundling size problem: per-language `:text_lemma_<lang>` companion packages so apps depend only on the languages they need.
 
 ## Deferred — Optional ML extensions (Bumblebee feature flag)
 

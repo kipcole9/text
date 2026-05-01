@@ -9,17 +9,35 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 ### Detection and analysis
 
 * *Language identification* ([`Text.Language.Classifier.Fasttext`](https://hexdocs.pm/text/Text.Language.Classifier.Fasttext.html)) — pure-Elixir port of fastText's `lid.176`, 176 languages, validated bit-for-bit against the reference. ~100 µs per prediction with EXLA.
-* *Sentiment analysis* ([`Text.Sentiment`](https://hexdocs.pm/text/Text.Sentiment.html)) — multilingual; bundled AFINN lexicons (default, 7 languages + emoticons) or XLM-RoBERTa via Bumblebee (optional, ~30 languages).
+* *Sentiment analysis* ([`Text.Sentiment`](https://hexdocs.pm/text/Text.Sentiment.html)) — multilingual AFINN lexicons (104 languages + emoji) or XLM-RoBERTa via Bumblebee.
 * *Part-of-speech tagging* ([`Text.POS`](https://hexdocs.pm/text/Text.POS.html)) — via Bumblebee, English by default.
 * *Named-entity recognition* ([`Text.NER`](https://hexdocs.pm/text/Text.NER.html)) — via Bumblebee, multilingual (10 high-resource languages).
+* *Readability* ([`Text.Readability`](https://hexdocs.pm/text/Text.Readability.html)) — Flesch, Flesch-Kincaid, Gunning-Fog, SMOG, ARI, Coleman-Liau, LIX, Dale-Chall, Spache.
+* *PII detection and redaction* ([`Text.PII`](https://hexdocs.pm/text/Text.PII.html)) — emails, phones, IBANs, Luhn-validated credit cards, SSNs, IPv4/IPv6, URLs.
+
+### Cleaning and normalization
+
+* *Pipeline cleaning* ([`Text.Clean`](https://hexdocs.pm/text/Text.Clean.html)) — HTML/entity strip, mojibake repair, NFC/NFKC normalization, diacritic folding.
+* *Truecasing* ([`Text.Truecase`](https://hexdocs.pm/text/Text.Truecase.html)) — sentence-aware case restoration for ALL-CAPS or lowercased text.
+* *Emoji* ([`Text.Emoji`](https://hexdocs.pm/text/Text.Emoji.html)) — detect, count, strip, convert to/from `:short_name:` form, and per-emoji sentiment scoring (Kralj Novak et al. 2015).
 
 ### Strings
 
-* *String distance* ([`Text.Distance`](https://hexdocs.pm/text/Text.Distance.html)) — Levenshtein, Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler.
-* *Set similarity* ([`Text.Similarity`](https://hexdocs.pm/text/Text.Similarity.html)) — Jaccard, Dice, overlap, cosine.
-* *Phonetic encoding* ([`Text.Phonetic.Soundex`](https://hexdocs.pm/text/Text.Phonetic.Soundex.html), [`Text.Phonetic.Metaphone`](https://hexdocs.pm/text/Text.Phonetic.Metaphone.html)).
+* *Edit distance* ([`Text.Distance`](https://hexdocs.pm/text/Text.Distance.html)) — Levenshtein, Damerau-Levenshtein, Hamming, Jaro, Jaro-Winkler.
+* *N-gram set similarity* ([`Text.Distance`](https://hexdocs.pm/text/Text.Distance.html)) — Jaccard, Sørensen-Dice, Tanimoto, cosine over character n-grams.
+* *Set similarity* ([`Text.Similarity`](https://hexdocs.pm/text/Text.Similarity.html)) — Jaccard, Dice, overlap, cosine over arbitrary token sets.
+* *Phonetic encoding* — [`Soundex`](https://hexdocs.pm/text/Text.Phonetic.Soundex.html), [`Metaphone`](https://hexdocs.pm/text/Text.Phonetic.Metaphone.html), [`NYSIIS`](https://hexdocs.pm/text/Text.Phonetic.NYSIIS.html), [`Cologne`](https://hexdocs.pm/text/Text.Phonetic.Cologne.html) (German), [`DoubleMetaphone`](https://hexdocs.pm/text/Text.Phonetic.DoubleMetaphone.html), each with `match?/2` for direct equality.
 * *Slugification* ([`Text.Slug`](https://hexdocs.pm/text/Text.Slug.html)) — locale-aware Unicode folding with cross-script transliteration.
 * *Segmentation* ([`Text.Segment`](https://hexdocs.pm/text/Text.Segment.html)) — UAX #29 word/sentence boundaries with CLDR abbreviation suppressions.
+* *Syllable counting* ([`Text.Syllable`](https://hexdocs.pm/text/Text.Syllable.html)) — vowel-group heuristic with an exceptions table.
+* *Hyphenation* ([`Text.Hyphenation`](https://hexdocs.pm/text/Text.Hyphenation.html)) — Knuth-Liang patterns; bundled `en-us`, `de-1996`, `fr`, `es`, `it`, `nl`, `pt`, with on-demand fetching for ~80 more from hyph-utf8.
+
+### Spelling and morphology
+
+* *Spell correction* ([`Text.Spell`](https://hexdocs.pm/text/Text.Spell.html)) — Norvig-style edit-distance suggestions backed by `Text.WordFreq`.
+* *Lemmatization* ([`Text.Lemma`](https://hexdocs.pm/text/Text.Lemma.html)) — dictionary-driven, ~41k bundled English pairs; ~20 more languages auto-downloadable from michmech via `mix text.download_lemma_data`.
+* *Word frequencies* ([`Text.WordFreq`](https://hexdocs.pm/text/Text.WordFreq.html)) — bundled top-30,000 frequencies for `en`, `de`, `fr`, `es`, `it`, `nl`, `pt` with `frequency`, `zipf`, `rank`, `top`.
+* *English inflection* ([`Text.Inflect.En`](https://hexdocs.pm/text/Text.Inflect.En.html)) — `pluralize/2` and `singularize/2`, modern and classical modes.
 
 ### Statistics and search
 
@@ -29,18 +47,15 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 * *Concordance* ([`Text.KWIC`](https://hexdocs.pm/text/Text.KWIC.html)) — keyword-in-context lookup.
 * *Word embeddings* ([`Text.Embedding`](https://hexdocs.pm/text/Text.Embedding.html)) — load fastText `.vec` files, then cosine similarity, nearest neighbours, and analogies.
 * *Word clouds* ([`Text.WordCloud`](https://hexdocs.pm/text/Text.WordCloud.html)) — multilingual keyword extraction (six scoring backends) plus spiral layout and SVG rendering.
+* *Extractive summarization* ([`Text.Summarize`](https://hexdocs.pm/text/Text.Summarize.html)) — TextRank and LexRank over Jaccard sentence graphs.
 * *Stopwords* ([`Text.Stopwords`](https://hexdocs.pm/text/Text.Stopwords.html)) — bundled lists for ~60 languages from [stopwords-iso](https://github.com/stopwords-iso/stopwords-iso).
-
-### Inflection
-
-* *English pluralization* ([`Text.Inflect.En`](https://hexdocs.pm/text/Text.Inflect.En.html)) — modern and classical modes.
 
 ## Installation
 
 ```elixir
 def deps do
   [
-    {:text, "~> 0.3.0"}
+    {:text, "~> 0.5.0"}
   ]
 end
 ```

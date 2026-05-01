@@ -12,6 +12,10 @@ defmodule Text.Readability do
   * `ari/2` — Automated Readability Index (US school grade).
   * `coleman_liau/2` — Coleman-Liau Index (US school grade).
   * `lix/2` — LIX (Läsbarhetsindex; language-agnostic-ish).
+  * `dale_chall/2` — Dale-Chall (US school grade); uses the bundled
+    ~3,000-word easy-words list.
+  * `spache/2` — Spache (US school grade, K-3 readers); uses the
+    bundled ~1,000-word easy-words list.
 
   Use `metrics/2` to compute every index in one pass over the text,
   and `statistics/2` to inspect the raw counts (words, sentences,
@@ -24,15 +28,30 @@ defmodule Text.Readability do
   metrics that depend on syllable counts (Flesch, Flesch-Kincaid,
   Gunning-Fog, SMOG) are English-only. ARI, Coleman-Liau, and LIX
   are character/length-based and work for any whitespace-segmented
-  language.
-
-  Dale-Chall and Spache are intentionally not yet implemented; they
-  require bundled easy-word lexicons that will land in a follow-up.
+  language. Dale-Chall and Spache are English-only and use the
+  bundled easy-word lists in `priv/readability/`.
 
   """
 
   alias Text.Segment
   alias Text.Syllable
+
+  @dale_chall_path "priv/readability/dale_chall.txt"
+  @spache_path "priv/readability/spache.txt"
+  @external_resource @dale_chall_path
+  @external_resource @spache_path
+
+  @dale_chall_words @dale_chall_path
+                    |> File.read!()
+                    |> String.split(~r/\r?\n/, trim: true)
+                    |> Enum.map(&String.downcase/1)
+                    |> MapSet.new()
+
+  @spache_words @spache_path
+                |> File.read!()
+                |> String.split(~r/\r?\n/, trim: true)
+                |> Enum.map(&String.downcase/1)
+                |> MapSet.new()
 
   @typedoc "Raw text statistics used to compute the readability metrics."
   @type statistics :: %{
@@ -43,6 +62,8 @@ defmodule Text.Readability do
           syllables: non_neg_integer(),
           polysyllables: non_neg_integer(),
           long_words: non_neg_integer(),
+          difficult_words: non_neg_integer(),
+          unfamiliar_words: non_neg_integer(),
           average_sentence_length: float(),
           average_syllables_per_word: float()
         }
@@ -55,7 +76,9 @@ defmodule Text.Readability do
           smog: float(),
           ari: float(),
           coleman_liau: float(),
-          lix: float()
+          lix: float(),
+          dale_chall: float(),
+          spache: float()
         }
 
   @long_word_threshold 7
@@ -100,16 +123,20 @@ defmodule Text.Readability do
     words = Segment.words(text, locale: to_string(language))
     word_count = length(words)
 
-    {syllables, polysyllables, long_words, letters} =
-      Enum.reduce(words, {0, 0, 0, 0}, fn word, {sy, poly, long, letters} ->
+    {syllables, polysyllables, long_words, letters, difficult, unfamiliar} =
+      Enum.reduce(words, {0, 0, 0, 0, 0, 0}, fn word, {sy, poly, long, letters, dc, sp} ->
         s = Syllable.count(word, language: language)
         l = letters_in(word)
+        word_lower = String.downcase(word)
+        word_len = String.length(word)
 
         {
           sy + s,
           poly + if(s >= @polysyllable_threshold, do: 1, else: 0),
-          long + if(String.length(word) >= @long_word_threshold, do: 1, else: 0),
-          letters + l
+          long + if(word_len >= @long_word_threshold, do: 1, else: 0),
+          letters + l,
+          dc + if(letter_word?(word) and not MapSet.member?(@dale_chall_words, word_lower), do: 1, else: 0),
+          sp + if(letter_word?(word) and not MapSet.member?(@spache_words, word_lower), do: 1, else: 0)
         }
       end)
 
@@ -121,6 +148,8 @@ defmodule Text.Readability do
       syllables: syllables,
       polysyllables: polysyllables,
       long_words: long_words,
+      difficult_words: difficult,
+      unfamiliar_words: unfamiliar,
       average_sentence_length: safe_div(word_count, sentence_count),
       average_syllables_per_word: safe_div(syllables, word_count)
     }
@@ -395,6 +424,100 @@ defmodule Text.Readability do
   end
 
   @doc """
+  Returns the Dale-Chall readability score.
+
+  Output is a US school grade level. Computed from the percentage of
+  *difficult* words — words **not** in the bundled ~3,000-word
+  easy-words list — and the average sentence length. Uses the
+  Chall-Dale 1995 adjustment: the raw score is shifted by `+3.6365`
+  when more than 5% of words are difficult.
+
+  Formula: `0.1579 × (PDW × 100) + 0.0496 × ASL [+ 3.6365 if PDW > 0.05]`,
+  where `PDW` is the proportion of difficult words and `ASL` is
+  average sentence length.
+
+  ### Arguments
+
+  * `text` is a string of one or more sentences.
+
+  ### Options
+
+  * `:language` is the segmentation locale, default `:en`. The
+    bundled easy-words list is English-only.
+
+  ### Returns
+
+  * A float grade level. Returns `0.0` for empty input.
+
+  ### Examples
+
+      iex> Text.Readability.dale_chall("The cat sat on the mat.") |> is_float()
+      true
+
+  """
+  @spec dale_chall(String.t() | statistics(), keyword()) :: float()
+  def dale_chall(text_or_stats, options \\ [])
+
+  def dale_chall(text, options) when is_binary(text),
+    do: dale_chall(statistics(text, options), options)
+
+  def dale_chall(%{words: 0}, _options), do: 0.0
+  def dale_chall(%{sentences: 0}, _options), do: 0.0
+
+  def dale_chall(%{words: words, sentences: sentences, difficult_words: difficult}, _options) do
+    pdw = difficult / words
+    asl = words / sentences
+    raw = 0.1579 * (pdw * 100) + 0.0496 * asl
+    if pdw > 0.05, do: raw + 3.6365, else: raw
+  end
+
+  @doc """
+  Returns the Spache readability score.
+
+  Output is a US school grade level, intended for K-3 reading
+  material. Computed from the percentage of *unfamiliar* words —
+  words **not** in the bundled ~1,000-word Spache easy-words list —
+  and average sentence length.
+
+  Formula: `0.121 × ASL + 0.082 × (UPW × 100) + 0.659`, where `ASL`
+  is average sentence length and `UPW` is the proportion of
+  unfamiliar words.
+
+  ### Arguments
+
+  * `text` is a string of one or more sentences.
+
+  ### Options
+
+  * `:language` is the segmentation locale, default `:en`. The
+    bundled easy-words list is English-only.
+
+  ### Returns
+
+  * A float grade level. Returns `0.0` for empty input.
+
+  ### Examples
+
+      iex> Text.Readability.spache("The cat sat on the mat.") |> is_float()
+      true
+
+  """
+  @spec spache(String.t() | statistics(), keyword()) :: float()
+  def spache(text_or_stats, options \\ [])
+
+  def spache(text, options) when is_binary(text),
+    do: spache(statistics(text, options), options)
+
+  def spache(%{words: 0}, _options), do: 0.0
+  def spache(%{sentences: 0}, _options), do: 0.0
+
+  def spache(%{words: words, sentences: sentences, unfamiliar_words: unfamiliar}, _options) do
+    asl = words / sentences
+    upw = unfamiliar / words * 100
+    0.121 * asl + 0.082 * upw + 0.659
+  end
+
+  @doc """
   Computes every readability metric in one pass.
 
   ### Arguments
@@ -409,13 +532,13 @@ defmodule Text.Readability do
   ### Returns
 
   * A map with the keys `:flesch`, `:flesch_kincaid`, `:gunning_fog`,
-    `:smog`, `:ari`, `:coleman_liau`, and `:lix`. Empty input
-    yields `0.0` for every metric.
+    `:smog`, `:ari`, `:coleman_liau`, `:lix`, `:dale_chall`, and
+    `:spache`. Empty input yields `0.0` for every metric.
 
   ### Examples
 
       iex> Text.Readability.metrics("The cat sat on the mat.") |> Map.keys() |> Enum.sort()
-      [:ari, :coleman_liau, :flesch, :flesch_kincaid, :gunning_fog, :lix, :smog]
+      [:ari, :coleman_liau, :dale_chall, :flesch, :flesch_kincaid, :gunning_fog, :lix, :smog, :spache]
 
   """
   @spec metrics(String.t(), keyword()) :: metrics()
@@ -429,7 +552,9 @@ defmodule Text.Readability do
       smog: smog(stats, options),
       ari: ari(stats, options),
       coleman_liau: coleman_liau(stats, options),
-      lix: lix(stats, options)
+      lix: lix(stats, options),
+      dale_chall: dale_chall(stats, options),
+      spache: spache(stats, options)
     }
   end
 
@@ -442,6 +567,15 @@ defmodule Text.Readability do
   defp letter?(c) when c >= ?a and c <= ?z, do: true
   defp letter?(c) when c >= ?A and c <= ?Z, do: true
   defp letter?(_), do: false
+
+  # Treat tokens with at least one letter as candidates for the
+  # easy/difficult check; pure punctuation and digit tokens shouldn't
+  # count as "difficult" simply because they're not in the lexicon.
+  defp letter_word?(word) do
+    word
+    |> String.to_charlist()
+    |> Enum.any?(&letter?/1)
+  end
 
   defp safe_div(_numerator, 0), do: 0.0
   defp safe_div(numerator, denominator), do: numerator / denominator

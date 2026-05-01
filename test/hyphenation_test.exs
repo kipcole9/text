@@ -104,6 +104,27 @@ defmodule Text.HyphenationTest do
     end
   end
 
+  describe "bundled language packs" do
+    test "de, fr, es, it, nl, pt are all loadable with zero I/O" do
+      # No data-dir overrides, no auto-download — these must work
+      # purely from the compile-time embedded data.
+      Application.delete_env(:text, :auto_download_hyphenation_data)
+
+      for {lang, word} <- [
+            {:de, "Wassersport"},
+            {:fr, "anticonstitutionnellement"},
+            {:es, "computadora"},
+            {:it, "computazione"},
+            {:nl, "computerwetenschap"},
+            {:pt, "computador"}
+          ] do
+        points = Hyphenation.points(word, language: lang)
+        assert is_list(points)
+        assert length(points) >= 1, "expected #{lang}: #{word} to have break points"
+      end
+    end
+  end
+
   describe "tag resolution defaults" do
     test "ambiguous languages map to common variants" do
       # We can verify these without auto-download by checking

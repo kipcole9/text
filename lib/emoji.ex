@@ -11,9 +11,11 @@ defmodule Text.Emoji do
   CLDR annotation set; rare emoji round-trip as themselves. Users
   can extend the lookup at runtime via `add_emoji/1`.
 
-  Sentiment scoring of emoji is a planned follow-up — the bundled
-  AFINN lexicon already covers emoticons (`:-)`, `:(`), and the
-  Bumblebee-backed sentiment model handles emoji directly.
+  Sentiment scoring is provided by `sentiment/1` and
+  `text_sentiment/1`, backed by the bundled Emoji Sentiment Ranking
+  v1.0 (Kralj Novak et al., 2015 — see `priv/emoji_sentiment/`)
+  covering ~750 emoji with per-emoji negative/neutral/positive
+  proportions and an aggregate score in `[-1.0, 1.0]`.
 
   """
 
@@ -196,6 +198,47 @@ defmodule Text.Emoji do
 
   @reverse Enum.into(@short_names, %{}, fn {emoji, name} -> {name, emoji} end)
 
+  @emoji_sentiment_path "priv/emoji_sentiment/emoji_sentiment_v1.csv"
+  @external_resource @emoji_sentiment_path
+
+  # Parse the Emoji Sentiment Ranking v1.0 CSV at compile time.
+  # Header: Emoji,Unicode codepoint,Occurrences,Position,Negative,Neutral,Positive,Unicode name,Unicode block
+  @emoji_sentiments @emoji_sentiment_path
+                    |> File.read!()
+                    |> String.split(~r/\r?\n/, trim: true)
+                    |> Enum.drop(1)
+                    |> Enum.flat_map(fn line ->
+                      case String.split(line, ",", parts: 9) do
+                        [emoji, _cp, occ, _pos, neg, neu, pos, name, _block] ->
+                          occurrences = String.to_integer(occ)
+                          negative = String.to_integer(neg)
+                          neutral = String.to_integer(neu)
+                          positive = String.to_integer(pos)
+
+                          score =
+                            if occurrences > 0,
+                              do: (positive - negative) / occurrences,
+                              else: 0.0
+
+                          [
+                            {emoji,
+                             %{
+                               emoji: emoji,
+                               occurrences: occurrences,
+                               negative: negative,
+                               neutral: neutral,
+                               positive: positive,
+                               score: score,
+                               name: name
+                             }}
+                          ]
+
+                        _ ->
+                          []
+                      end
+                    end)
+                    |> Map.new()
+
   @doc """
   Returns a list of every emoji found in the text, in order of
   appearance.
@@ -345,6 +388,97 @@ defmodule Text.Emoji do
         emoji -> emoji
       end
     end)
+  end
+
+  @doc """
+  Returns the bundled sentiment record for a single emoji.
+
+  The data is the Emoji Sentiment Ranking v1.0 (Kralj Novak et al.,
+  2015), licensed CC-BY-SA 3.0. Coverage is ~750 of the most-used
+  emoji in tweets at the time of the study; rare emoji return `nil`.
+
+  ### Arguments
+
+  * `emoji` is a single-emoji string. Surface form must match the
+    upstream entry exactly (no skin-tone or ZWJ-sequence variants).
+
+  ### Returns
+
+  * A map with keys `:emoji`, `:occurrences`, `:negative`,
+    `:neutral`, `:positive`, `:score` (range `[-1.0, 1.0]`), and
+    `:name` (Unicode name). Returns `nil` if the emoji is not in
+    the ranking.
+
+  ### Examples
+
+      iex> %{score: score} = Text.Emoji.sentiment("😂")
+      iex> score > 0.0
+      true
+
+      iex> Text.Emoji.sentiment("not_an_emoji")
+      nil
+
+  """
+  @spec sentiment(String.t()) ::
+          %{
+            emoji: String.t(),
+            occurrences: non_neg_integer(),
+            negative: non_neg_integer(),
+            neutral: non_neg_integer(),
+            positive: non_neg_integer(),
+            score: float(),
+            name: String.t()
+          }
+          | nil
+  def sentiment(emoji) when is_binary(emoji) do
+    Map.get(@emoji_sentiments, emoji)
+  end
+
+  @doc """
+  Returns the aggregate sentiment of every known emoji in a text.
+
+  Each emoji's score is weighted by its corpus `:occurrences` so
+  that high-confidence emoji dominate noisy ones — matching the
+  weighted-average approach used by the original paper. Emoji not
+  in the ranking are skipped.
+
+  ### Arguments
+
+  * `text` is the input string.
+
+  ### Returns
+
+  * `{score, count}` where `score` is a float in `[-1.0, 1.0]` and
+    `count` is the number of emoji that contributed. Returns `nil`
+    when the text contains no scoreable emoji.
+
+  ### Examples
+
+      iex> {score, 2} = Text.Emoji.text_sentiment("Great day 😂❤")
+      iex> score > 0.0
+      true
+
+      iex> Text.Emoji.text_sentiment("no emoji here")
+      nil
+
+  """
+  @spec text_sentiment(String.t()) :: {float(), pos_integer()} | nil
+  def text_sentiment(text) when is_binary(text) do
+    {weighted, weight, count} =
+      text
+      |> extract()
+      |> Enum.reduce({0.0, 0, 0}, fn emoji, {w_acc, occ_acc, n} ->
+        case Map.get(@emoji_sentiments, emoji) do
+          nil -> {w_acc, occ_acc, n}
+          %{score: s, occurrences: o} -> {w_acc + s * o, occ_acc + o, n + 1}
+        end
+      end)
+
+    cond do
+      count == 0 -> nil
+      weight == 0 -> {0.0, count}
+      true -> {weighted / weight, count}
+    end
   end
 
   @doc """

@@ -10,11 +10,19 @@ defmodule Text.Hyphenation do
 
   ### Bundled and on-demand language packs
 
-  American English (`hyph-en-us`, ~5,000 patterns plus DEK's
-  exception list) is bundled and loaded at compile time, so the
-  default English path is zero-I/O. Every other hyph-utf8 language
-  pack — French, German, Spanish, Russian, Hindi, and ~80 others —
-  can be loaded on demand from the
+  Seven hyph-utf8 packs are bundled and loaded at compile time, so
+  the common European-language paths are zero-I/O:
+
+  * `en-us` — American English (~5,000 patterns plus DEK's exception list)
+  * `de-1996` — German (modern spelling)
+  * `fr` — French
+  * `es` — Spanish
+  * `it` — Italian
+  * `nl` — Dutch
+  * `pt` — Portuguese
+
+  Every other hyph-utf8 language pack (Russian, Hindi, and ~75
+  others) can be loaded on demand from the
   [hyph-utf8](https://github.com/hyphenation/tex-hyphen) upstream.
 
   On-demand loading goes through `Text.Data`, which means:
@@ -34,10 +42,11 @@ defmodule Text.Hyphenation do
     `:data_dir`/`hyphenation/` directory and it will be picked up
     without any download.
 
-  Bundled file: `priv/hyphenation/hyph-en-us.tex`, distributed under
-  a permissive Knuth-style license (copying and distribution
-  permitted in any medium provided the original copyright notice
-  is preserved).
+  Bundled files live in `priv/hyphenation/`. Each `.tex` file ships
+  under its upstream license: `en-us`, `de-1996`, `fr`, `es`, `nl`,
+  and `pt` are MIT/X11/BSD; `it` is LPPL. All are compatible with
+  redistribution; the licenses (and original copyright notices)
+  are preserved verbatim in the headers of each file.
 
   ### Language input shapes
 
@@ -73,15 +82,49 @@ defmodule Text.Hyphenation do
   alias Text.Data
   alias Text.Hyphenation.Parser
 
-  @data_path "priv/hyphenation/hyph-en-us.tex"
-  @external_resource @data_path
+  # Tag → {default_left, default_right} for the bundled language packs.
+  # Each entry's `priv/hyphenation/hyph-<tag>.tex` is read at compile time
+  # and embedded into a single tag-keyed lookup; first call resolves to
+  # data with zero I/O. The minima follow each pattern file's own header
+  # comments where present, with conservative TeX defaults of `{2, 2}`
+  # otherwise.
+  @bundled_tags ~w(en-us de-1996 fr es it nl pt)
 
-  {patterns, exceptions} = Parser.parse_tex(File.read!(@data_path))
+  for tag <- @bundled_tags do
+    @external_resource "priv/hyphenation/hyph-#{tag}.tex"
+  end
 
-  @patterns_en_us patterns
-  @exceptions_en_us exceptions
-  @left_min_en_us 2
-  @right_min_en_us 3
+  parse_hyphenmins_fn = fn content ->
+    left =
+      case Regex.run(~r/^%\s*left:\s*(\d+)/m, content) do
+        [_, n] -> String.to_integer(n)
+        _ -> 2
+      end
+
+    right =
+      case Regex.run(~r/^%\s*right:\s*(\d+)/m, content) do
+        [_, n] -> String.to_integer(n)
+        _ -> 2
+      end
+
+    {left, right}
+  end
+
+  @bundled (for tag <- @bundled_tags, into: %{} do
+              path = "priv/hyphenation/hyph-#{tag}.tex"
+              content = File.read!(path)
+              {patterns, exceptions} = Parser.parse_tex(content)
+              {left_min, right_min} = parse_hyphenmins_fn.(content)
+              # The American English minima of {2, 3} are baked into the
+              # spec rather than the file header; keep them stable.
+              {left_min, right_min} =
+                case tag do
+                  "en-us" -> {2, 3}
+                  _ -> {left_min, right_min}
+                end
+
+              {tag, {patterns, exceptions, left_min, right_min}}
+            end)
 
   @hyph_url_base "https://raw.githubusercontent.com/hyphenation/tex-hyphen/master/hyph-utf8/tex/generic/hyph-utf8/patterns/tex/"
 
@@ -356,12 +399,11 @@ defmodule Text.Hyphenation do
     end
   end
 
-  defp load_for_tag("en-us") do
-    {@patterns_en_us, @exceptions_en_us, @left_min_en_us, @right_min_en_us}
-  end
-
   defp load_for_tag(hyph_tag) do
-    fetch_and_parse(hyph_tag, [])
+    case Map.fetch(@bundled, hyph_tag) do
+      {:ok, data} -> data
+      :error -> fetch_and_parse(hyph_tag, [])
+    end
   end
 
   defp fetch_and_parse(hyph_tag, options) do

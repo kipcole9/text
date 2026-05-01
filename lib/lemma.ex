@@ -13,23 +13,40 @@ defmodule Text.Lemma do
 
   ### Bundled and on-demand language packs
 
-  English is bundled at compile time and loaded with zero I/O. Every
-  other language pack from the upstream
+  English is bundled at compile time and loaded with zero I/O. The
+  other lemma dictionaries published by Michal Boleslav Měchura's
   [`lemmatization-lists`](https://github.com/michmech/lemmatization-lists)
-  project (Open Database License) is fetched on demand via
-  `Text.Data`:
+  project (Open Database License) are large enough that bundling
+  them all would push the package over hex's size limit, so they
+  are **not** shipped with the package and are instead loaded on
+  demand via `Text.Data`. Available upstream:
 
-  * Loaded packs are cached under `:data_dir`/`lemma/` (default
-    `~/.cache/text/lemma/`) and reused on subsequent calls.
+  * Western European: `de`, `es`, `fr`, `it`, `pt`, `ca`, `gl`, `ast`
+  * Northern European: `sv`, `et`
+  * Central / Eastern European: `cs`, `sk`, `sl`, `bg`, `ro`, `ru`,
+    `uk`, `hu`
+  * Celtic: `ga`, `gd`, `cy`, `gv`
+  * Other: `fa`
 
-  * Auto-download from upstream is **opt-in**, gated by
-    `config :text, auto_download_lemma_data: true`. Without that
-    flag, calls for an unbundled language raise an `ArgumentError`
-    explaining the situation.
+  No `nl` (Dutch) file exists upstream — register a third-party
+  Dutch dictionary via `load_language/2` if you need it.
 
-  * Or you can populate the cache manually by dropping the
-    `lemmatization-<lang>.txt` file from upstream into the cache
-    directory.
+  Three ways to make a non-English pack available:
+
+  * Run `mix text.download_lemma_data <lang> [...]` once. This
+    fetches the upstream files and places them in the configured
+    `Text.Data` cache so subsequent lookups are zero-network. Set
+    `data_dir:` in app config if you want them written somewhere
+    other than `~/.cache/text/lemma/`.
+
+  * Set `config :text, auto_download_lemma_data: true` and let the
+    first lookup for an uncached language fetch from upstream
+    automatically. Without that flag, calls for an uncached
+    language raise an `ArgumentError` explaining the situation.
+
+  * Drop the `lemmatization-<lang>.txt` file into the configured
+    cache directory yourself, or call `load_language/2` with an
+    explicit path.
 
   ### Language input shapes
 

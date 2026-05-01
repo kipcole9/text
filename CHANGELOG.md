@@ -20,6 +20,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `Text.Inflect.En.singularize/2` and `Text.Inflect.En.singularize_noun/2` — invert the existing pluralizer. Combines reverse lookup of Conway's irregular tables, explicit suffix rules for unambiguous English plural forms (`-ies`, `-shes`/`-ches`/`-xes`/`-zes`/`-sses`), small whitelists for Greek-derived `-is`/`-es` plurals (`analyses → analysis`) and English `-us` plurals (`geniuses → genius`), and a `pluralize/2` round-trip search to validate other candidates.
 
+* `Text.Readability.dale_chall/2` and `Text.Readability.spache/2` — the two classic word-list readability indices, backed by bundled easy-words lists in `priv/readability/` (Dale-Chall 2,949 words, Spache 1,063 words; both sourced from the MIT-licensed `py-readability-metrics` distribution of the public-domain originals). `statistics/2` now also returns `:difficult_words` and `:unfamiliar_words` counts.
+
+* `Text.Hyphenation` bundles six additional language packs: `de-1996`, `fr`, `es`, `it`, `nl`, `pt`. All loaded at compile time with zero I/O, joining the existing `en-us` pack. Source: hyph-utf8 upstream; per-file licenses (MIT/X11/BSD/LPPL) are preserved in each `.tex` header.
+
+* `Text.WordFreq` bundles six additional frequency tables at the same top-30,000 cap as English: `de`, `fr`, `es`, `it`, `nl`, `pt`. Source: Hermit Dave's MIT-licensed [FrequencyWords](https://github.com/hermitdave/FrequencyWords) OpenSubtitles 2018 corpus.
+
+* `Text.Emoji.sentiment/1` and `Text.Emoji.text_sentiment/1` — per-emoji and aggregate sentiment scoring backed by the bundled Emoji Sentiment Ranking v1.0 (Kralj Novak et al., 2015 — CC-BY-SA 3.0; data file at `priv/emoji_sentiment/emoji_sentiment_v1.csv`, ~750 emoji with negative/neutral/positive proportions and an aggregate score in `[-1.0, 1.0]`). Aggregate scoring is occurrence-weighted to match the original paper.
+
+* `mix text.download_lemma_data <lang>...` — fetches lemmatization dictionaries from the michmech upstream into the `Text.Data` cache without requiring the per-app `auto_download_lemma_data` flag. Useful as a build step when shipping a release with the dictionaries pre-warmed. Pass `--list` to see the supported languages; `--force` to refresh.
+
+### Changed
+
+* `Text.Lemma` moduledoc now enumerates the upstream-available languages (~20 languages from the michmech project) and notes that no Dutch (`nl`) dictionary exists upstream. Bundling the non-English dictionaries was evaluated and deferred — the smallest of them (French, 4.7 MB raw) by itself would push the package near hex's 8 MB limit. Use the new `mix text.download_lemma_data` task or set `auto_download_lemma_data: true` to populate the cache.
+
 ### Fixed
 
 * `Text.Inflect.En.Helpers.replace_suffix/3` now actually replaces only the trailing suffix instead of all repeated trailing occurrences, fixing cases like `theses` (which previously transformed to `thisis` instead of `thesis` because both `es` occurrences were rewritten). Affects rule output where the suffix repeats inside the base word.

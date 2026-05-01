@@ -48,9 +48,11 @@ defmodule Text.MixProject do
         # (the 125 MB model is a user-downloaded runtime asset, fetched
         # via `mix text.download_lid176`) and `priv/scripts` (dev-only
         # fixture generators).
+        "priv/emoji_sentiment",
         "priv/hyphenation",
         "priv/inflection",
         "priv/lemma",
+        "priv/readability",
         "priv/sentiment",
         "priv/stopwords",
         "priv/wordfreq",
