@@ -292,6 +292,44 @@ defmodule Text.Clean do
   end
 
   @doc """
+  Removes diacritics, accents, and other Latin-script decorations
+  from `text` by transliterating to ASCII.
+
+  Delegates to `Unicode.Transform.LatinAscii.transform/1` (a CLDR
+  `Latin-ASCII` transform compiled to pattern-matched function heads
+  for O(1) per-codepoint dispatch).
+
+  Unlike a naïve "NFD then strip Mn" recipe, this also handles
+  non-decomposable letters: `Þ` → `Th`, `ß` → `ss`, `Æ` → `AE`,
+  `ł` → `l`, `đ` → `d`, etc.
+
+  Useful as a preprocessing step before fuzzy matching, search-index
+  insertion, or filename sanitization.
+
+  ### Arguments
+
+  * `text` is the input string.
+
+  ### Returns
+
+  * The transliterated ASCII string.
+
+  ### Examples
+
+      iex> Text.Clean.unaccent("naïve café résumé")
+      "naive cafe resume"
+
+      iex> Text.Clean.unaccent("Þórbergur Þórðarson")
+      "THorbergur THordarson"
+
+      iex> Text.Clean.unaccent("Łódź")
+      "Lodz"
+
+  """
+  @spec unaccent(String.t()) :: String.t()
+  defdelegate unaccent(text), to: Unicode.Transform.LatinAscii, as: :transform
+
+  @doc """
   Applies the full cleanup pipeline.
 
   Default order: HTML strip → mojibake fix → control-char strip →
@@ -315,6 +353,9 @@ defmodule Text.Clean do
   * `:collapse_whitespace` (default `true`) — apply
     `collapse_whitespace/1`.
 
+  * `:unaccent` (default `false`) — apply `unaccent/1` (after the
+    other steps) to fold accented Latin characters to ASCII.
+
   ### Returns
 
   * The cleaned string.
@@ -327,6 +368,9 @@ defmodule Text.Clean do
       iex> Text.Clean.clean("itâ€™s   <em>cool</em>")
       "it’s cool"
 
+      iex> Text.Clean.clean("CAFÉ <em>RÉSUMÉ</em>", unaccent: true)
+      "CAFE RESUME"
+
   """
   @spec clean(String.t(), keyword()) :: String.t()
   def clean(text, options \\ []) when is_binary(text) do
@@ -336,6 +380,7 @@ defmodule Text.Clean do
     |> maybe(Keyword.get(options, :strip_control, true), &strip_control/1)
     |> maybe_normalize(Keyword.get(options, :normalize, :nfc))
     |> maybe(Keyword.get(options, :collapse_whitespace, true), &collapse_whitespace/1)
+    |> maybe(Keyword.get(options, :unaccent, false), &unaccent/1)
   end
 
   defp maybe(text, true, fun), do: fun.(text)

@@ -76,5 +76,36 @@ defmodule Text.CleanTest do
       input = "  itâ€™s  <em>cool</em>\n\n"
       assert Clean.clean(input) == "it’s cool"
     end
+
+    test "opt-in unaccent folds Latin diacritics" do
+      assert Clean.clean("Café Résumé", unaccent: true) == "Cafe Resume"
+    end
+
+    test "default leaves accents intact" do
+      assert Clean.clean("Café Résumé") == "Café Résumé"
+    end
+  end
+
+  describe "unaccent/1" do
+    test "strips combining-mark diacritics" do
+      assert Clean.unaccent("naïve") == "naive"
+      assert Clean.unaccent("résumé") == "resume"
+      assert Clean.unaccent("piñata") == "pinata"
+    end
+
+    test "expands non-decomposable Latin letters" do
+      assert Clean.unaccent("Æneid") == "AEneid"
+      assert Clean.unaccent("ßeißen") == "sseissen"
+      assert Clean.unaccent("Łódź") == "Lodz"
+    end
+
+    test "leaves ASCII unchanged" do
+      assert Clean.unaccent("hello world") == "hello world"
+    end
+
+    test "passes non-Latin scripts through unchanged" do
+      assert Clean.unaccent("Привет мир") == "Привет мир"
+      assert Clean.unaccent("こんにちは") == "こんにちは"
+    end
   end
 end
