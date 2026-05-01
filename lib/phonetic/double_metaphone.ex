@@ -239,32 +239,53 @@ defmodule Text.Phonetic.DoubleMetaphone do
   # Simple consonant cluster: characters with no context-sensitive
   # rewrites in Philips' algorithm.
   defp consonant(state) do
-    char = at(state, state.position)
-    consonant(state, char)
+    case at(state, state.position) do
+      ?B -> rule_b(state)
+      ?C -> rule_c(state)
+      ?D -> rule_d(state)
+      ?F -> rule_f(state)
+      ?G -> rule_g(state)
+      ?H -> rule_h(state)
+      ?J -> rule_j(state)
+      ?K -> rule_k(state)
+      ?L -> rule_l(state)
+      ?M -> rule_m(state)
+      ?N -> rule_n(state)
+      ?P -> rule_p(state)
+      ?Q -> rule_q(state)
+      ?R -> rule_r(state)
+      ?S -> rule_s(state)
+      ?T -> rule_t(state)
+      ?V -> rule_v(state)
+      ?W -> rule_w(state)
+      ?X -> rule_x(state)
+      ?Z -> rule_z(state)
+      other -> rule_default(state, other)
+    end
   end
 
-  defp consonant(state, ?B) do
+  defp rule_b(state) do
     # B → P; double BB collapses
     skip = if at(state, state.position + 1) == ?B, do: 2, else: 1
     emit(state, ~c"P") |> advance(skip)
   end
 
-  defp consonant(state, ?F) do
+  defp rule_f(state) do
     skip = if at(state, state.position + 1) == ?F, do: 2, else: 1
     emit(state, ~c"F") |> advance(skip)
   end
 
-  defp consonant(state, ?K) do
+  defp rule_k(state) do
     skip = if at(state, state.position + 1) == ?K, do: 2, else: 1
     emit(state, ~c"K") |> advance(skip)
   end
 
-  defp consonant(state, ?L) do
+  defp rule_l(state) do
     skip = if at(state, state.position + 1) == ?L, do: 2, else: 1
     emit(state, ~c"L") |> advance(skip)
   end
 
-  defp consonant(state, ?M) do
+  defp rule_m(state) do
     # M → M; collapses on UMB at end-of-word (e.g. "thumb") and double MM
     next = at(state, state.position + 1)
     pos = state.position
@@ -285,12 +306,12 @@ defmodule Text.Phonetic.DoubleMetaphone do
     emit(state, ~c"M") |> advance(skip)
   end
 
-  defp consonant(state, ?N) do
+  defp rule_n(state) do
     skip = if at(state, state.position + 1) == ?N, do: 2, else: 1
     emit(state, ~c"N") |> advance(skip)
   end
 
-  defp consonant(state, ?P) do
+  defp rule_p(state) do
     next = at(state, state.position + 1)
 
     cond do
@@ -307,12 +328,12 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?Q) do
+  defp rule_q(state) do
     skip = if at(state, state.position + 1) == ?Q, do: 2, else: 1
     emit(state, ~c"K") |> advance(skip)
   end
 
-  defp consonant(state, ?R) do
+  defp rule_r(state) do
     # Drop final 'R' in some French names like "Rogier" — but Philips'
     # canonical algorithm only does this when preceded by 'IE' at the
     # very end and the word isn't Slavo-Germanic.
@@ -332,12 +353,12 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?V) do
+  defp rule_v(state) do
     skip = if at(state, state.position + 1) == ?V, do: 2, else: 1
     emit(state, ~c"F") |> advance(skip)
   end
 
-  defp consonant(state, ?X) do
+  defp rule_x(state) do
     # X is normally KS; trailing X in French names like "Breaux" /
     # "Beau" / "Manceau" is silent — handled below.
     pos = state.position
@@ -351,7 +372,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?S) do
+  defp rule_s(state) do
     pos = state.position
     next = at(state, pos + 1)
     next2 = at(state, pos + 2)
@@ -460,7 +481,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?T) do
+  defp rule_t(state) do
     pos = state.position
     next = at(state, pos + 1)
     next2 = at(state, pos + 2)
@@ -508,7 +529,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?J) do
+  defp rule_j(state) do
     pos = state.position
     next = at(state, pos + 1)
 
@@ -537,7 +558,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?W) do
+  defp rule_w(state) do
     pos = state.position
     next = at(state, pos + 1)
     next2 = at(state, pos + 2)
@@ -571,7 +592,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?Z) do
+  defp rule_z(state) do
     pos = state.position
     next = at(state, pos + 1)
 
@@ -589,7 +610,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?D) do
+  defp rule_d(state) do
     next = at(state, state.position + 1)
     next2 = at(state, state.position + 2)
 
@@ -607,7 +628,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?C) do
+  defp rule_c(state) do
     pos = state.position
     next = at(state, pos + 1)
     next2 = at(state, pos + 2)
@@ -789,7 +810,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
-  defp consonant(state, ?G) do
+  defp rule_g(state) do
     pos = state.position
     next = at(state, pos + 1)
     next2 = at(state, pos + 2)
@@ -891,7 +912,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
   defp hard_g_initial?(?I, ?E), do: true
   defp hard_g_initial?(_, _), do: false
 
-  defp consonant(state, ?H) do
+  defp rule_h(state) do
     # H is silent unless it's at the start of a word followed by a vowel,
     # OR it follows a vowel and precedes another vowel (intervocalic).
     pos = state.position
@@ -913,7 +934,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
   # Catch-all for letters whose rules we haven't covered yet — emit
   # the letter unchanged so partial coverage degrades gracefully
   # rather than crashing.
-  defp consonant(state, char) do
+  defp rule_default(state, char) do
     emit(state, [char]) |> advance(1)
   end
 
