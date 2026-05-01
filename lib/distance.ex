@@ -355,4 +355,151 @@ defmodule Text.Distance do
     |> Enum.take_while(fn {x, y} -> x == y end)
     |> length()
   end
+
+  ## ── set-based metrics over character n-grams ────────────────────
+
+  @doc """
+  Returns the Jaccard distance between `a` and `b` computed on
+  character n-grams (shingles).
+
+  Defined as `1 - |A ∩ B| / |A ∪ B|` where `A` and `B` are the
+  multisets of n-grams of each string. Returns `0.0` for identical
+  strings, `1.0` when the n-gram sets are completely disjoint.
+
+  ## Options
+
+  * `:n` — n-gram size (default `2`, i.e. character bigrams).
+
+  ## Examples
+
+      iex> Text.Distance.jaccard("night", "nacht")
+      0.8571428571428572
+
+      iex> Text.Distance.jaccard("kitten", "kitten")
+      0.0
+
+      iex> Text.Distance.jaccard("abcdef", "uvwxyz")
+      1.0
+
+  """
+  @spec jaccard(String.t(), String.t(), keyword()) :: float()
+  def jaccard(a, b, options \\ []) when is_binary(a) and is_binary(b) do
+    n = Keyword.get(options, :n, 2)
+    set_a = ngram_set(a, n)
+    set_b = ngram_set(b, n)
+    union = MapSet.union(set_a, set_b) |> MapSet.size()
+
+    case union do
+      0 -> 0.0
+      _ -> 1.0 - MapSet.size(MapSet.intersection(set_a, set_b)) / union
+    end
+  end
+
+  @doc """
+  Returns the Sørensen–Dice distance between `a` and `b` computed on
+  character n-grams.
+
+  Defined as `1 - 2|A ∩ B| / (|A| + |B|)`. Closely related to Jaccard
+  but weights matches more heavily; widely used for fuzzy string
+  matching where a slightly more forgiving score is desirable.
+
+  ## Options
+
+  * `:n` — n-gram size (default `2`).
+
+  ## Examples
+
+      iex> Text.Distance.sorensen_dice("night", "nacht")
+      0.75
+
+      iex> Text.Distance.sorensen_dice("kitten", "kitten")
+      0.0
+
+      iex> Text.Distance.sorensen_dice("abcdef", "uvwxyz")
+      1.0
+
+  """
+  @spec sorensen_dice(String.t(), String.t(), keyword()) :: float()
+  def sorensen_dice(a, b, options \\ []) when is_binary(a) and is_binary(b) do
+    n = Keyword.get(options, :n, 2)
+    set_a = ngram_set(a, n)
+    set_b = ngram_set(b, n)
+    total = MapSet.size(set_a) + MapSet.size(set_b)
+
+    case total do
+      0 -> 0.0
+      _ -> 1.0 - 2 * MapSet.size(MapSet.intersection(set_a, set_b)) / total
+    end
+  end
+
+  @doc """
+  Returns the Tanimoto distance between `a` and `b` over character
+  n-grams.
+
+  For binary feature vectors (which is what we have when treating
+  n-grams as set membership) Tanimoto reduces to Jaccard — so this is
+  an alias maintained for callers who specifically want the Tanimoto
+  name. See `jaccard/3` for the implementation and complexity.
+
+  ## Examples
+
+      iex> Text.Distance.tanimoto("night", "nacht") == Text.Distance.jaccard("night", "nacht")
+      true
+
+  """
+  @spec tanimoto(String.t(), String.t(), keyword()) :: float()
+  defdelegate tanimoto(a, b, options \\ []), to: __MODULE__, as: :jaccard
+
+  @doc """
+  Returns the cosine distance between `a` and `b` over character
+  n-grams treated as a binary bag of words.
+
+  Defined as `1 - |A ∩ B| / sqrt(|A| · |B|)`.
+
+  ## Options
+
+  * `:n` — n-gram size (default `2`).
+
+  ## Examples
+
+      iex> Text.Distance.cosine("night", "nacht")
+      0.75
+
+      iex> Text.Distance.cosine("kitten", "kitten")
+      0.0
+
+      iex> Text.Distance.cosine("abcdef", "uvwxyz")
+      1.0
+
+  """
+  @spec cosine(String.t(), String.t(), keyword()) :: float()
+  def cosine(a, b, options \\ []) when is_binary(a) and is_binary(b) do
+    n = Keyword.get(options, :n, 2)
+    set_a = ngram_set(a, n)
+    set_b = ngram_set(b, n)
+    size_a = MapSet.size(set_a)
+    size_b = MapSet.size(set_b)
+
+    case size_a * size_b do
+      0 -> 0.0
+      product -> 1.0 - MapSet.size(MapSet.intersection(set_a, set_b)) / :math.sqrt(product)
+    end
+  end
+
+  # Build the set of grapheme n-grams of `string`. Grapheme-level
+  # operation matches the rest of this module.
+  defp ngram_set(string, n) when n >= 1 do
+    graphemes = String.graphemes(string)
+
+    case length(graphemes) do
+      len when len < n ->
+        if len == 0, do: MapSet.new(), else: MapSet.new([Enum.join(graphemes)])
+
+      _ ->
+        graphemes
+        |> Enum.chunk_every(n, 1, :discard)
+        |> Enum.map(&Enum.join/1)
+        |> MapSet.new()
+    end
+  end
 end

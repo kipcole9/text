@@ -224,4 +224,61 @@ defmodule Text.DistanceTest do
       end
     end
   end
+
+  describe "set-based metrics over n-grams" do
+    test "identical strings → 0.0 for all set metrics" do
+      for fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
+                  &Distance.tanimoto/2, &Distance.cosine/2] do
+        assert fun.("kitten", "kitten") == 0.0
+      end
+    end
+
+    test "completely disjoint n-gram sets → 1.0" do
+      for fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
+                  &Distance.tanimoto/2, &Distance.cosine/2] do
+        assert fun.("abcdef", "uvwxyz") == 1.0
+      end
+    end
+
+    test "tanimoto/2 is an alias for jaccard/2 on binary features" do
+      assert Distance.tanimoto("night", "nacht") == Distance.jaccard("night", "nacht")
+      assert Distance.tanimoto("knuth", "nuth") == Distance.jaccard("knuth", "nuth")
+    end
+
+    test "dice ≤ jaccard for matching strings" do
+      # Sørensen–Dice weights matches more heavily than Jaccard, so its
+      # distance is always ≤ Jaccard's for the same input pair.
+      pairs = [{"night", "nacht"}, {"smith", "smyth"}, {"phonetic", "phonemic"}]
+
+      for {a, b} <- pairs do
+        assert Distance.sorensen_dice(a, b) <= Distance.jaccard(a, b),
+               "expected dice ≤ jaccard for #{inspect({a, b})}"
+      end
+    end
+
+    test "n-gram size is configurable" do
+      # Trigrams give different (and usually higher) distance than bigrams
+      # for short inputs.
+      bi = Distance.jaccard("kitten", "sitten")
+      tri = Distance.jaccard("kitten", "sitten", n: 3)
+      assert bi != tri
+    end
+
+    test "is symmetric" do
+      pairs = [{"night", "nacht"}, {"abc", "xyz"}, {"hello", "world"}]
+
+      for {a, b} <- pairs, fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
+                                    &Distance.cosine/2] do
+        assert fun.(a, b) == fun.(b, a),
+               "expected symmetry for #{inspect({a, b})}"
+      end
+    end
+
+    test "shorter than n-gram size still produces a valid result" do
+      # When a string is shorter than `n`, we treat the whole string as
+      # a single shingle.
+      assert Distance.jaccard("ab", "ab", n: 3) == 0.0
+      assert Distance.jaccard("ab", "cd", n: 3) == 1.0
+    end
+  end
 end
