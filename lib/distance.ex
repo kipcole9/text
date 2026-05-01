@@ -385,13 +385,11 @@ defmodule Text.Distance do
   @spec jaccard(String.t(), String.t(), keyword()) :: float()
   def jaccard(a, b, options \\ []) when is_binary(a) and is_binary(b) do
     n = Keyword.get(options, :n, 2)
-    set_a = ngram_set(a, n)
-    set_b = ngram_set(b, n)
-    union = MapSet.union(set_a, set_b) |> MapSet.size()
+    {intersection, union} = intersection_and_union_sizes(a, b, n)
 
     case union do
       0 -> 0.0
-      _ -> 1.0 - MapSet.size(MapSet.intersection(set_a, set_b)) / union
+      _ -> 1.0 - intersection / union
     end
   end
 
@@ -422,13 +420,12 @@ defmodule Text.Distance do
   @spec sorensen_dice(String.t(), String.t(), keyword()) :: float()
   def sorensen_dice(a, b, options \\ []) when is_binary(a) and is_binary(b) do
     n = Keyword.get(options, :n, 2)
-    set_a = ngram_set(a, n)
-    set_b = ngram_set(b, n)
-    total = MapSet.size(set_a) + MapSet.size(set_b)
+    {intersection, size_a, size_b} = intersection_and_sizes(a, b, n)
+    total = size_a + size_b
 
     case total do
       0 -> 0.0
-      _ -> 1.0 - 2 * MapSet.size(MapSet.intersection(set_a, set_b)) / total
+      _ -> 1.0 - 2 * intersection / total
     end
   end
 
@@ -475,31 +472,54 @@ defmodule Text.Distance do
   @spec cosine(String.t(), String.t(), keyword()) :: float()
   def cosine(a, b, options \\ []) when is_binary(a) and is_binary(b) do
     n = Keyword.get(options, :n, 2)
-    set_a = ngram_set(a, n)
-    set_b = ngram_set(b, n)
-    size_a = MapSet.size(set_a)
-    size_b = MapSet.size(set_b)
+    {intersection, size_a, size_b} = intersection_and_sizes(a, b, n)
 
     case size_a * size_b do
       0 -> 0.0
-      product -> 1.0 - MapSet.size(MapSet.intersection(set_a, set_b)) / :math.sqrt(product)
+      product -> 1.0 - intersection / :math.sqrt(product)
     end
   end
 
-  # Build the set of grapheme n-grams of `string`. Grapheme-level
-  # operation matches the rest of this module.
+  # Compute the intersection size and union size of two strings'
+  # n-gram sets in one pass. Returns `{intersection_size, union_size}`.
+  @spec intersection_and_union_sizes(String.t(), String.t(), pos_integer()) ::
+          {non_neg_integer(), non_neg_integer()}
+  defp intersection_and_union_sizes(a, b, n) do
+    set_a = ngram_set(a, n)
+    set_b = ngram_set(b, n)
+    intersection = Enum.count(Map.keys(set_a), &Map.has_key?(set_b, &1))
+    union = map_size(set_a) + map_size(set_b) - intersection
+    {intersection, union}
+  end
+
+  # Compute intersection size and the two individual set sizes.
+  @spec intersection_and_sizes(String.t(), String.t(), pos_integer()) ::
+          {non_neg_integer(), non_neg_integer(), non_neg_integer()}
+  defp intersection_and_sizes(a, b, n) do
+    set_a = ngram_set(a, n)
+    set_b = ngram_set(b, n)
+    intersection = Enum.count(Map.keys(set_a), &Map.has_key?(set_b, &1))
+    {intersection, map_size(set_a), map_size(set_b)}
+  end
+
+  # Build a map of grapheme n-grams of `string` (used as a set; values
+  # are always `true`). Avoids `MapSet` to sidestep its opaque-type
+  # interaction with dialyzer.
+  @spec ngram_set(String.t(), pos_integer()) :: %{optional(String.t()) => true}
   defp ngram_set(string, n) when n >= 1 do
     graphemes = String.graphemes(string)
 
     case length(graphemes) do
+      0 ->
+        %{}
+
       len when len < n ->
-        if len == 0, do: MapSet.new(), else: MapSet.new([Enum.join(graphemes)])
+        %{Enum.join(graphemes) => true}
 
       _ ->
         graphemes
         |> Enum.chunk_every(n, 1, :discard)
-        |> Enum.map(&Enum.join/1)
-        |> MapSet.new()
+        |> Map.new(fn chunk -> {Enum.join(chunk), true} end)
     end
   end
 end
