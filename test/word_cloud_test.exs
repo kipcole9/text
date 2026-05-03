@@ -216,4 +216,60 @@ defmodule Text.WordCloudTest do
              ] = result
     end
   end
+
+  describe "to_d3_cloud/2" do
+    defp term(name, weight, count \\ 1, kind \\ :word) do
+      %{term: name, weight: weight, count: count, kind: kind}
+    end
+
+    test "renames :term to :text and maps weight to size with default range" do
+      [a, b] = WordCloud.to_d3_cloud([term("a", 1.0), term("b", 0.0)])
+
+      assert a == %{text: "a", size: 96.0, weight: 1.0, count: 1, kind: :word}
+      assert b == %{text: "b", size: 12.0, weight: 0.0, count: 1, kind: :word}
+    end
+
+    test "linear scale (default) is the inverse of Layout's font sizing" do
+      [_, b, _] =
+        WordCloud.to_d3_cloud(
+          [term("a", 1.0), term("b", 0.5), term("c", 0.0)],
+          font_size_range: {10, 100}
+        )
+
+      assert_in_delta b.size, 55.0, 0.001
+    end
+
+    test ":sqrt scale produces area-proportional sizing" do
+      [_, b, _] =
+        WordCloud.to_d3_cloud(
+          [term("a", 1.0), term("b", 0.25), term("c", 0.0)],
+          font_size_range: {0, 100},
+          scale: :sqrt
+        )
+
+      assert_in_delta b.size, 50.0, 0.001
+    end
+
+    test "sorts by size descending regardless of input order" do
+      result =
+        WordCloud.to_d3_cloud([
+          term("small", 0.1),
+          term("big", 1.0),
+          term("medium", 0.5)
+        ])
+
+      assert Enum.map(result, & &1.text) == ["big", "medium", "small"]
+    end
+
+    test "passes through count and kind for d3-cloud callbacks" do
+      [phrase, word] =
+        WordCloud.to_d3_cloud([
+          term("machine learning", 1.0, 12, :phrase),
+          term("model", 0.5, 4, :word)
+        ])
+
+      assert phrase.count == 12 and phrase.kind == :phrase
+      assert word.count == 4 and word.kind == :word
+    end
+  end
 end

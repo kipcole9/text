@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] — 2026-05-03
+
+### Added
+
+* `Text.WordCloud.to_d3_cloud/2` — adapter that converts the output of `Text.WordCloud.terms/2` into the `[%{text, size}, …]` shape consumed by [d3-cloud](https://github.com/jasondavies/d3-cloud). Maps `:weight → :size` (px) using the same `:font_size_range` vocabulary as `Text.WordCloud.Layout`, so a server-rendered SVG and a client-rendered d3-cloud scale identically. Supports `:linear` (default) and `:sqrt` (area-proportional) sizing. Original `:weight`, `:count`, and `:kind` fields pass through unchanged for use in d3-cloud's per-datum callbacks (tooltips, font-weight selection, rotation).
+
 ## [0.5.0] — 2026-05-02
 
 ### Added

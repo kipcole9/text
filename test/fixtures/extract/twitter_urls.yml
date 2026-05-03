@@ -1,0 +1,367 @@
+  urls:
+    - description: "Extract a lone URL"
+      text: "http://example.com"
+      expected: ["http://example.com"]
+
+    - description: "Extract a lone unicode url"
+      text: "http://ああ.com"
+      expected: ["http://ああ.com"]
+
+    - description: "Extract a lone unicode url with -"
+      text: "http://あ-あ.com"
+      expected: ["http://あ-あ.com"]
+
+    - description: "Extract valid URL: http://google.com"
+      text: "text http://google.com"
+      expected: ["http://google.com"]
+
+    - description: "Extract valid URL: http://foobar.com/#"
+      text: "text http://foobar.com/#"
+      expected: ["http://foobar.com/#"]
+
+    - description: "Extract valid URL: http://google.com/#foo"
+      text: "text http://google.com/#foo"
+      expected: ["http://google.com/#foo"]
+
+    - description: "Extract valid URL: http://google.com/#search?q=iphone%20-filter%3Alinks"
+      text: "text http://google.com/#search?q=iphone%20-filter%3Alinks"
+      expected: ["http://google.com/#search?q=iphone%20-filter%3Alinks"]
+
+    - description: "Extract valid URL: http://twitter.com/#search?q=iphone%20-filter%3Alinks"
+      text: "text http://twitter.com/#search?q=iphone%20-filter%3Alinks"
+      expected: ["http://twitter.com/#search?q=iphone%20-filter%3Alinks"]
+
+    - description: "Extract valid URL: http://somedomain.com/index.php?path=/abc/def/"
+      text: "text http://somedomain.com/index.php?path=/abc/def/"
+      expected: ["http://somedomain.com/index.php?path=/abc/def/"]
+
+    - description: "Extract valid URL: http://www.boingboing.net/2007/02/14/katamari_damacy_phon.html"
+      text: "text http://www.boingboing.net/2007/02/14/katamari_damacy_phon.html"
+      expected: ["http://www.boingboing.net/2007/02/14/katamari_damacy_phon.html"]
+
+    - description: "Extract valid URL: http://somehost.com:3000"
+      text: "text http://somehost.com:3000"
+      expected: ["http://somehost.com:3000"]
+
+    - description: "Extract valid URL: http://xo.com/~matthew+%ff-x"
+      text: "text http://xo.com/~matthew+%ff-x"
+      expected: ["http://xo.com/~matthew+%ff-x"]
+
+    - description: "Extract valid URL: http://xo.com/~matthew+%ff-,.;x"
+      text: "text http://xo.com/~matthew+%ff-,.;x"
+      expected: ["http://xo.com/~matthew+%ff-,.;x"]
+
+    - description: "Extract valid URL: http://xo.com/,.;x"
+      text: "text http://xo.com/,.;x"
+      expected: ["http://xo.com/,.;x"]
+
+    - description: "Extract valid URL: http://en.wikipedia.org/wiki/Primer_(film)"
+      text: "text http://en.wikipedia.org/wiki/Primer_(film)"
+      expected: ["http://en.wikipedia.org/wiki/Primer_(film)"]
+
+    - description: "Extract valid URL: http://www.ams.org/bookstore-getitem/item=mbk-59"
+      text: "text http://www.ams.org/bookstore-getitem/item=mbk-59"
+      expected: ["http://www.ams.org/bookstore-getitem/item=mbk-59"]
+
+    - description: "Extract valid URL: http://✪df.ws/ejp"
+      text: "text http://✪df.ws/ejp"
+      expected: ["http://✪df.ws/ejp"]
+
+    - description: "Extract valid URL: http://example.com/"
+      text: "test http://example.comだよね.comtest/hogehoge"
+      expected: ["http://example.com"]
+
+    - description: "Extract valid URL: http://chilp.it/?77e8fd"
+      text: "text http://chilp.it/?77e8fd"
+      expected: ["http://chilp.it/?77e8fd"]
+
+    - description: "Extract valid URL: http://x.com/oneletterdomain"
+      text: "text http://x.com/oneletterdomain"
+      expected: ["http://x.com/oneletterdomain"]
+
+    - description: "Extract valid URL: http://msdn.microsoft.com/ja-jp/library/system.net.httpwebrequest(v=VS.100).aspx"
+      text: "text http://msdn.microsoft.com/ja-jp/library/system.net.httpwebrequest(v=VS.100).aspx"
+      expected: ["http://msdn.microsoft.com/ja-jp/library/system.net.httpwebrequest(v=VS.100).aspx"]
+
+    - description: "Extract valid URL with hyphen as query ending char: https://www.youtube.com/watch?v=LOxOAuDHzaw&list=PLPoq910Q9jXhuH6pit_KwIsck9fEz_9U-"
+      text: "text https://www.youtube.com/watch?v=LOxOAuDHzaw&list=PLPoq910Q9jXhuH6pit_KwIsck9fEz_9U-"
+      expected: ["https://www.youtube.com/watch?v=LOxOAuDHzaw&list=PLPoq910Q9jXhuH6pit_KwIsck9fEz_9U-"]
+
+    - description: "DO NOT extract invalid URL: http://no-tld"
+      text: "text http://no-tld"
+      expected: []
+
+    - description: "DO NOT extract invalid URL: http://tld-too-short.x"
+      text: "text http://tld-too-short.x"
+      expected: []
+
+    - description: "DO NOT extract invalid URL with invalid preceding character: (http://twitter.com"
+      text: "(http://twitter.com"
+      expected: ["http://twitter.com"]
+
+    - description: "Extract a very long hyphenated sub-domain URL (single letter hyphens)"
+      text: "text http://word-and-a-number-8-ftw.domain.com/"
+      expected: ["http://word-and-a-number-8-ftw.domain.com/"]
+
+    - description: "DO NOT Extract a hyphenated TLD (even though it's usually a typo)"
+      text: "text http://domain.com-that-you-should-have-put-a-space-after"
+      expected: []
+
+    - description: "Extract URL ending with # value"
+      text: "text http://foo.com?#foo text"
+      expected: ["http://foo.com?#foo"]
+
+    - description: "Extract URLs without protocol on (com|org|edu|gov|net) domains"
+      text: "foo.com foo.net foo.org foo.edu foo.gov"
+      expected: ["foo.com", "foo.net", "foo.org", "foo.edu", "foo.gov"]
+
+    - description: "Extract URLs without protocol not on (com|org|edu|gov|net) domains"
+      text: "foo.baz foo.co.jp www.xxxxxxx.baz www.foo.co.uk wwwww.xxxxxxx foo.comm foo.somecom foo.govedu foo.jp"
+      expected: ["foo.co.jp", "www.foo.co.uk", "foo.jp"]
+
+    - description: "Extract URLs without protocol on ccTLD with slash"
+      text: "t.co/abcde bit.ly/abcde"
+      expected: ["t.co/abcde", "bit.ly/abcde"]
+
+    - description: "Extract URLs with protocol on ccTLD domains"
+      text: "http://foo.jp http://fooooo.jp"
+      expected: ["http://foo.jp", "http://fooooo.jp"]
+
+    - description: "Extract URLs with a - or + at the end of the path"
+      text: "Go to http://example.com/a+ or http://example.com/a-"
+      expected: ["http://example.com/a+", "http://example.com/a-"]
+
+    - description: "Extract URLs with longer paths ending in -"
+      text: "Go to http://example.com/view/slug-url-?foo=bar"
+      expected: ["http://example.com/view/slug-url-?foo=bar"]
+
+    - description: "Extract URLs with an en dash in the path"
+      text: "Go to https://en.m.wikipedia.org/wiki/Hatfield–McCoy_feud please"
+      expected: ["https://en.m.wikipedia.org/wiki/Hatfield–McCoy_feud"]
+
+    - description: "Extract URLs beginning with a space"
+      text: "@user Try http:// example.com/path"
+      expected: ["example.com/path"]
+
+    - description: "Extract long URL without protocol surrounded by CJK characters"
+      text: "これは日本語です。example.com/path/index.html中国語example.com/path한국"
+      expected: ["example.com/path/index.html", "example.com/path"]
+
+    - description: "Extract short URL without protocol surrounded by CJK characters"
+      text: "twitter.comこれは日本語です。example.com中国語t.co/abcde한국twitter.com example2.comテストtwitter.com/abcde"
+      expected: ["twitter.com", "example.com", "t.co/abcde", "twitter.com", "example2.com", "twitter.com/abcde"]
+
+    - description: "Extract URLs with and without protocol surrounded by CJK characters"
+      text: "http://twitter.com/これは日本語です。example.com中国語http://t.co/abcde한국twitter.comテストexample2.comテストhttp://twitter.com/abcde"
+      expected: ["http://twitter.com/", "example.com", "http://t.co/abcde", "twitter.com", "example2.com", "http://twitter.com/abcde"]
+
+    - description: "Extract URLs with protocol and path containing Cyrillic characters"
+      text: "Go to http://twitter.com/Русские_слова"
+      expected: ["http://twitter.com/Русские_слова"]
+
+    - description: "Extract non-ASCII host name URLs with protocol, but ignore host names bigger than 63 characters. Also handle exceptions for non-ASCII hostnames longer than 256 characters"
+      text: "http://exampleこれは日本語です.com/path/index.html http://あああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ.com/path/index.html"
+      expected: ["http://exampleこれは日本語です.com/path/index.html"]
+
+    - description: "Extract short URLs without protocol on ccTLD domains without path"
+      text: "twitter.jp日本語it.so中国語foo.jp it.so foo.jp"
+      expected: ["twitter.jp", "it.so", "foo.jp", "it.so", "foo.jp"]
+
+    - description: "DO NOT extract invalid URL"
+      text: "Hello http://xn--はじめよう.com/index.html"
+      expected: []
+
+    - description: "DO NOT Extract URL with domain preceeded by underscore: http://domain-begin_dash_2314352345_dfasd.foo-cow_4352.com"
+      text: "text http://domain-dash_2314352345_dfasd.foo-cow_4352.com"
+      expected: []
+
+    - description: "DO NOT Extract URLs with a - or + in the middle of an email address"
+      text: "Email me at name.al-lastname@foo.com or name.al+lastname@foo.com"
+      expected: []
+
+    - description: "Extract URLs with a - in the middle"
+      text: "Find my page at name.al-lastname.com"
+      expected: ["name.al-lastname.com"]
+
+    - description: "Extract some (tv|co) short URLs without protocol on ccTLD domains without path"
+      text: "MLB.tv vine.co twitch.tv t.co"
+      expected: ["MLB.tv", "vine.co", "twitch.tv", "t.co"]
+
+    - description: "Extract URLs beginning with a non-breaking space (U+00A0)"
+      text: "@user Try http:// example.com/path"
+      expected: ["example.com/path"]
+
+    - description: "Extract URLs with underscores and dashes in the subdomain"
+      text: "test http://sub_domain-dash.twitter.com"
+      expected: ["http://sub_domain-dash.twitter.com"]
+
+    - description: "Extract URL with minimum number of valid characters"
+      text: "test http://a.b.cd"
+      expected: ["http://a.b.cd"]
+
+    - description: "Extract URLs containing underscores and dashes"
+      text: "test http://a_b.c-d.com"
+      expected: ["http://a_b.c-d.com"]
+
+    - description: "Extract URLs containing dashes in the subdomain"
+      text: "test http://a-b.c.com"
+      expected: ["http://a-b.c.com"]
+
+    - description: "Extract URLs with dashes in the domain name"
+      text: "test http://twitter-dash.com"
+      expected: ["http://twitter-dash.com"]
+
+    - description: "Extract URLs with lots of symbols then a period"
+      text: "http://www.bestbuy.com/site/Currie+Technologies+-+Ezip+400+Scooter/9885188.p?id=1218189013070&skuId=9885188"
+      expected: ["http://www.bestbuy.com/site/Currie+Technologies+-+Ezip+400+Scooter/9885188.p?id=1218189013070&skuId=9885188"]
+
+    - description: "DO NOT extract URLs containing leading dashes in the subdomain"
+      text: "test http://-leadingdash.twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing leading dashes in the domain with a subdomain"
+      text: "test http://leadingdash.-twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing trailing dashes in the subdomain"
+      text: "test http://trailingdash-.twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing trailing dashes in the domain with a subdomain"
+      text: "test http://trailingdash.twitter-.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing leading underscores in the subdomain"
+      text: "test http://_leadingunderscore.twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing leading underscores in the domain with a subdomain"
+      text: "test http://leadingunderscore._twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing trailing underscores in the subdomain"
+      text: "test http://trailingunderscore_.twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing trailing underscores in the domain with a subdomain"
+      text: "test http://trailingunderscore.twitter_.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing leading dashes in the domain name"
+      text: "test http://-twitter.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing trailing dashes in the domain name"
+      text: "test http://twitter-.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing underscores in the domain name"
+      text: "test http://twitter_underscore.com"
+      expected: []
+
+    - description: "DO NOT extract URLs containing underscores in the tld"
+      text: "test http://twitter.c_o_m"
+      expected: []
+
+    - description: "Extract valid URL http://www.foo.com/foo/path-with-period./"
+      text: "test http://www.foo.com/foo/path-with-period./"
+      expected: ["http://www.foo.com/foo/path-with-period./"]
+
+    - description: "Extract valid URL http://www.foo.org.za/foo/bar/688.1"
+      text: "test http://www.foo.org.za/foo/bar/688.1"
+      expected: ["http://www.foo.org.za/foo/bar/688.1"]
+
+    - description: "Extract valid URL http://www.foo.com/bar-path/some.stm?param1=foo;param2=P1|0||P2|0"
+      text: "test http://www.foo.com/bar-path/some.stm?param1=foo;param2=P1|0||P2|0"
+      expected: ["http://www.foo.com/bar-path/some.stm?param1=foo;param2=P1|0||P2|0"]
+
+    - description: "Extract valid URL http://foo.com/bar/123/foo_&_bar/"
+      text: "test http://foo.com/bar/123/foo_&_bar/"
+      expected: ["http://foo.com/bar/123/foo_&_bar/"]
+
+    - description: "Extract valid URL http://www.cp.sc.edu/events/65"
+      text: "test http://www.cp.sc.edu/events/65 test"
+      expected: ["http://www.cp.sc.edu/events/65"]
+
+    - description: "Extract valid URL http://www.andersondaradio.no.comunidades.net/"
+      text: "http://www.andersondaradio.no.comunidades.net/ test test"
+      expected: ["http://www.andersondaradio.no.comunidades.net/"]
+
+    - description: "Extract valid URL ELPAÍS.com"
+      text: "test ELPAÍS.com"
+      expected: ["ELPAÍS.com"]
+
+    - description: "DO NOT include period at the end of URL"
+      text: "test http://twitter.com/."
+      expected: ["http://twitter.com/"]
+
+    - description: "Extract a URL with '?' in fragment"
+      text: "http://tn.com.ar/show/00056158/la-estrella-del-certamen-el-turno-de-pamela-anderson?fb_xd_fragment#?=&cb=fe17523f223b7&relation=parent.parent&transport=fragment&type=resize&height=20&ackdata"
+      expected: ["http://tn.com.ar/show/00056158/la-estrella-del-certamen-el-turno-de-pamela-anderson?fb_xd_fragment#?=&cb=fe17523f223b7&relation=parent.parent&transport=fragment&type=resize&height=20&ackdata"]
+
+    - description: "Extract a URL with '?' in fragment in a text"
+      text: "text http://tn.com.ar/show/00056158/la-estrella-del-certamen-el-turno-de-pamela-anderson?fb_xd_fragment#?=&cb=fe17523f223b7&relation=parent.parent&transport=fragment&type=resize&height=20&ackdata text"
+      expected: ["http://tn.com.ar/show/00056158/la-estrella-del-certamen-el-turno-de-pamela-anderson?fb_xd_fragment#?=&cb=fe17523f223b7&relation=parent.parent&transport=fragment&type=resize&height=20&ackdata"]
+
+   # A common cause of runaway regex engines.
+    - description: "Extract a URL with a ton of trailing periods"
+      text: "Test a ton of periods http://example.com/path.........................................."
+      expected: ["http://example.com/path"]
+
+    - description: "Extract a URL with a ton of trailing commas"
+      text: "Test a ton of periods http://example.com/,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"
+      expected: ["http://example.com/"]
+
+    - description: "Extract a URL with a ton of trailing '!'"
+      text: "Test a ton of periods http://example.com/path/!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      expected: ["http://example.com/path/"]
+
+    - description: "DO NOT extract URLs in hashtag or @mention"
+      text: "#test.com @test.com #http://test.com @http://test.com #t.co/abcde @t.co/abcde"
+      expected: []
+
+    - description: "Extract a t.co URL with a trailing apostrophe"
+      text: "I really like http://t.co/pbY2NfTZ's website"
+      expected: ["http://t.co/pbY2NfTZ"]
+
+    - description: "Extract a t.co URL with a trailing hyphen"
+      text: "Check this site out http://t.co/FNkPfmii- it's great"
+      expected: ["http://t.co/FNkPfmii"]
+
+    - description: "Extract a t.co URL with a trailing colon"
+      text: "According to http://t.co/ulYGBYSo: the internet is cool"
+      expected: ["http://t.co/ulYGBYSo"]
+
+    - description: "Extract a t.co URL with a long path"
+      text: "I really like http://t.co/abcdefghijklmnopqrstuvwxyz0123456789"
+      expected: ["http://t.co/abcdefghijklmnopqrstuvwxyz0123456789"]
+
+    - description: "DO NOT extract URLs with > 40 characters in a t.co slug"
+      text: "I really like http://t.co/abcdefghijklmnopqrstuvwxyz012345678901234"
+      expected: []
+
+    - description: "Extract domain followed by Japanese characters"
+      text: "example.comてすとですtwitter.みんなです"
+      expected: ["example.com", "twitter.みんな"]
+
+    - description: "Extract URL before newline"
+      text: "http://twitter.com\nhttp://example.com\nhttp://example.com/path\nexample.com/path\nit.so\nit.so/abcde"
+      expected: ["http://twitter.com", "http://example.com", "http://example.com/path", "example.com/path", "it.so", "it.so/abcde"]
+
+    - description: "DO NOT extract URL if preceded by $"
+      text: "$http://twitter.com $twitter.com $http://t.co/abcde $t.co/abcde $t.co $TVI.CA $RBS.CA"
+      expected: []
+
+    - description: "DO NOT extract .bz2 file name as URL"
+      text: "long.test.tar.bz2 test.tar.bz2 tar.bz2"
+      expected: []
+
+    - description: "DO NOT extract URL with gTLD followed by @ sign"
+      text: "john.doe.gov@mail.com"
+      expected: []
+
+    - description: "DO NOT extract URL with ccTLD followed by @ sign"
+      text: "john.doe.jp@mail.com"
+      expected: []
+
+  urls_with_indices:

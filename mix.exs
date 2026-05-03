@@ -101,11 +101,13 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 0.10"},
-      {:unicode, "~> 1.21"},
+      {:unicode, "~> 1.22"},
+      {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
+      {:yaml_elixir, "~> 2.9", only: [:test], runtime: false},
       {:jason, "~> 1.2"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
     ]

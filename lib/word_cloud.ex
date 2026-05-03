@@ -125,6 +125,83 @@ defmodule Text.WordCloud do
     |> finalise(options)
   end
 
+  @doc """
+  Converts scored terms into the shape consumed by [d3-cloud](https://github.com/jasondavies/d3-cloud).
+
+  d3-cloud expects an array of `{text, size}` records and runs its
+  Wordle-style layout in the browser. This adapter maps each entry's
+  `:weight` to a pixel font size using the same `:font_size_range`
+  vocabulary as `Text.WordCloud.Layout`, so a server-rendered SVG and a
+  client-rendered d3-cloud will scale identically.
+
+  The original `:weight`, `:count`, and `:kind` fields are passed through
+  unchanged. d3-cloud ignores them but exposes the full datum to its
+  `text`, `fontSize`, `fontWeight`, and `rotate` callbacks, so consumers
+  can read e.g. `d.count` for tooltips with no extra plumbing.
+
+  ### Arguments
+
+  * `terms` is the output of `Text.WordCloud.terms/2` (or any list of
+    `%{term, weight, count, kind}` maps).
+
+  ### Options
+
+  * `:font_size_range` is a `{min, max}` pixel tuple. Weight `1.0` maps
+    to `max`, weight `0.0` maps to `min`. Default `{12, 96}`.
+
+  * `:scale` is `:linear` (default) or `:sqrt`. `:sqrt` produces
+    area-proportional sizing, which is the convention most d3-cloud
+    examples use. `:linear` matches `Text.WordCloud.Layout`'s behaviour.
+
+  ### Returns
+
+  * A list of `%{text, size, weight, count, kind}` maps sorted by
+    `:size` descending. The `:text` and `:size` keys are what d3-cloud
+    consumes; the rest are passed through for callbacks.
+
+  ### Examples
+
+      iex> terms = [
+      ...>   %{term: "elixir", weight: 1.0, count: 5, kind: :word},
+      ...>   %{term: "phoenix", weight: 0.5, count: 2, kind: :word}
+      ...> ]
+      iex> Text.WordCloud.to_d3_cloud(terms, font_size_range: {10, 100})
+      [
+        %{text: "elixir", size: 100.0, weight: 1.0, count: 5, kind: :word},
+        %{text: "phoenix", size: 55.0, weight: 0.5, count: 2, kind: :word}
+      ]
+
+  """
+  @spec to_d3_cloud([term_entry()], keyword()) :: [
+          %{
+            text: String.t(),
+            size: float(),
+            weight: float(),
+            count: pos_integer(),
+            kind: :word | :phrase
+          }
+        ]
+  def to_d3_cloud(terms, options \\ []) when is_list(terms) do
+    {min_fs, max_fs} = Keyword.get(options, :font_size_range, {12, 96})
+    scale = Keyword.get(options, :scale, :linear)
+
+    terms
+    |> Enum.map(fn %{term: t, weight: w, count: c, kind: k} ->
+      %{text: t, size: size_for(w, min_fs, max_fs, scale), weight: w, count: c, kind: k}
+    end)
+    |> Enum.sort_by(& &1.size, :desc)
+  end
+
+  defp size_for(weight, min_fs, max_fs, :linear)
+       when weight >= 0.0 and weight <= 1.0 do
+    min_fs + weight * (max_fs - min_fs)
+  end
+
+  defp size_for(weight, min_fs, max_fs, :sqrt)
+       when weight >= 0.0 and weight <= 1.0 do
+    min_fs + :math.sqrt(weight) * (max_fs - min_fs)
+  end
+
   # ---- options resolution ----------------------------------------------
 
   defp resolve_options(text, options) do

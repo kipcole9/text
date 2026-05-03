@@ -1,0 +1,18 @@
+  urls_with_directional_markers:
+    - description: "Extract URLs from RTL text"
+      text: "\U00002066\U0000202Atest abcdef.com پاکستان http://twitter.com/\U0000202C\U00002069"
+      expected:
+        - url: "abcdef.com"
+          indices: [7, 17]
+        - url: "http://twitter.com/"
+          indices: [26, 45]
+
+    - description: "Extract URLs from RTL text with embedded directional marks"
+      text: "This is a test \U00002066\U0000202Atwitter.com\U0000202C\U00002069 \U00002066\U0000202Ahttp://foobar.پاکستان/\U0000202C\U00002069⁩ قطر فلسطين عمان"
+      expected:
+        - url: "twitter.com"
+          indices: [17, 28]
+        - url: "http://foobar.پاکستان/"
+          indices: [33, 55]
+
+  tco_urls_with_params:
