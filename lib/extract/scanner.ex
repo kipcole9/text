@@ -124,13 +124,19 @@ defmodule Text.Extract.Scanner do
   @label_end "(?![A-Za-z0-9_\\-])"
 
   @url_regex Regex.compile!(
+               # 1. scheme://(label.)+label — relaxed host class
+               #    (any IDN). TLD validation happens in the
+               #    `Text.Extract.Url` validator, which walks labels
+               #    right-to-left and truncates the host at the
+               #    rightmost valid TLD.
+               # 2. (safe_label.)+ (safe_label | idn_unicode_tld) —
+               #    restricted host class for schemeless URLs. Last
+               #    label may be a known IDN-Unicode TLD (since the
+               #    safe label class excludes CJK and would otherwise
+               #    miss `twitter.みんな`-style hosts). Validator
+               #    handles ASCII TLD validation post-match.
                @lookbehind <>
                  "(?:" <>
-                 # 1. scheme://(label.)+label — relaxed host class
-                 #    (any IDN). TLD validation happens in the
-                 #    `Text.Extract.Url` validator, which walks labels
-                 #    right-to-left and truncates the host at the
-                 #    rightmost valid TLD.
                  "(?:[A-Za-z][A-Za-z0-9+.\\-]*):\\/\\/" <>
                  "(?:" <>
                  @host_label_any <>
@@ -140,12 +146,6 @@ defmodule Text.Extract.Scanner do
                  "(?::\\d+)?" <>
                  @url_tail <>
                  "|" <>
-                 # 2. (safe_label.)+ (safe_label | idn_unicode_tld) —
-                 #    restricted host class for schemeless URLs. Last
-                 #    label may be a known IDN-Unicode TLD (since the
-                 #    safe label class excludes CJK and would otherwise
-                 #    miss `twitter.みんな`-style hosts). Validator
-                 #    handles ASCII TLD validation post-match.
                  "(?:" <>
                  @host_label_safe <>
                  "\\.)+" <>

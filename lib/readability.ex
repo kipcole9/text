@@ -135,8 +135,16 @@ defmodule Text.Readability do
           poly + if(s >= @polysyllable_threshold, do: 1, else: 0),
           long + if(word_len >= @long_word_threshold, do: 1, else: 0),
           letters + l,
-          dc + if(letter_word?(word) and not MapSet.member?(@dale_chall_words, word_lower), do: 1, else: 0),
-          sp + if(letter_word?(word) and not MapSet.member?(@spache_words, word_lower), do: 1, else: 0)
+          dc +
+            if(letter_word?(word) and not MapSet.member?(@dale_chall_words, word_lower),
+              do: 1,
+              else: 0
+            ),
+          sp +
+            if(letter_word?(word) and not MapSet.member?(@spache_words, word_lower),
+              do: 1,
+              else: 0
+            )
         }
       end)
 

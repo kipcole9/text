@@ -143,8 +143,12 @@ defmodule Text.Phonetic.NYSIIS do
   # Step 2: last-letter rewrites.
   defp rewrite_last(letters) do
     case Enum.reverse(letters) do
-      [?E, ?E | rest] -> Enum.reverse([?Y | rest])
-      [?E, ?I | rest] -> Enum.reverse([?Y | rest])
+      [?E, ?E | rest] ->
+        Enum.reverse([?Y | rest])
+
+      [?E, ?I | rest] ->
+        Enum.reverse([?Y | rest])
+
       [a, b | rest] when {b, a} in [{?D, ?T}, {?R, ?T}, {?R, ?D}, {?N, ?T}, {?N, ?D}] ->
         Enum.reverse([?D | rest])
 
@@ -225,7 +229,7 @@ defmodule Text.Phonetic.NYSIIS do
     next_input = List.first(rest)
 
     replacement =
-      if prev_input in @vowels and (next_input in @vowels) do
+      if prev_input in @vowels and next_input in @vowels do
         ?H
       else
         prev_input

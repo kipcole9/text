@@ -125,10 +125,14 @@ defmodule Text.Extract.Email do
   # mis-split).
   defp split_at_at(raw) do
     case String.split(raw, "@") do
-      [_one] -> :error
-      parts -> [List.last(parts) | Enum.reverse(tl(Enum.reverse(parts)))] |> case do
-        [host | local_parts] -> [Enum.reverse(local_parts) |> Enum.join("@"), host]
-      end
+      [_one] ->
+        :error
+
+      parts ->
+        [List.last(parts) | Enum.reverse(tl(Enum.reverse(parts)))]
+        |> case do
+          [host | local_parts] -> [Enum.reverse(local_parts) |> Enum.join("@"), host]
+        end
     end
   end
 
@@ -167,11 +171,17 @@ defmodule Text.Extract.Email do
     labels = String.split(host, ".")
 
     cond do
-      length(labels) < 2 -> {:error, :no_host}
-      Enum.any?(labels, &(&1 == "")) -> {:error, :invalid_host}
+      length(labels) < 2 ->
+        {:error, :no_host}
+
+      Enum.any?(labels, &(&1 == "")) ->
+        {:error, :invalid_host}
+
       Enum.any?(labels, &(String.starts_with?(&1, "-") or String.ends_with?(&1, "-"))) ->
         {:error, :invalid_host}
-      true -> :ok
+
+      true ->
+        :ok
     end
   end
 

@@ -149,20 +149,17 @@ defmodule Text.Inflect.En do
   # this whitelist the round-trip would prefer the shorter
   # `analyse`/`crise` form because the original `pluralize_noun/2`
   # accepts both as valid singulars.
-  @greek_is_es_singulars MapSet.new(
-                           ~w(
+  @greek_is_es_singulars MapSet.new(~w(
                              analysis axis basis crisis diagnosis ellipsis
                              emphasis genesis hypothesis nemesis oasis
                              paralysis prognosis psychosis synopsis thesis
-                           )
-                         )
+                           ))
 
   # Common English `-us` nouns whose plurals are formed by `-uses`.
   # Used in `explicit_singular/1` because the original Conway-style
   # `pluralize_noun/2` doesn't reliably round-trip these (it returns
   # e.g. `statuss` for `status`).
-  @us_base_singulars MapSet.new(
-                       ~w(
+  @us_base_singulars MapSet.new(~w(
                          abacus apparatus apropos asparagus bonus bus cactus
                          calculus campus census circus citrus consensus
                          corpus cosmos crocus crocus discus eros
@@ -171,8 +168,7 @@ defmodule Text.Inflect.En do
                          nimbus nucleus omnibus opus prospectus radius
                          status stimulus stylus surplus syllabus terminus
                          thesaurus typhus uterus virus walrus
-                       )
-                     )
+                       ))
 
   # Common English words ending in `-oe` whose plurals are formed by a
   # plain `-s` (`shoe`/`shoes`, `toe`/`toes`). Used to disambiguate
@@ -180,12 +176,10 @@ defmodule Text.Inflect.En do
   # it over the trim-`-es` form. Without this list `shoes` would
   # wrongly land at `sho` because `sho + es = shoes` is a valid
   # round-trip.
-  @oe_base_singulars MapSet.new(
-                       ~w(
+  @oe_base_singulars MapSet.new(~w(
                          shoe toe canoe foe doe hoe woe oboe horseshoe
                          tiptoe overshoe snowshoe
-                       )
-                     )
+                       ))
 
   defp explicit_singular(word) do
     cond do

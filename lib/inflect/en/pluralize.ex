@@ -81,35 +81,35 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_irregular_suffix(word, _mode) do
     cond do
-     suffix?(word, "man") ->
-       replace_suffix(word, "man", "men")
+      suffix?(word, "man") ->
+        replace_suffix(word, "man", "men")
 
-     suffix?(word, "louse") ->
-       replace_suffix(word, "louse", "lice")
+      suffix?(word, "louse") ->
+        replace_suffix(word, "louse", "lice")
 
-     suffix?(word, "mouse") ->
-       replace_suffix(word, "mouse", "mice")
+      suffix?(word, "mouse") ->
+        replace_suffix(word, "mouse", "mice")
 
-     suffix?(word, "tooth") ->
-       replace_suffix(word, "tooth", "teeth")
+      suffix?(word, "tooth") ->
+        replace_suffix(word, "tooth", "teeth")
 
-     suffix?(word, "goose") ->
-       replace_suffix(word, "goose", "geese")
+      suffix?(word, "goose") ->
+        replace_suffix(word, "goose", "geese")
 
-     suffix?(word, "foot") ->
-       replace_suffix(word, "foot", "feet")
+      suffix?(word, "foot") ->
+        replace_suffix(word, "foot", "feet")
 
-     suffix?(word, "zoon") ->
-       replace_suffix(word, "zoon", "zoa")
+      suffix?(word, "zoon") ->
+        replace_suffix(word, "zoon", "zoa")
 
-     suffix?(word, "cis") ->
-       replace_suffix(word, "cis", "ces")
+      suffix?(word, "cis") ->
+        replace_suffix(word, "cis", "ces")
 
-     suffix?(word, "sis") ->
-       replace_suffix(word, "sis", "ses")
+      suffix?(word, "sis") ->
+        replace_suffix(word, "sis", "ses")
 
-     suffix?(word, "xis") ->
-       replace_suffix(word, "xis", "xes")
+      suffix?(word, "xis") ->
+        replace_suffix(word, "xis", "xes")
 
       true ->
         nil
@@ -126,16 +126,16 @@ defmodule Text.Inflect.En.Pluralize do
   def is_assimilated_classical(word, mode) do
     cond do
       category?(word, "-ex", "-ices", mode) ->
-       replace_suffix(word, "ex", "ices")
+        replace_suffix(word, "ex", "ices")
 
       category?(word, "-um", "-a", mode) ->
-       replace_suffix(word, "um", "a")
+        replace_suffix(word, "um", "a")
 
       category?(word, "-on", "-a", mode) ->
-       replace_suffix(word, "on", "a")
+        replace_suffix(word, "on", "a")
 
       category?(word, "-a", "-ae", mode) ->
-       replace_suffix(word, "a", "ae")
+        replace_suffix(word, "a", "ae")
 
       true ->
         nil
@@ -160,41 +160,41 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_classical(word, :classical = mode) do
     cond do
-     suffix?(word, "trix") ->
-       replace_suffix(word, "trix", "trices")
+      suffix?(word, "trix") ->
+        replace_suffix(word, "trix", "trices")
 
-     suffix?(word, "eau") ->
+      suffix?(word, "eau") ->
         word <> "x"
 
-     suffix?(word, "ieu") ->
+      suffix?(word, "ieu") ->
         word <> "x"
 
-     suffix?(word, "inx") ->
-       replace_suffix(word, "nx", "nges")
+      suffix?(word, "inx") ->
+        replace_suffix(word, "nx", "nges")
 
-     suffix?(word, "anx") ->
-       replace_suffix(word, "nx", "nges")
+      suffix?(word, "anx") ->
+        replace_suffix(word, "nx", "nges")
 
-     suffix?(word, "ynx") ->
-       replace_suffix(word, "nx", "nges")
+      suffix?(word, "ynx") ->
+        replace_suffix(word, "nx", "nges")
 
       category?(word, "-en", "-ina", mode) ->
-       replace_suffix(word, "en", "ina")
+        replace_suffix(word, "en", "ina")
 
       category?(word, "-a", "-ata", mode) ->
         word <> "ta"
 
       category?(word, "-is", "-ides", mode) ->
-       replace_suffix(word, "is", "ides")
+        replace_suffix(word, "is", "ides")
 
       category?(word, "-us", "-i", mode) ->
-       replace_suffix(word, "us", "i")
+        replace_suffix(word, "us", "i")
 
       category?(word, "-us", "-us", mode) ->
         word
 
       category?(word, "-o", "-i", mode) ->
-       replace_suffix(word, "o", "i")
+        replace_suffix(word, "o", "i")
 
       category?(word, "-", "-i", mode) ->
         word <> "i"
@@ -210,7 +210,7 @@ defmodule Text.Inflect.En.Pluralize do
   def is_classical(word, :modern = mode) do
     cond do
       category?(word, "-us", "-i", mode) ->
-       replace_suffix(word, "us", "uses")
+        replace_suffix(word, "us", "uses")
 
       true ->
         nil
@@ -223,14 +223,14 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_compound_plural(word, _mode) do
     cond do
-     suffix?(word, "ch") ->
-       replace_suffix(word, "h", "hes")
+      suffix?(word, "ch") ->
+        replace_suffix(word, "h", "hes")
 
-     suffix?(word, "sh") ->
-       replace_suffix(word, "h", "hes")
+      suffix?(word, "sh") ->
+        replace_suffix(word, "h", "hes")
 
-     suffix?(word, "ss") ->
-       replace_suffix(word, "ss", "sses")
+      suffix?(word, "ss") ->
+        replace_suffix(word, "ss", "sses")
 
       true ->
         nil
@@ -246,32 +246,32 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_ves_plural(word, _mode) do
     cond do
-     suffix?(word, "alf") ->
-       replace_suffix(word, "f", "ves")
+      suffix?(word, "alf") ->
+        replace_suffix(word, "f", "ves")
 
-     suffix?(word, "elf") ->
-       replace_suffix(word, "f", "ves")
+      suffix?(word, "elf") ->
+        replace_suffix(word, "f", "ves")
 
-     suffix?(word, "olf") ->
-       replace_suffix(word, "f", "ves")
+      suffix?(word, "olf") ->
+        replace_suffix(word, "f", "ves")
 
-     suffix?(word, "arf") ->
-       replace_suffix(word, "f", "ves")
+      suffix?(word, "arf") ->
+        replace_suffix(word, "f", "ves")
 
-     suffix?(word, "nife") ->
-       replace_suffix(word, "fe", "ves")
+      suffix?(word, "nife") ->
+        replace_suffix(word, "fe", "ves")
 
-     suffix?(word, "life") ->
-       replace_suffix(word, "fe", "ves")
+      suffix?(word, "life") ->
+        replace_suffix(word, "fe", "ves")
 
-     suffix?(word, "wife") ->
-       replace_suffix(word, "fe", "ves")
+      suffix?(word, "wife") ->
+        replace_suffix(word, "fe", "ves")
 
-     suffix?(word, "deaf") ->
-       word
+      suffix?(word, "deaf") ->
+        word
 
-     suffix?(word, "eaf") ->
-       replace_suffix(word, "f", "ves")
+      suffix?(word, "eaf") ->
+        replace_suffix(word, "f", "ves")
 
       true ->
         nil
@@ -286,14 +286,14 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_word_ending_in_y(word, _mode) do
     cond do
-     suffix?(word, "y") && vowel?(word, -2) ->
+      suffix?(word, "y") && vowel?(word, -2) ->
         word <> "s"
 
-     suffix?(word, "y") && starts_with_upper?(word) ->
+      suffix?(word, "y") && starts_with_upper?(word) ->
         word <> "s"
 
-     suffix?(word, "y") ->
-       replace_suffix(word, "y", "ies")
+      suffix?(word, "y") ->
+        replace_suffix(word, "y", "ies")
 
       true ->
         nil
@@ -313,10 +313,10 @@ defmodule Text.Inflect.En.Pluralize do
       category?(word, "-o", "-os", mode) ->
         word <> "s"
 
-     suffix?(word, "o") && vowel?(word, -2) ->
+      suffix?(word, "o") && vowel?(word, -2) ->
         word <> "s"
 
-     suffix?(word, "o") ->
+      suffix?(word, "o") ->
         word <> "es"
 
       true ->
@@ -327,9 +327,9 @@ defmodule Text.Inflect.En.Pluralize do
   def is_o_suffix(word, :classical = mode) do
     cond do
       category?(word, "-o", "-os", mode) ->
-       replace_suffix(word, "o", "i")
+        replace_suffix(word, "o", "i")
 
-     suffix?(word, "o") ->
+      suffix?(word, "o") ->
         word <> "es"
 
       true ->
@@ -412,26 +412,26 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_third_person_singular(word) do
     cond do
-     suffix?(word, "ches") ->
-       replace_suffix(word, "hes", "h")
+      suffix?(word, "ches") ->
+        replace_suffix(word, "hes", "h")
 
-     suffix?(word, "shes") ->
-       replace_suffix(word, "hes", "h")
+      suffix?(word, "shes") ->
+        replace_suffix(word, "hes", "h")
 
-     suffix?(word, "ses") ->
-       replace_suffix(word, "es", "")
+      suffix?(word, "ses") ->
+        replace_suffix(word, "es", "")
 
-     suffix?(word, "xes") ->
-       replace_suffix(word, "es", "")
+      suffix?(word, "xes") ->
+        replace_suffix(word, "es", "")
 
-     suffix?(word, "zzes") ->
-       replace_suffix(word, "es", "")
+      suffix?(word, "zzes") ->
+        replace_suffix(word, "es", "")
 
-     suffix?(word, "ies") ->
-       replace_suffix(word, "ies", "y")
+      suffix?(word, "ies") ->
+        replace_suffix(word, "ies", "y")
 
-     suffix?(word, "oes") ->
-       replace_suffix(word, "oes", "o")
+      suffix?(word, "oes") ->
+        replace_suffix(word, "oes", "o")
 
       true ->
         nil
@@ -443,11 +443,11 @@ defmodule Text.Inflect.En.Pluralize do
 
   def is_third_person_singular_s(word) do
     cond do
-     suffix?(word, "ss") ->
+      suffix?(word, "ss") ->
         nil
 
-     suffix?(word, "s") ->
-       replace_suffix(word, "s", "")
+      suffix?(word, "s") ->
+        replace_suffix(word, "s", "")
 
       true ->
         nil
@@ -551,10 +551,10 @@ defmodule Text.Inflect.En.Pluralize do
   #                 otherwise,              return "<owners>'s"
   def is_genetive(word) do
     cond do
-     suffix?(word, "'s") ->
+      suffix?(word, "'s") ->
         do_genetive(word, "'s")
 
-     suffix?(word, "'") ->
+      suffix?(word, "'") ->
         do_genetive(word, "'")
 
       true ->
@@ -606,7 +606,7 @@ defmodule Text.Inflect.En.Pluralize do
   end
 
   def category?(word, "nationalities", _mode) do
-   suffix?(word, "ese") && starts_with_upper?(word)
+    suffix?(word, "ese") && starts_with_upper?(word)
   end
 
   @doc false
@@ -681,5 +681,4 @@ defmodule Text.Inflect.En.Pluralize do
   def category?(word, "-", "-im", _mode) do
     word in any_im()
   end
-
 end

@@ -112,7 +112,15 @@ defmodule Text.MixProject do
       {:yaml_elixir, "~> 2.9", only: [:test], runtime: false},
       {:jason, "~> 1.2"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
-    ]
+    ] ++ maybe_json_polyfill()
+  end
+
+  defp maybe_json_polyfill do
+    if Code.ensure_loaded?(:json) do
+      []
+    else
+      [{:json_polyfill, "~> 0.2 or ~> 1.0"}]
+    end
   end
 
   # Runtime-relevant optional deps. CI uses two sets of env vars:

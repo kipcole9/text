@@ -62,7 +62,9 @@ defmodule Mix.Tasks.Text.DownloadLemmaData do
     cond do
       options[:list] ->
         Mix.shell().info(
-          "Available languages: " <> Enum.join(@available, ", ") <> "\n" <>
+          "Available languages: " <>
+            Enum.join(@available, ", ") <>
+            "\n" <>
             "Downloads from: #{@url_base}"
         )
 

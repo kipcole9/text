@@ -20,18 +20,20 @@ defmodule Text.Inflect.En.Helpers do
              |> Map.new()
 
   @pluralize_auxillary_irregular @inflections
-                                |> Map.get("a8")
-                                |> Enum.drop(3)
-                                |> Enum.map(&String.split(&1, " -> "))
-                                |> Enum.map(&List.to_tuple/1)
-                                |> Map.new()
+                                 |> Map.get("a8")
+                                 |> Enum.drop(3)
+                                 |> Enum.map(&String.split(&1, " -> "))
+                                 |> Enum.map(&List.to_tuple/1)
+                                 |> Map.new()
 
   @pronouns @inflections
             |> Map.get("a5")
             |> Enum.drop(3)
             |> Enum.reject(&(&1 == "->"))
             |> Enum.map(&String.replace(&1, " ->", ""))
-            |> Enum.map(fn x -> if String.contains?(x, "|"), do: String.split(x, "|"), else: x end)
+            |> Enum.map(fn x ->
+              if String.contains?(x, "|"), do: String.split(x, "|"), else: x
+            end)
             |> Enum.chunk_every(2)
             |> Map.new(&List.to_tuple/1)
 
@@ -45,99 +47,93 @@ defmodule Text.Inflect.En.Helpers do
                        |> Map.new()
 
   @non_inflecting_nouns @inflections
-                         |> Map.take(["a2", "a3"])
-                         |> Map.values()
-                         |> List.flatten()
+                        |> Map.take(["a2", "a3"])
+                        |> Map.values()
+                        |> List.flatten()
 
   @ambiguous @inflections
-              |> Map.get("a4")
+             |> Map.get("a4")
 
   @non_inflecting_verbs @inflections
-                         |> Map.get("a9")
+                        |> Map.get("a9")
 
-   @a_ae_modern @inflections
-                |> Map.get("a10")
+  @a_ae_modern @inflections
+               |> Map.get("a10")
 
-   @a_ae_classical @inflections
-                   |> Map.take(["a10", "a11"])
-                   |> Map.values()
-                   |> List.flatten()
+  @a_ae_classical @inflections
+                  |> Map.take(["a10", "a11"])
+                  |> Map.values()
+                  |> List.flatten()
 
-   @a_ata @inflections
-          |> Map.get("a12")
+  @a_ata @inflections
+         |> Map.get("a12")
 
-   @en_ina @inflections
-           |> Map.get("a13")
+  @en_ina @inflections
+          |> Map.get("a13")
 
-   @ex_ices_modern @inflections
-                   |> Map.get("a14")
+  @ex_ices_modern @inflections
+                  |> Map.get("a14")
 
-   @ex_ices_classical @inflections
-                      |> Map.take(["a14", "a15"])
-                      |> Map.values()
-                      |> List.flatten()
+  @ex_ices_classical @inflections
+                     |> Map.take(["a14", "a15"])
+                     |> Map.values()
+                     |> List.flatten()
 
-   @is_ides @inflections
-            |> Map.get("a16")
+  @is_ides @inflections
+           |> Map.get("a16")
 
-   @o_i @inflections
-        |> Map.get("a18")
+  @o_i @inflections
+       |> Map.get("a18")
 
-   @o_words_modern @inflections
-                   |> Map.take(["a17", "a18"])
-                   |> Map.values()
-                   |> List.flatten()
+  @o_words_modern @inflections
+                  |> Map.take(["a17", "a18"])
+                  |> Map.values()
+                  |> List.flatten()
 
-   @o_words_classical @inflections
-                      |> Map.get("a17")
+  @o_words_classical @inflections
+                     |> Map.get("a17")
 
-   @on_a @inflections
-         |> Map.get("a19")
+  @on_a @inflections
+        |> Map.get("a19")
 
-   @um_a_modern @inflections
-                |> Map.get("a20")
+  @um_a_modern @inflections
+               |> Map.get("a20")
 
-   @um_a_classical @inflections
-                   |> Map.take(["a20", "a21"])
-                   |> Map.values()
-                   |> List.flatten()
+  @um_a_classical @inflections
+                  |> Map.take(["a20", "a21"])
+                  |> Map.values()
+                  |> List.flatten()
 
-   @us_i @inflections
-         |> Map.get("a22")
+  @us_i @inflections
+        |> Map.get("a22")
 
-   @us_us @inflections
-          |> Map.get("a23")
+  @us_us @inflections
+         |> Map.get("a23")
 
-   @any_i @inflections
-          |> Map.get("a24")
+  @any_i @inflections
+         |> Map.get("a24")
 
-   @any_im @inflections
-           |> Map.get("a25")
+  @any_im @inflections
+          |> Map.get("a25")
 
   @non_inflecting_suffix ["fish", "ois", "sheep", "deer", "pox", "itis"]
 
   ## ── Reverse (plural → singular) lookup tables for singularization.
   ## Built once at compile time from the same source data.
 
-  @irregular_to_singular_modern (
-                                  for {singular, [modern, _classical]} <- @irregular,
-                                      into: %{},
-                                      do: {modern, singular}
-                                )
+  @irregular_to_singular_modern for {singular, [modern, _classical]} <- @irregular,
+                                    into: %{},
+                                    do: {modern, singular}
 
-  @irregular_to_singular_classical (
-                                     for {singular, [_modern, classical]} <- @irregular,
-                                         into: %{},
-                                         do: {classical, singular}
-                                   )
+  @irregular_to_singular_classical for {singular, [_modern, classical]} <- @irregular,
+                                       into: %{},
+                                       do: {classical, singular}
 
   # Pronoun entries are stored as `{singular, plural}` tuples (no
   # modern/classical distinction). The same map serves both modes.
-  @pronoun_to_singular (
-                         for {singular, plural} <- @pronouns,
-                             into: %{},
-                             do: {plural, singular}
-                       )
+  @pronoun_to_singular for {singular, plural} <- @pronouns,
+                           into: %{},
+                           do: {plural, singular}
 
   @doc false
   def irregular_singular(word, :modern), do: Map.get(@irregular_to_singular_modern, word)
@@ -147,8 +143,11 @@ defmodule Text.Inflect.En.Helpers do
   def pronoun_singular(word), do: Map.get(@pronoun_to_singular, word)
 
   @doc false
-  def known_irregular_plural?(word, :modern), do: Map.has_key?(@irregular_to_singular_modern, word)
-  def known_irregular_plural?(word, :classical), do: Map.has_key?(@irregular_to_singular_classical, word)
+  def known_irregular_plural?(word, :modern),
+    do: Map.has_key?(@irregular_to_singular_modern, word)
+
+  def known_irregular_plural?(word, :classical),
+    do: Map.has_key?(@irregular_to_singular_classical, word)
 
   @doc false
   def known_pronoun_plural?(word), do: Map.has_key?(@pronoun_to_singular, word)

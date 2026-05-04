@@ -11,4 +11,11 @@ if Code.ensure_loaded?(EXLA) do
   Nx.Defn.global_default_options(compiler: EXLA)
 end
 
-ExUnit.start(exclude: [:requires_lid_176, :requires_bumblebee_model])
+# Exclusion tags whose presence depends on optional deps. We skip the
+# tagged tests when the dep isn't loaded; the corresponding modules are
+# tagged with `@moduletag` matching these atoms.
+optional_dep_excludes =
+  [{Text.Stemmer, :requires_text_stemmer}]
+  |> Enum.flat_map(fn {mod, tag} -> if Code.ensure_loaded?(mod), do: [], else: [tag] end)
+
+ExUnit.start(exclude: [:requires_lid_176, :requires_bumblebee_model] ++ optional_dep_excludes)

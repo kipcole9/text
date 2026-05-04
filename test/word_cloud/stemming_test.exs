@@ -1,6 +1,12 @@
 defmodule Text.WordCloud.StemmingTest do
   use ExUnit.Case, async: true
 
+  # `:stem` requires the optional `:text_stemmer` dependency. CI runs
+  # one matrix entry with all optional deps stripped to verify the
+  # library still compiles and works without them; tag this whole
+  # module so the runner skips it cleanly in that mode.
+  @moduletag :requires_text_stemmer
+
   alias Text.WordCloud
 
   @inflected_corpus """

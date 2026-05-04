@@ -49,9 +49,7 @@ defmodule Mix.Tasks.Text.GenAfinnLexicons do
     generate_emoji_tsv(overwrite?)
     generate_negators_tsv(overwrite?)
 
-    Mix.shell().info(
-      "Wrote #{length(written_langs)} language TSV(s); see #{@priv_root}/."
-    )
+    Mix.shell().info("Wrote #{length(written_langs)} language TSV(s); see #{@priv_root}/.")
   end
 
   ## ── Languages ─────────────────────────────────────────────────────

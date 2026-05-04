@@ -93,28 +93,26 @@ defmodule Text.Sentiment.Lexicons.AFINN do
   @available @lexicons |> Map.keys() |> Enum.sort()
 
   # ── Negators ─────────────────────────────────────────────────────
-  @negators (
-              if File.exists?(@negators_path) do
-                @negators_path
-                |> File.read!()
-                |> String.split(~r/\r?\n/, trim: true)
-                |> Enum.reduce(%{}, fn line, acc ->
-                  case String.split(line, "\t", parts: 2) do
-                    [lang, phrase] ->
-                      tag = String.to_atom(lang)
-                      Map.update(acc, tag, [phrase], &[phrase | &1])
+  @negators (if File.exists?(@negators_path) do
+               @negators_path
+               |> File.read!()
+               |> String.split(~r/\r?\n/, trim: true)
+               |> Enum.reduce(%{}, fn line, acc ->
+                 case String.split(line, "\t", parts: 2) do
+                   [lang, phrase] ->
+                     tag = String.to_atom(lang)
+                     Map.update(acc, tag, [phrase], &[phrase | &1])
 
-                    _ ->
-                      acc
-                  end
-                end)
-                |> Map.new(fn {lang, phrases} ->
-                  {lang, phrases |> Enum.uniq() |> Enum.sort()}
-                end)
-              else
-                %{}
-              end
-            )
+                   _ ->
+                     acc
+                 end
+               end)
+               |> Map.new(fn {lang, phrases} ->
+                 {lang, phrases |> Enum.uniq() |> Enum.sort()}
+               end)
+             else
+               %{}
+             end)
 
   @en_default_negators ~w(not no never none nobody nowhere neither nor cannot can't won't shouldn't wouldn't isn't aren't wasn't weren't doesn't don't didn't haven't hasn't hadn't ain't)
 

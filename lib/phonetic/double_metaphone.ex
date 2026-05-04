@@ -472,9 +472,10 @@ defmodule Text.Phonetic.DoubleMetaphone do
         cond do
           # Greek roots: SCHO + (vowel) + (R|L|N|M|T) → SK (school,
           # scholar, scheme, schema, schizo).
-          next3 in [?O, ?E, ?A, ?U] and (next4 in [?R, ?L, ?N, ?M, ?T] or
-                                          next5 in [?R, ?L, ?N, ?M, ?T]) and
-            german_sch_exception?(state) == false ->
+          next3 in [?O, ?E, ?A, ?U] and
+            (next4 in [?R, ?L, ?N, ?M, ?T] or
+               next5 in [?R, ?L, ?N, ?M, ?T]) and
+              german_sch_exception?(state) == false ->
             emit(state, ~c"SK") |> advance(3)
 
           # SCH at start followed by a Germanic consonant cluster
@@ -709,7 +710,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
           advance(state, 1)
         else
           # Skip a following C, K, or Q to avoid double-emission.
-          skip = if next in [?C, ?K, ?Q] and not (next2 in [?I, ?E]), do: 2, else: 1
+          skip = if next in [?C, ?K, ?Q] and next2 not in [?I, ?E], do: 2, else: 1
           emit(state, ~c"K") |> advance(skip)
         end
     end
@@ -944,7 +945,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
         emit(state, ~c"H") |> advance(2)
 
       pos > 0 and at(state, pos - 1) in [?A, ?E, ?I, ?O, ?U, ?Y] and
-        next in [?A, ?E, ?I, ?O, ?U, ?Y] ->
+          next in [?A, ?E, ?I, ?O, ?U, ?Y] ->
         emit(state, ~c"H") |> advance(2)
 
       true ->
@@ -982,7 +983,10 @@ defmodule Text.Phonetic.DoubleMetaphone do
 
   # Append one or more characters to *both* primary and alternate.
   defp emit(state, chars) when is_list(chars) do
-    %{state | primary: Enum.reverse(chars, state.primary),
-              alternate: Enum.reverse(chars, state.alternate)}
+    %{
+      state
+      | primary: Enum.reverse(chars, state.primary),
+        alternate: Enum.reverse(chars, state.alternate)
+    }
   end
 end

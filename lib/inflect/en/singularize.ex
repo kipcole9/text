@@ -100,11 +100,10 @@ defmodule Text.Inflect.En.Singularize do
   # Greek/Latin -es/-ces/-xes plurals (analyses → analysis, axes → axis,
   # appendices → appendix). Conservative: only fires when stripping the
   # plural suffix yields a known classical singular.
-  @classical_is_es_plurals (
-                             for w <- Text.Inflect.En.Helpers.is_ides(),
-                                 String.ends_with?(w, "is"),
-                                 do:
-                                   String.replace_suffix(w, "is", "es")
+  @classical_is_es_plurals for(
+                             w <- Text.Inflect.En.Helpers.is_ides(),
+                             String.ends_with?(w, "is"),
+                             do: String.replace_suffix(w, "is", "es")
                            )
                            |> MapSet.new()
 
@@ -125,16 +124,16 @@ defmodule Text.Inflect.En.Singularize do
   def is_assimilated_classical(word, mode) do
     cond do
       category?(word, "-ex", "-ices", mode) ->
-       replace_suffix(word, "ex", "ices")
+        replace_suffix(word, "ex", "ices")
 
       category?(word, "-um", "-a", mode) ->
-       replace_suffix(word, "um", "a")
+        replace_suffix(word, "um", "a")
 
       category?(word, "-on", "-a", mode) ->
-       replace_suffix(word, "on", "a")
+        replace_suffix(word, "on", "a")
 
       category?(word, "-a", "-ae", mode) ->
-       replace_suffix(word, "a", "ae")
+        replace_suffix(word, "a", "ae")
 
       true ->
         nil
@@ -211,7 +210,7 @@ defmodule Text.Inflect.En.Singularize do
   def is_classical(word, :modern = mode) do
     cond do
       category?(word, "-us", "-i", mode) ->
-       replace_suffix(word, "us", "uses")
+        replace_suffix(word, "us", "uses")
 
       true ->
         nil
@@ -225,14 +224,14 @@ defmodule Text.Inflect.En.Singularize do
 
   def is_compound_plural(word, _mode) do
     cond do
-     suffix?(word, "ches") ->
-       replace_suffix(word, "hes", "h")
+      suffix?(word, "ches") ->
+        replace_suffix(word, "hes", "h")
 
-     suffix?(word, "shes") ->
-       replace_suffix(word, "shes", "sh")
+      suffix?(word, "shes") ->
+        replace_suffix(word, "shes", "sh")
 
-     suffix?(word, "sses") ->
-       replace_suffix(word, "sses", "ss")
+      suffix?(word, "sses") ->
+        replace_suffix(word, "sses", "ss")
 
       true ->
         nil
@@ -249,29 +248,29 @@ defmodule Text.Inflect.En.Singularize do
 
   def is_ves_plural(word, _mode) do
     cond do
-     suffix?(word, "alves") ->
-       replace_suffix(word, "ves", "f")
+      suffix?(word, "alves") ->
+        replace_suffix(word, "ves", "f")
 
-     suffix?(word, "elves") ->
-       replace_suffix(word, "ves", "f")
+      suffix?(word, "elves") ->
+        replace_suffix(word, "ves", "f")
 
-     suffix?(word, "olves") ->
-       replace_suffix(word, "ves", "f")
+      suffix?(word, "olves") ->
+        replace_suffix(word, "ves", "f")
 
-     suffix?(word, "arves") ->
-       replace_suffix(word, "ves", "f")
+      suffix?(word, "arves") ->
+        replace_suffix(word, "ves", "f")
 
-     suffix?(word, "nives") ->
-       replace_suffix(word, "ves", "fe")
+      suffix?(word, "nives") ->
+        replace_suffix(word, "ves", "fe")
 
-     suffix?(word, "lives") ->
-       replace_suffix(word, "ves", "fe")
+      suffix?(word, "lives") ->
+        replace_suffix(word, "ves", "fe")
 
-     suffix?(word, "wives") ->
-       replace_suffix(word, "ves", "fe")
+      suffix?(word, "wives") ->
+        replace_suffix(word, "ves", "fe")
 
-     suffix?(word, "deaves") ->
-       replace_suffix(word, "ves", "f")
+      suffix?(word, "deaves") ->
+        replace_suffix(word, "ves", "f")
 
       true ->
         nil
@@ -287,14 +286,14 @@ defmodule Text.Inflect.En.Singularize do
 
   def is_word_ending_in_y(word, _mode) do
     cond do
-     suffix?(word, "ys") && vowel?(word, -3) ->
+      suffix?(word, "ys") && vowel?(word, -3) ->
         replace_suffix(word, "ys", "y")
 
-     suffix?(word, "ys") && starts_with_upper?(word) ->
+      suffix?(word, "ys") && starts_with_upper?(word) ->
         replace_suffix(word, "ys", "y")
 
-     suffix?(word, "ies") ->
-       replace_suffix(word, "ies", "y")
+      suffix?(word, "ies") ->
+        replace_suffix(word, "ies", "y")
 
       true ->
         nil
@@ -315,10 +314,10 @@ defmodule Text.Inflect.En.Singularize do
       category?(word, "-o", "-os", mode) ->
         word <> "s"
 
-     suffix?(word, "o") && vowel?(word, -2) ->
+      suffix?(word, "o") && vowel?(word, -2) ->
         word <> "s"
 
-     suffix?(word, "o") ->
+      suffix?(word, "o") ->
         word <> "es"
 
       true ->
@@ -329,9 +328,9 @@ defmodule Text.Inflect.En.Singularize do
   def is_o_suffix(word, :classical = mode) do
     cond do
       category?(word, "-o", "-os", mode) ->
-       replace_suffix(word, "o", "i")
+        replace_suffix(word, "o", "i")
 
-     suffix?(word, "o") ->
+      suffix?(word, "o") ->
         word <> "es"
 
       true ->
@@ -457,29 +456,29 @@ defmodule Text.Inflect.En.Singularize do
 
   def is_third_person_singular(word) do
     cond do
-     suffix?(word, "ch") ->
-       replace_suffix(word, "ch", "ches")
+      suffix?(word, "ch") ->
+        replace_suffix(word, "ch", "ches")
 
-     suffix?(word, "sh") ->
-       replace_suffix(word, "sh", "shes")
+      suffix?(word, "sh") ->
+        replace_suffix(word, "sh", "shes")
 
-     suffix?(word, "ss") ->
-       word
+      suffix?(word, "ss") ->
+        word
 
-     suffix?(word, "s") ->
-       word <> "ses"
+      suffix?(word, "s") ->
+        word <> "ses"
 
-     suffix?(word, "x") ->
-       word <> "xes"
+      suffix?(word, "x") ->
+        word <> "xes"
 
-     suffix?(word, "zz") ->
-       replace_suffix(word, "zz", "zzes")
+      suffix?(word, "zz") ->
+        replace_suffix(word, "zz", "zzes")
 
-     suffix?(word, "y") ->
-       replace_suffix(word, "y", "ies")
+      suffix?(word, "y") ->
+        replace_suffix(word, "y", "ies")
 
-     suffix?(word, "o") ->
-       replace_suffix(word, "o", "oes")
+      suffix?(word, "o") ->
+        replace_suffix(word, "o", "oes")
 
       true ->
         nil
@@ -556,10 +555,10 @@ defmodule Text.Inflect.En.Singularize do
   #                 otherwise,              return "<owners>'s"
   def is_genetive(word) do
     cond do
-     suffix?(word, "'s") ->
+      suffix?(word, "'s") ->
         do_genetive(word, "'s")
 
-     suffix?(word, "'") ->
+      suffix?(word, "'") ->
         do_genetive(word, "'")
 
       true ->
@@ -611,7 +610,7 @@ defmodule Text.Inflect.En.Singularize do
   end
 
   def category?(word, "nationalities", _mode) do
-   suffix?(word, "ese") && starts_with_upper?(word)
+    suffix?(word, "ese") && starts_with_upper?(word)
   end
 
   @doc false
@@ -686,5 +685,4 @@ defmodule Text.Inflect.En.Singularize do
   def category?(word, "-", "-im", _mode) do
     word in any_im()
   end
-
 end

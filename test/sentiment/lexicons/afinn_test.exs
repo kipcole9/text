@@ -12,8 +12,28 @@ defmodule Text.Sentiment.Lexicons.AFINNTest do
 
     test "covers the new bulk-imported languages" do
       # Spot-check a sample across language families and scripts.
-      for tag <- [:de, :es, :it, :pt, :nl, :ru, :ja, :zh, :ko, :ar, :hi, :he,
-                  :uk, :vi, :th, :id, :sw, :hu, :cs, :ro] do
+      for tag <- [
+            :de,
+            :es,
+            :it,
+            :pt,
+            :nl,
+            :ru,
+            :ja,
+            :zh,
+            :ko,
+            :ar,
+            :hi,
+            :he,
+            :uk,
+            :vi,
+            :th,
+            :id,
+            :sw,
+            :hu,
+            :cs,
+            :ro
+          ] do
         # iw and jw are upstream legacy codes, not :he/:jv
         cond do
           tag == :he -> assert :iw in AFINN.available()
@@ -44,6 +64,7 @@ defmodule Text.Sentiment.Lexicons.AFINNTest do
         Enum.each(lexicon, fn {token, score} ->
           assert is_binary(token)
           assert is_integer(score)
+
           assert score in -5..5,
                  "out-of-range score #{score} for #{inspect(token)} in #{inspect(tag)}"
         end)
@@ -60,7 +81,8 @@ defmodule Text.Sentiment.Lexicons.AFINNTest do
       emoji = AFINN.lexicon(:emoji)
       # 😂 face with tears of joy, ❤ heavy black heart, 😍 smiling face with heart eyes
       for cp <- [0x1F602, 0x2764, 0x1F60D] do
-        assert emoji[<<cp::utf8>>] >= 1, "expected positive score for U+#{Integer.to_string(cp, 16)}"
+        assert emoji[<<cp::utf8>>] >= 1,
+               "expected positive score for U+#{Integer.to_string(cp, 16)}"
       end
     end
 

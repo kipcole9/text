@@ -101,8 +101,11 @@ defmodule Text.ReadabilityTest do
       # @paragraph has many words outside the 3000-word easy list.
       stats = Readability.statistics(@paragraph)
       assert stats.difficult_words / stats.words > 0.05
-      raw_part = 0.1579 * (stats.difficult_words / stats.words * 100) +
-                 0.0496 * (stats.words / stats.sentences)
+
+      raw_part =
+        0.1579 * (stats.difficult_words / stats.words * 100) +
+          0.0496 * (stats.words / stats.sentences)
+
       assert_in_delta Readability.dale_chall(@paragraph), raw_part + 3.6365, 0.001
     end
 
@@ -130,8 +133,17 @@ defmodule Text.ReadabilityTest do
       m = Readability.metrics(@short)
 
       assert Map.keys(m) |> Enum.sort() ==
-               [:ari, :coleman_liau, :dale_chall, :flesch, :flesch_kincaid,
-                :gunning_fog, :lix, :smog, :spache]
+               [
+                 :ari,
+                 :coleman_liau,
+                 :dale_chall,
+                 :flesch,
+                 :flesch_kincaid,
+                 :gunning_fog,
+                 :lix,
+                 :smog,
+                 :spache
+               ]
     end
 
     test "metrics/2 matches individual functions" do

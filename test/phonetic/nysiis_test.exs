@@ -62,7 +62,7 @@ defmodule Text.Phonetic.NYSIISTest do
 
     test "diacritics fold via Text.Clean.unaccent" do
       assert NYSIIS.encode("Müller") == NYSIIS.encode("Mueller") or
-             NYSIIS.encode("Müller") == NYSIIS.encode("Muller")
+               NYSIIS.encode("Müller") == NYSIIS.encode("Muller")
     end
   end
 

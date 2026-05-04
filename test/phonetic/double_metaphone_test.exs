@@ -21,25 +21,25 @@ defmodule Text.Phonetic.DoubleMetaphoneTest do
 
     test "silent initial clusters" do
       assert DoubleMetaphone.encode("knight") == {"NT", "NT"}
-      assert DoubleMetaphone.encode("night")  == {"NT", "NT"}
+      assert DoubleMetaphone.encode("night") == {"NT", "NT"}
       assert DoubleMetaphone.encode("wright") == {"RT", "RT"}
-      assert DoubleMetaphone.encode("right")  == {"RT", "RT"}
+      assert DoubleMetaphone.encode("right") == {"RT", "RT"}
       assert DoubleMetaphone.encode("psychic") == {"SXK", "SKK"}
-      assert DoubleMetaphone.encode("gnome")  == {"NM", "NM"}
+      assert DoubleMetaphone.encode("gnome") == {"NM", "NM"}
     end
   end
 
   describe "encode/2 — non-Anglo names" do
     test "German SCH-cluster names" do
-      assert DoubleMetaphone.encode("Schmidt")   == {"XMT", "SMT"}
+      assert DoubleMetaphone.encode("Schmidt") == {"XMT", "SMT"}
       assert DoubleMetaphone.encode("Schneider") == {"XNTR", "SNTR"}
-      assert DoubleMetaphone.encode("Schwartz")  == {"XRTS", "SRTS"}
+      assert DoubleMetaphone.encode("Schwartz") == {"XRTS", "SRTS"}
     end
 
     test "Greek-root SCH words → SK" do
-      assert DoubleMetaphone.encode("school")  == {"SKL", "SKL"}
+      assert DoubleMetaphone.encode("school") == {"SKL", "SKL"}
       assert DoubleMetaphone.encode("scholar") == {"SKLR", "SKLR"}
-      assert DoubleMetaphone.encode("schema")  == {"SKM", "SKM"}
+      assert DoubleMetaphone.encode("schema") == {"SKM", "SKM"}
     end
 
     test "Italian -CIA / -CCIA → X" do
@@ -58,15 +58,15 @@ defmodule Text.Phonetic.DoubleMetaphoneTest do
 
     test "Greek-root CH → K (Christopher, chemistry)" do
       assert DoubleMetaphone.encode("Christopher") == {"KRST", "KRST"}
-      assert DoubleMetaphone.encode("Chemistry")   == {"KMST", "KMST"}
-      assert DoubleMetaphone.encode("Chianti")     == {"KNT", "KNT"}
+      assert DoubleMetaphone.encode("Chemistry") == {"KMST", "KMST"}
+      assert DoubleMetaphone.encode("Chianti") == {"KNT", "KNT"}
     end
   end
 
   describe "encode/2 — diacritic and case folding" do
     test "diacritics fold via Text.Clean.unaccent" do
       assert DoubleMetaphone.encode("Müller") == DoubleMetaphone.encode("Muller")
-      assert DoubleMetaphone.encode("Café")   == DoubleMetaphone.encode("Cafe")
+      assert DoubleMetaphone.encode("Café") == DoubleMetaphone.encode("Cafe")
     end
 
     test "case-insensitive" do

@@ -227,15 +227,23 @@ defmodule Text.DistanceTest do
 
   describe "set-based metrics over n-grams" do
     test "identical strings → 0.0 for all set metrics" do
-      for fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
-                  &Distance.tanimoto/2, &Distance.cosine/2] do
+      for fun <- [
+            &Distance.jaccard/2,
+            &Distance.sorensen_dice/2,
+            &Distance.tanimoto/2,
+            &Distance.cosine/2
+          ] do
         assert fun.("kitten", "kitten") == 0.0
       end
     end
 
     test "completely disjoint n-gram sets → 1.0" do
-      for fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
-                  &Distance.tanimoto/2, &Distance.cosine/2] do
+      for fun <- [
+            &Distance.jaccard/2,
+            &Distance.sorensen_dice/2,
+            &Distance.tanimoto/2,
+            &Distance.cosine/2
+          ] do
         assert fun.("abcdef", "uvwxyz") == 1.0
       end
     end
@@ -267,8 +275,8 @@ defmodule Text.DistanceTest do
     test "is symmetric" do
       pairs = [{"night", "nacht"}, {"abc", "xyz"}, {"hello", "world"}]
 
-      for {a, b} <- pairs, fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2,
-                                    &Distance.cosine/2] do
+      for {a, b} <- pairs,
+          fun <- [&Distance.jaccard/2, &Distance.sorensen_dice/2, &Distance.cosine/2] do
         assert fun.(a, b) == fun.(b, a),
                "expected symmetry for #{inspect({a, b})}"
       end

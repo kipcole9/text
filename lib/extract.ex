@@ -461,9 +461,11 @@ defmodule Text.Extract do
   # Strings get HTML-escaped — same as text segments — to prevent a
   # well-intentioned `fn e -> "[#{e.url}]" end` from injecting markup.
   defp ensure_safe({:safe, iodata}), do: iodata
+
   defp ensure_safe(other) when is_binary(other) do
     {:safe, escaped} = Phoenix.HTML.html_escape(other)
     escaped
   end
+
   defp ensure_safe(iodata) when is_list(iodata), do: iodata
 end
