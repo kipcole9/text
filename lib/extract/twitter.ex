@@ -41,6 +41,17 @@ defmodule Text.Extract.Twitter do
 
   * `{:error, :twitter_quirk_rejected}` — the URL is rejected entirely
     (e.g. t.co slug exceeds 40 chars).
+
+  ### Examples
+
+      iex> [r] = Text.Extract.urls("see http://t.co/abcde123 today", twitter_quirks: true)
+      iex> r.url
+      "http://t.co/abcde123"
+
+      iex> Text.Extract.urls("http://t.co/abcdefghijklmnopqrstuvwxyz012345678901234",
+      ...>                   twitter_quirks: true)
+      []
+
   """
   @spec apply({:ok, map()}, String.t()) ::
           {:ok, map()} | {:error, :twitter_quirk_rejected}

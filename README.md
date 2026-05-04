@@ -14,6 +14,7 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 * *Named-entity recognition* ([`Text.NER`](https://hexdocs.pm/text/Text.NER.html)) — via Bumblebee, multilingual (10 high-resource languages).
 * *Readability* ([`Text.Readability`](https://hexdocs.pm/text/Text.Readability.html)) — Flesch, Flesch-Kincaid, Gunning-Fog, SMOG, ARI, Coleman-Liau, LIX, Dale-Chall, Spache.
 * *PII detection and redaction* ([`Text.PII`](https://hexdocs.pm/text/Text.PII.html)) — emails, phones, IBANs, Luhn-validated credit cards, SSNs, IPv4/IPv6, URLs.
+* *URL & email extraction* ([`Text.Extract`](https://hexdocs.pm/text/Text.Extract.html)) — twitter-text-quality extraction with full UTS #46 IDNA, IANA TLD validation, and UTR #39 single-script defence against homograph attacks. `urls/2`, `emails/2`, `all/2` for structured records; `split/2` and `autolink/2` (returns `Phoenix.HTML.safe()`) for rendering.
 
 ### Cleaning and normalization
 
@@ -55,7 +56,7 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 ```elixir
 def deps do
   [
-    {:text, "~> 0.5.0"}
+    {:text, "~> 0.6.0"}
   ]
 end
 ```

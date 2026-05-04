@@ -176,6 +176,15 @@ defmodule Text.Extract do
   Where a candidate matches both — e.g. `mailto:alice@example.com` —
   the email wins (it's the canonical interpretation).
 
+  ### Arguments
+
+  * `text` is a UTF-8 string.
+
+  ### Options
+
+  * Same options as `urls/2` and `emails/2` — `:require_scheme`,
+    `:schemes`, `:tld_mode`, `:eai`, `:strict_idn`, `:twitter_quirks`.
+
   ### Returns
 
   * A list of records each with a `:kind` field (`:url` or `:email`)

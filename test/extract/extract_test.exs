@@ -2,9 +2,12 @@ defmodule Text.ExtractTest do
   use ExUnit.Case, async: true
   doctest Text.Extract
   doctest Text.Extract.Boundary
+  doctest Text.Extract.Email
   doctest Text.Extract.Scanner
   doctest Text.Extract.Script
   doctest Text.Extract.Tld
+  doctest Text.Extract.Twitter
+  doctest Text.Extract.Url
 
   alias Text.Extract
 

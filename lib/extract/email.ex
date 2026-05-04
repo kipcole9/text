@@ -70,6 +70,16 @@ defmodule Text.Extract.Email do
   * `{:ok, record}` on success.
 
   * `{:error, reason}` on rejection.
+
+  ### Examples
+
+      iex> {:ok, r} = Text.Extract.Email.validate("alice@example.com", {0, 17})
+      iex> {r.local, r.host, r.span}
+      {"alice", "example.com", {0, 17}}
+
+      iex> Text.Extract.Email.validate("alice@example.fake", {0, 18})
+      {:error, :invalid_tld}
+
   """
   @spec validate(String.t(), {non_neg_integer(), non_neg_integer()}, keyword()) ::
           {:ok, email_record()} | {:error, reason()}

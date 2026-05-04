@@ -88,6 +88,16 @@ defmodule Text.Extract.Url do
 
   * `{:error, reason}` if the candidate fails validation. `record`
     fields are documented in the module docs.
+
+  ### Examples
+
+      iex> {:ok, r} = Text.Extract.Url.validate("http://example.com", {0, 18})
+      iex> {r.scheme, r.host, r.span}
+      {"http", "example.com", {0, 18}}
+
+      iex> Text.Extract.Url.validate("http://no-tld", {0, 13})
+      {:error, :invalid_tld}
+
   """
   @spec validate(String.t(), {non_neg_integer(), non_neg_integer()}, keyword()) ::
           {:ok, url_record()} | {:error, reason()}

@@ -90,11 +90,11 @@ defmodule Mix.Tasks.Text.DownloadTlds do
     if current == upstream do
       Mix.shell().info("No changes.")
     else
-      cur_set = current |> String.split("\n", trim: true) |> MapSet.new()
-      up_set = upstream |> String.split("\n", trim: true) |> MapSet.new()
+      cur_lines = current |> String.split("\n", trim: true)
+      up_lines = upstream |> String.split("\n", trim: true)
 
-      added = MapSet.difference(up_set, cur_set) |> Enum.sort()
-      removed = MapSet.difference(cur_set, up_set) |> Enum.sort()
+      added = (up_lines -- cur_lines) |> Enum.sort()
+      removed = (cur_lines -- up_lines) |> Enum.sort()
 
       Enum.each(removed, &Mix.shell().info("- " <> &1))
       Enum.each(added, &Mix.shell().info("+ " <> &1))

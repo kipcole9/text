@@ -1,7 +1,7 @@
 defmodule Text.MixProject do
   use Mix.Project
 
-  @version "0.5.0"
+  @version "0.6.0"
 
   def project do
     [
@@ -49,6 +49,7 @@ defmodule Text.MixProject do
         # via `mix text.download_lid176`) and `priv/scripts` (dev-only
         # fixture generators).
         "priv/emoji_sentiment",
+        "priv/extract",
         "priv/hyphenation",
         "priv/inflection",
         "priv/lemma",
