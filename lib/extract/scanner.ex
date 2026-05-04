@@ -61,26 +61,146 @@ defmodule Text.Extract.Scanner do
   # The `(?<!…)` negative lookbehind enforces the boundary rule above.
   # CJK / whitespace / start-of-string all pass; ASCII alnum and the
   # forbidden punctuation set fail.
-  @url_regex ~r/
-    (?<![A-Za-z0-9@$\#_\-.\/:?&=+%])
-    (?:
-      (?:[A-Za-z][A-Za-z0-9+.\-]*):\/\/[^\s]+
-    |
-      (?:[A-Za-z0-9_\-]+(?:\.[A-Za-z0-9_\-]+)+)
-      (?::\d+)?
-      (?:\/[^\s]*)?
-    )
-  /xu
+  # CJK boundary scripts — Han, Hiragana, Katakana, Hangul. Treated as
+  # *boundaries* in URLs: a Hiragana char in the middle of prose marks
+  # the end of a preceding URL, not a continuation of one. The single
+  # exception is the IDN TLD list (handled separately, below).
+  @cjk_scripts "\\p{Han}\\p{Hiragana}\\p{Katakana}\\p{Hangul}"
 
-  @email_regex ~r/
-    (?<![A-Za-z0-9@$\#_\-.\/:?&=+%])
-    (?:[A-Za-z0-9._%+\-]+)
-    @
-    (?:[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+)
-  /xu
+  # Body class for path / query / fragment characters: anything that's
+  # not a non-pchar boundary. Specifically excluded:
+  #
+  # * `\s` — Unicode-aware whitespace (under `u` flag).
+  #
+  # * CJK scripts — see above; twitter-text treats them as word breaks.
+  #
+  # * `\p{Cf}` (Format characters) — RTL / LTR / isolate marks (U+202A,
+  #   U+202C, U+2066, U+2069, …) and zero-width chars. These never
+  #   belong inside a URL even though they pass `\S`.
+  @url_body "[^\\s#{@cjk_scripts}\\p{Cf}]"
+
+  # Host label class — any Unicode letter / mark / digit / symbol, plus
+  # `_` and `-`. Used inside `://`-anchored URLs where the host is
+  # unambiguously delimited by `://` on the left and `/`, `?`, `#`, or
+  # whitespace on the right. `\p{S}` covers cases like `http://✪df.ws`
+  # where IDN-style symbols appear in the host (twitter-text accepts
+  # these even though strict UTS #46 would reject — the validator's
+  # IDNA call is permissive by default; users wanting STD3 strictness
+  # opt in via `:strict_idn`).
+  @host_label_any "[\\p{L}\\p{M}\\p{N}\\p{S}_\\-]+"
+
+  # Bare-host label class — same as `@host_label_any` but excludes the
+  # CJK boundary scripts. Used in *schemeless* host extraction where
+  # we have no `://` anchor to disambiguate "Hiragana inside a URL"
+  # from "Hiragana ending a URL". The IDN-TLD alternation (below)
+  # handles the case where Hiragana / Han / etc. is itself a TLD.
+  @host_label_safe "(?:(?![#{@cjk_scripts}])[\\p{L}\\p{M}\\p{N}_\\-])+"
+
+  # Bare-host TLD alternation — only the IDN Unicode TLDs (~151
+  # entries, ~3 KB). We need this in the regex for the bare-host
+  # pattern because the safe-label class excludes CJK / Hiragana /
+  # Katakana / Hangul, so a host like `twitter.みんな` would not match
+  # without an explicit IDN-TLD alternative as the last label. The
+  # ASCII TLD list lives in `Text.Extract.Tld` and is checked
+  # post-match by the URL validator's TLD walk.
+  @idn_tld_alts Text.Extract.Tld.idn_unicode()
+                |> Enum.sort_by(&(-byte_size(&1)))
+                |> Enum.map_join("|", &Regex.escape/1)
+
+  # Negative lookbehind: block continuations of an ongoing URL so a
+  # rejected `$http://twitter.com` doesn't re-match its host as a fresh
+  # bare URL. Includes URL-syntax bytes (`/`, `:`, `?`, `&`, `=`, `+`,
+  # `%`) to defend against this case.
+  @lookbehind "(?<![A-Za-z0-9@$\\#_\\-.\\/:?&=+%])"
+
+  # Tail after the host: an optional path / query / fragment. All three
+  # introducers (`/`, `?`, `#`) are valid — `http://foo.com?#bar` is a
+  # complete URL with an empty path, empty query, and a `bar` fragment.
+  @url_tail "(?:[\\/?\\#]" <> @url_body <> "*)?"
+
+  # Trailing-label boundary: the host's last label must not be followed
+  # by another label-continuation byte, otherwise we're matching in the
+  # middle of a longer label.
+  @label_end "(?![A-Za-z0-9_\\-])"
+
+  @url_regex Regex.compile!(
+               @lookbehind <>
+                 "(?:" <>
+                 # 1. scheme://(label.)+label — relaxed host class
+                 #    (any IDN). TLD validation happens in the
+                 #    `Text.Extract.Url` validator, which walks labels
+                 #    right-to-left and truncates the host at the
+                 #    rightmost valid TLD.
+                 "(?:[A-Za-z][A-Za-z0-9+.\\-]*):\\/\\/" <>
+                 "(?:" <>
+                 @host_label_any <>
+                 "\\.)+" <>
+                 @host_label_any <>
+                 @label_end <>
+                 "(?::\\d+)?" <>
+                 @url_tail <>
+                 "|" <>
+                 # 2. (safe_label.)+ (safe_label | idn_unicode_tld) —
+                 #    restricted host class for schemeless URLs. Last
+                 #    label may be a known IDN-Unicode TLD (since the
+                 #    safe label class excludes CJK and would otherwise
+                 #    miss `twitter.みんな`-style hosts). Validator
+                 #    handles ASCII TLD validation post-match.
+                 "(?:" <>
+                 @host_label_safe <>
+                 "\\.)+" <>
+                 "(?:" <>
+                 @host_label_safe <>
+                 "|" <>
+                 @idn_tld_alts <>
+                 ")" <>
+                 @label_end <>
+                 "(?::\\d+)?" <>
+                 @url_tail <>
+                 ")",
+               "iu"
+             )
+
+  # Email local part: ASCII atext + dot, plus any non-ASCII char (RFC
+  # 6531 / EAI). Whether non-ASCII actually validates is the email
+  # validator's job (gated by the `:eai` option) — the scanner is
+  # permissive so EAI candidates can be considered.
+  @email_local "(?:[A-Za-z0-9._%+\\-]|[^\\x00-\\x7F])+"
+
+  @email_regex Regex.compile!(
+                 @lookbehind <>
+                   @email_local <>
+                   "@" <>
+                   "(?:" <>
+                   @host_label_safe <>
+                   "(?:\\." <>
+                   @host_label_safe <>
+                   ")+)",
+                 "u"
+               )
+
+  @typedoc "Element of the scanner's interleaved output."
+  @type element ::
+          {:text, String.t()}
+          | {:url, String.t(), span()}
+          | {:email, String.t(), span()}
+
+  @typedoc "Byte offsets `{start, length}` into the source text."
+  @type span :: {non_neg_integer(), non_neg_integer()}
 
   @doc """
-  Returns candidate spans for `text`.
+  Walks `text` once and returns an interleaved list of plain-text
+  fragments and URL / email candidates, preserving document order.
+
+  Concatenating every element's content reproduces `text` byte-for-byte:
+
+      text == scan(text) |> Enum.map_join(&content/1)
+
+  This shape is the building block for everything else in
+  `Text.Extract`. `Text.Extract.urls/2` filters for `:url` and
+  validates; `Text.Extract.split/2` validates each candidate and
+  promotes failures back to `:text`; `Text.Extract.autolink/2`
+  renders the result.
 
   ### Arguments
 
@@ -88,59 +208,89 @@ defmodule Text.Extract.Scanner do
 
   ### Returns
 
-  * A list of `{kind, {start_byte, length_bytes}}` tuples in document
-    order. `kind` is `:email` or `:url`. Email candidates are emitted
-    before overlapping URL candidates so downstream callers can give
-    email precedence.
+  * A list of elements:
+
+    * `{:text, fragment}` — a span of `text` containing no candidate.
+
+    * `{:url, candidate, {start, length}}` — a URL-shaped candidate.
+      `candidate` is the substring; `start`/`length` are byte offsets
+      back into `text`.
+
+    * `{:email, candidate, {start, length}}` — an email-shaped
+      candidate.
+
+  Where a URL match is wholly contained inside an email match, the
+  email wins and the URL is dropped (which is the canonical
+  interpretation: `mailto:` aside, an email is never a URL).
 
   ### Examples
 
       iex> Text.Extract.Scanner.scan("see http://example.com today")
-      [{:url, {4, 18}}]
+      [{:text, "see "}, {:url, "http://example.com", {4, 18}}, {:text, " today"}]
 
       iex> Text.Extract.Scanner.scan("alice@example.com")
-      [{:email, {0, 17}}]
+      [{:email, "alice@example.com", {0, 17}}]
 
       iex> Text.Extract.Scanner.scan("hello world")
-      []
+      [{:text, "hello world"}]
 
       iex> Text.Extract.Scanner.scan("$invalid http://example.com")
-      [{:url, {10, 17}}]
+      [{:text, "$invalid "}, {:url, "http://example.com", {9, 18}}]
 
   """
-  @spec scan(String.t()) :: [{:url | :email, {non_neg_integer(), pos_integer()}}]
+  @spec scan(String.t()) :: [element()]
   def scan(text) when is_binary(text) do
-    emails = scan_with(text, @email_regex, :email)
-    email_spans = MapSet.new(emails, fn {_kind, span} -> span end)
+    emails = candidates(text, @email_regex, :email)
+    email_set = MapSet.new(emails, fn {_kind, span} -> span end)
 
     urls =
       text
-      |> scan_with(@url_regex, :url)
+      |> candidates(@url_regex, :url)
       |> Enum.reject(fn {_kind, {start, len}} ->
-        # Drop URL candidates that are wholly contained inside an email
-        # candidate — the email is the canonical interpretation.
-        Enum.any?(email_spans, fn {es, el} ->
+        Enum.any?(email_set, fn {es, el} ->
           start >= es and start + len <= es + el
         end)
       end)
 
-    Enum.sort_by(emails ++ urls, fn {_kind, {start, _}} -> start end)
+    matches = Enum.sort_by(emails ++ urls, fn {_kind, {start, _}} -> start end)
+    interleave(text, matches)
   end
 
-  defp scan_with(text, regex, kind) do
+  # ---- candidate finding ----------------------------------------------
+
+  defp candidates(text, regex, kind) do
     Regex.scan(regex, text, return: :index, capture: :first)
     |> Enum.flat_map(fn
       [{start, len}] ->
-        # Defensive double-check: the negative lookbehind is the primary
-        # boundary guard, but `Regex.scan` doesn't enforce string-start
-        # for the *very first* match if the engine treats `^` flags
-        # oddly. We additionally verify against the byte preceding the
-        # match.
         if valid_preceding_byte?(text, start), do: [{kind, {start, len}}], else: []
 
       _ ->
         []
     end)
+  end
+
+  # ---- interleaving ----------------------------------------------------
+
+  # Walks `matches` (sorted by start offset, non-overlapping after the
+  # email-wins reduction) and emits the original text gaps between
+  # them as `{:text, fragment}`. The result reconstructs `text` exactly
+  # when concatenated.
+  defp interleave(text, matches) do
+    {acc, cursor} =
+      Enum.reduce(matches, {[], 0}, fn {kind, {start, len}}, {acc, pos} ->
+        gap = start - pos
+        acc = if gap > 0, do: [{:text, binary_part(text, pos, gap)} | acc], else: acc
+        candidate = binary_part(text, start, len)
+        {[{kind, candidate, {start, len}} | acc], start + len}
+      end)
+
+    tail_size = byte_size(text) - cursor
+    acc = if tail_size > 0, do: [{:text, binary_part(text, cursor, tail_size)} | acc], else: acc
+
+    case Enum.reverse(acc) do
+      [] -> if text == "", do: [], else: [{:text, text}]
+      list -> list
+    end
   end
 
   defp valid_preceding_byte?(_text, 0), do: true

@@ -42,6 +42,36 @@ defmodule Text.Extract.Tld do
                 |> String.split(~r/\r?\n/, trim: true)
                 |> Enum.find(&String.starts_with?(&1, "#"))
 
+  # Pre-computed Unicode forms of every IDN TLD in the IANA list. Used
+  # by `Text.Extract.Scanner` to extend its bare-host regex with
+  # explicit alternatives for non-ASCII TLDs (e.g. `みんな`, `中国`,
+  # `рф`, `ไทย`) — without them, the scanner cannot tell where a
+  # CJK-followed-by-prose URL like `twitter.みんなです` should end.
+  #
+  # Built at compile time from the `xn--` ACE entries via
+  # `Unicode.IDNA.to_unicode/2`. Failures are skipped silently — they'd
+  # represent IANA list rows that fail current UTS #46 validation,
+  # which is rare but possible across Unicode versions.
+  @idn_tlds @tlds
+            |> Enum.filter(&String.starts_with?(&1, "xn--"))
+            |> Enum.flat_map(fn ace ->
+              case Unicode.IDNA.to_unicode(ace) do
+                {:ok, unicode} -> [unicode]
+                _ -> []
+              end
+            end)
+            |> Enum.uniq()
+
+  # ASCII TLDs sorted longest-first. Useful for callers that build
+  # regex alternations: `co.uk` vs `uk` — the regex must try `co` and
+  # `uk` separately at appropriate positions, but for a single-label
+  # alternation the order matters when one TLD is a prefix of another
+  # (`com` vs `comm` — `comm` isn't actually a TLD here, but the same
+  # principle applies to e.g. `co` vs `com`).
+  @ascii_tlds_sorted @tlds
+                     |> Enum.reject(&String.starts_with?(&1, "xn--"))
+                     |> Enum.sort_by(&{-String.length(&1), &1})
+
   @doc """
   Returns the IANA TLD list as a `MapSet` of lowercased ASCII labels.
 
@@ -107,6 +137,46 @@ defmodule Text.Extract.Tld do
   def tld?(label, :iana) when is_binary(label) do
     MapSet.member?(@tlds, String.downcase(label))
   end
+
+  @doc """
+  Returns the ASCII TLDs sorted longest-first.
+
+  Useful for building regex alternations where longer TLDs must be
+  tried first.
+
+  ### Examples
+
+      iex> ascii = Text.Extract.Tld.ascii_sorted()
+      iex> "com" in ascii
+      true
+
+      iex> "xn--p1ai" in Text.Extract.Tld.ascii_sorted()
+      false
+
+  """
+  @spec ascii_sorted() :: [String.t()]
+  def ascii_sorted, do: @ascii_tlds_sorted
+
+  @doc """
+  Returns the IDN TLDs in their Unicode form.
+
+  Built at compile time from the `xn--` ACE entries by passing each
+  through `Unicode.IDNA.to_unicode/1`. Used by `Text.Extract.Scanner`
+  to extend its bare-host regex with explicit alternatives for IDN
+  TLDs.
+
+  ### Examples
+
+      iex> tlds = Text.Extract.Tld.idn_unicode()
+      iex> length(tlds) > 100
+      true
+
+      iex> "みんな" in Text.Extract.Tld.idn_unicode()
+      true
+
+  """
+  @spec idn_unicode() :: [String.t()]
+  def idn_unicode, do: @idn_tlds
 
   @doc """
   Returns the count of TLDs in the bundled IANA list.

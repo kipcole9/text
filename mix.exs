@@ -105,6 +105,7 @@ defmodule Text.MixProject do
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},
+      {:phoenix_html, "~> 4.0"},
       {:ex_doc, "~> 0.21 or ~> 0.30", only: [:dev, :release], optional: true},
       {:benchee, "~> 1.0", only: :dev, runtime: false},
       {:yaml_elixir, "~> 2.9", only: [:test], runtime: false},

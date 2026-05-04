@@ -36,7 +36,7 @@ defmodule Text.Extract.ConformanceTest do
 
           extracted =
             text
-            |> Text.Extract.urls()
+            |> Text.Extract.urls(twitter_quirks: true)
             |> Enum.map(& &1.url)
 
           assert extracted == normalise_expected(expected),

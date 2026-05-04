@@ -27,3 +27,4 @@ corpus/analysis/~$Accuracy Analysis.xlsx
 # Dev artifacts
 /plans
 /tmp
+.claude/

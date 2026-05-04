@@ -22,17 +22,17 @@ defmodule Text.Extract.Boundary do
 
   ### Examples
 
-      iex> Text.Extract.Boundary.shrink("see http://example.com.", {4, 19})
-      {4, 18}
+      iex> Text.Extract.Boundary.shrink("http://example.com.")
+      "http://example.com"
 
-      iex> Text.Extract.Boundary.shrink("(http://example.com)", {1, 19})
-      {1, 18}
+      iex> Text.Extract.Boundary.shrink("http://example.com)")
+      "http://example.com"
 
-      iex> Text.Extract.Boundary.shrink("see http://en.wikipedia.org/wiki/URI_(disambiguation)", {4, 49})
-      {4, 49}
+      iex> Text.Extract.Boundary.shrink("http://en.wikipedia.org/wiki/URI_(disambiguation)")
+      "http://en.wikipedia.org/wiki/URI_(disambiguation)"
 
-      iex> Text.Extract.Boundary.shrink("a http://x.com/path......", {2, 23})
-      {2, 15}
+      iex> Text.Extract.Boundary.shrink("http://x.com/path......")
+      "http://x.com/path"
 
   """
 
@@ -41,45 +41,44 @@ defmodule Text.Extract.Boundary do
   @bracket_closers Enum.map(@brackets, &elem(&1, 0))
 
   @doc """
-  Trims trailing punctuation and unbalanced closers from `span`.
+  Trims trailing punctuation and unbalanced closers from a candidate
+  string.
 
   ### Arguments
 
-  * `text` is the original UTF-8 string.
-
-  * `span` is a `{start_byte, length_bytes}` tuple referencing `text`.
+  * `candidate` is the candidate substring (e.g. as emitted by
+    `Text.Extract.Scanner.scan/1`).
 
   ### Returns
 
-  * A possibly-shortened `{start, length}` span. `length` is reduced;
-    `start` never changes.
+  * The candidate with trailing junk removed. Never grows; only the
+    end of the string is trimmed.
   """
-  @spec shrink(String.t(), {non_neg_integer(), non_neg_integer()}) ::
-          {non_neg_integer(), non_neg_integer()}
-  def shrink(text, {start, len}) when is_binary(text) do
-    do_shrink(text, start, len)
+  @spec shrink(String.t()) :: String.t()
+  def shrink(candidate) when is_binary(candidate) do
+    do_shrink(candidate, byte_size(candidate))
   end
 
-  defp do_shrink(_text, start, 0), do: {start, 0}
+  defp do_shrink(_candidate, 0), do: ""
 
-  defp do_shrink(text, start, len) do
-    last_byte = :binary.at(text, start + len - 1)
+  defp do_shrink(candidate, len) do
+    last_byte = :binary.at(candidate, len - 1)
 
     cond do
       last_byte in @trailing_punct ->
-        do_shrink(text, start, len - 1)
+        do_shrink(candidate, len - 1)
 
       last_byte in @bracket_closers ->
         opener = bracket_opener(last_byte)
 
-        if balanced?(text, start, len - 1, opener, last_byte) do
-          {start, len}
+        if balanced?(candidate, len - 1, opener, last_byte) do
+          binary_part(candidate, 0, len)
         else
-          do_shrink(text, start, len - 1)
+          do_shrink(candidate, len - 1)
         end
 
       true ->
-        {start, len}
+        binary_part(candidate, 0, len)
     end
   end
 
@@ -88,12 +87,12 @@ defmodule Text.Extract.Boundary do
     opener
   end
 
-  # Counts balanced openers/closers inside the inner span (excluding the
-  # final closer at index `start + len`). Returns `true` if there's at
+  # Counts balanced openers/closers inside the inner span (excluding
+  # the final closer at index `len - 1`). Returns `true` if there's at
   # least one unmatched opener — meaning the trailing closer balances
   # something and should be kept.
-  defp balanced?(text, start, len, opener, closer) do
-    inner = :binary.part(text, start, len)
+  defp balanced?(candidate, len, opener, closer) do
+    inner = binary_part(candidate, 0, len)
     do_balance(inner, opener, closer, 0)
   end
 

@@ -20,7 +20,7 @@ defmodule Text.Extract.Url do
   Returns a `%{}` record on success or `{:error, reason}` on rejection.
   """
 
-  alias Text.Extract.{Boundary, Tld}
+  alias Text.Extract.{Boundary, Script, Tld, Twitter}
 
   @typedoc "Parsed URL record."
   @type url_record :: %{
@@ -45,6 +45,8 @@ defmodule Text.Extract.Url do
           | :invalid_tld
           | :idna_failed
           | :unsupported_scheme
+          | :mixed_script
+          | :twitter_quirk_rejected
 
   @default_schemes ~w(http https ftp ftps)
 
@@ -53,9 +55,12 @@ defmodule Text.Extract.Url do
 
   ### Arguments
 
-  * `text` is the original UTF-8 source string.
+  * `candidate` is the candidate substring as emitted by
+    `Text.Extract.Scanner.scan/1`.
 
-  * `span` is a `{start_byte, length_bytes}` tuple from the scanner.
+  * `span` is the `{start_byte, length_bytes}` tuple positioning
+    `candidate` within the original source text — preserved through
+    to the returned record's `:span` field.
 
   ### Options
 
@@ -67,9 +72,15 @@ defmodule Text.Extract.Url do
 
   * `:tld_mode` — `:iana` (default) or `:any`. See `Text.Extract.Tld`.
 
-  * `:strict_idn` — when `true`, the IDNA call uses STD3 ASCII rules
-    (rejects `_` in labels). Default `false` (matches Twitter, allows
-    `_` in subdomain labels).
+  * `:strict_idn` — when `true`, applies two extra defences against
+    homograph attacks: STD3 ASCII rules in the IDNA call (rejects `_`
+    in labels), and the UTR #39 §5.1 single-script restriction
+    (rejects mixed-script hosts like `аpple.com` where the `а` is
+    Cyrillic). Default `false` (matches Twitter behaviour).
+
+  * `:twitter_quirks` — when `true`, applies the Twitter-text-specific
+    rules in `Text.Extract.Twitter` (t.co slug max 40 chars, English
+    possessive `'s` stripping). Default `false`.
 
   ### Returns
 
@@ -80,14 +91,14 @@ defmodule Text.Extract.Url do
   """
   @spec validate(String.t(), {non_neg_integer(), non_neg_integer()}, keyword()) ::
           {:ok, url_record()} | {:error, reason()}
-  def validate(text, {start, len}, options \\ []) when is_binary(text) do
-    {start, len} = Boundary.shrink(text, {start, len})
+  def validate(candidate, {start, _len} = _span, options \\ [])
+      when is_binary(candidate) do
+    raw = Boundary.shrink(candidate)
 
-    if len == 0 do
+    if raw == "" do
       {:error, :empty}
     else
-      raw = :binary.part(text, start, len)
-      do_validate(raw, {start, len}, options)
+      do_validate(raw, {start, byte_size(raw)}, options)
     end
   end
 
@@ -96,14 +107,196 @@ defmodule Text.Extract.Url do
     schemes = Keyword.get(options, :schemes, @default_schemes)
     tld_mode = Keyword.get(options, :tld_mode, :iana)
     strict = Keyword.get(options, :strict_idn, false)
+    quirks? = Keyword.get(options, :twitter_quirks, false)
 
     with {:ok, parsed} <- parse(raw),
          :ok <- check_scheme(parsed, schemes, require_scheme),
+         {:ok, parsed, raw, span} <- truncate_to_tld(parsed, raw, span, tld_mode),
          {:ok, ascii_host} <- idna_host(parsed.host, strict),
          :ok <- check_host_labels(parsed.host),
-         :ok <- check_tld(ascii_host, tld_mode) do
-      {:ok, build_record(raw, span, parsed, ascii_host)}
+         :ok <- check_script(parsed.host, strict),
+         {:ok, record} <- {:ok, build_record(raw, span, parsed, ascii_host)},
+         {:ok, record} <- maybe_twitter_quirks(record, raw, quirks?) do
+      {:ok, record}
     end
+  end
+
+  defp check_script(_host, false), do: :ok
+
+  defp check_script(host, true) do
+    if Script.single_script?(host), do: :ok, else: {:error, :mixed_script}
+  end
+
+  defp maybe_twitter_quirks(record, _raw, false), do: {:ok, record}
+  defp maybe_twitter_quirks(record, raw, true), do: Twitter.apply({:ok, record}, raw)
+
+  # ---- TLD walk and truncation ----------------------------------------
+
+  # The scanner regex is permissive about the host's last label — it
+  # just requires *some* label-shaped token. This function does the
+  # TLD validation that used to live inside the regex (as a 7.5KB
+  # alternation) and additionally truncates the host when a real TLD
+  # appears earlier in the label sequence.
+  #
+  # For `example.com[Hiragana].comtest`: the regex matches all 3 host
+  # labels (and the path). We walk labels right-to-left, asking
+  # `Tld.tld?` for each. `comtest` fails, `comだよね` fails, `com`
+  # succeeds — host truncates to `example.com` and the trailing
+  # `.comtest/path` falls outside the URL.
+  defp truncate_to_tld(parsed, raw, span, tld_mode) do
+    labels = String.split(parsed.host, ".")
+    label_count = length(labels)
+    label_pos = find_tld_position(labels, tld_mode)
+    mid_pos = find_mid_label_tld(parsed.host, tld_mode)
+
+    cond do
+      label_pos == label_count and mid_pos == nil ->
+        # Full host already ends in a TLD; no truncation.
+        {:ok, parsed, raw, span}
+
+      label_pos == nil and mid_pos == nil ->
+        # No TLD anywhere in the host.
+        {:error, :invalid_tld}
+
+      true ->
+        # Pick the truncation that retains the most of the host. A
+        # mid-label TLD always sits *inside* a label, so its byte
+        # position is between two label-end positions; comparing on
+        # byte offset gives the most-permissive choice.
+        label_byte_pos = label_byte_offset(parsed.host, label_pos)
+        truncated_host = pick_truncated_host(parsed.host, label_byte_pos, mid_pos)
+
+        truncated_parsed = %{
+          parsed
+          | host: truncated_host,
+            port: nil,
+            path: nil,
+            query: nil,
+            fragment: nil
+        }
+
+        truncated_raw = rebuild_raw(truncated_parsed)
+        {start, _len} = span
+        {:ok, truncated_parsed, truncated_raw, {start, byte_size(truncated_raw)}}
+    end
+  end
+
+  defp label_byte_offset(_host, nil), do: -1
+
+  defp label_byte_offset(host, label_count) do
+    host
+    |> String.split(".")
+    |> Enum.take(label_count)
+    |> Enum.map(&byte_size/1)
+    |> Enum.sum()
+    |> Kernel.+(label_count - 1)
+  end
+
+  defp pick_truncated_host(host, label_pos, nil),
+    do: binary_part(host, 0, label_pos)
+
+  defp pick_truncated_host(host, label_pos, mid_pos) do
+    pos = max(label_pos, mid_pos)
+    binary_part(host, 0, pos)
+  end
+
+  # Walks labels right-to-left, returning the count of labels in the
+  # longest valid prefix (i.e. the prefix whose last label is a known
+  # TLD). Returns `nil` if no label is a TLD or the host has fewer
+  # than 2 labels.
+  defp find_tld_position(labels, _tld_mode) when length(labels) < 2, do: nil
+
+  defp find_tld_position(labels, tld_mode) do
+    count = length(labels)
+
+    Enum.find_value(count..2//-1, fn n ->
+      label = Enum.at(labels, n - 1)
+      if known_tld?(label, tld_mode), do: n
+    end)
+  end
+
+  # Mid-label TLD detection for mixed-script labels in scheme URLs.
+  #
+  # The OLD scanner regex baked in a 7.5 KB alternation of every IANA
+  # TLD as the required last label. That alternation, combined with a
+  # `(?![A-Za-z0-9_-])` lookahead, meant the regex engine would
+  # naturally truncate `example.comだよね.comtest` to `example.com`
+  # via backtracking — `comtest` and `comだよね` aren't TLDs but `com`
+  # ending right before the Hiragana `だ` is.
+  #
+  # With the alternation moved out of the regex, full-label truncation
+  # alone misses this case. This helper walks the original host
+  # string looking for ASCII letter runs that end at a script-boundary
+  # (right before a non-ASCII codepoint) and form a known TLD. The
+  # latest such position wins.
+  #
+  # Cheap and safe to skip when the host has no non-ASCII characters
+  # — full-label truncation handles the all-ASCII case completely.
+  defp find_mid_label_tld(host, tld_mode) do
+    if all_ascii?(host) do
+      nil
+    else
+      ~r/[A-Za-z0-9_\-]+/u
+      |> Regex.scan(host, return: :index)
+      |> Enum.flat_map(fn [{start, len}] ->
+        # Must be preceded by `.` (so it's a fresh "label-ish" run, not
+        # part of an earlier sub-label) and followed by a non-ASCII
+        # character (otherwise it's just a full ASCII label, already
+        # handled by `find_tld_position`).
+        prev = if start == 0, do: nil, else: :binary.at(host, start - 1)
+        next = if start + len < byte_size(host), do: :binary.at(host, start + len), else: nil
+
+        if prev == ?. and next != nil and next >= 0x80 do
+          ascii_run = binary_part(host, start, len)
+          if known_tld?(ascii_run, tld_mode), do: [start + len], else: []
+        else
+          []
+        end
+      end)
+      |> case do
+        [] -> nil
+        positions -> Enum.max(positions)
+      end
+    end
+  end
+
+  defp all_ascii?(<<>>), do: true
+  defp all_ascii?(<<byte, rest::binary>>) when byte < 0x80, do: all_ascii?(rest)
+  defp all_ascii?(_), do: false
+
+  # A label is a "known TLD" if either its raw form (case-folded) or
+  # its IDNA-encoded ASCII form is in the bundled set under `mode`.
+  # The IDNA conversion is best-effort — failures fall back to the raw
+  # label, which is fine because the IANA list is in lowercase ASCII /
+  # `xn--` Punycode and a non-IDNA-convertible label can't match it.
+  defp known_tld?(label, mode) do
+    cond do
+      Tld.tld?(label, mode) ->
+        true
+
+      true ->
+        case Unicode.IDNA.to_ascii(label) do
+          {:ok, ascii} -> Tld.tld?(ascii, mode)
+          _ -> false
+        end
+    end
+  end
+
+  defp rebuild_raw(parsed) do
+    scheme_part = if parsed.scheme, do: parsed.scheme <> "://", else: ""
+    userinfo_part = if parsed.userinfo, do: parsed.userinfo <> "@", else: ""
+    port_part = if parsed.port, do: ":" <> Integer.to_string(parsed.port), else: ""
+    path_part = parsed.path || ""
+    query_part = if parsed.query, do: "?" <> parsed.query, else: ""
+    fragment_part = if parsed.fragment, do: "#" <> parsed.fragment, else: ""
+
+    scheme_part <>
+      userinfo_part <>
+      parsed.host <>
+      port_part <>
+      path_part <>
+      query_part <>
+      fragment_part
   end
 
   # ---- parsing ---------------------------------------------------------
@@ -257,17 +450,6 @@ defmodule Text.Extract.Url do
   end
 
   defp contains_underscore?(label), do: String.contains?(label, "_")
-
-  # ---- TLD check -------------------------------------------------------
-
-  defp check_tld(ascii_host, mode) do
-    tld =
-      ascii_host
-      |> String.split(".")
-      |> List.last()
-
-    if Tld.tld?(tld, mode), do: :ok, else: {:error, :invalid_tld}
-  end
 
   # ---- record builder --------------------------------------------------
 
