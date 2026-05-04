@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook — runs `mix format` on staged Elixir files and
+# re-stages them, so the formatted version is what lands in the
+# commit.
+#
+# Enable per-repo with:
+#
+#     git config core.hooksPath .githooks
+#
+# (run from the repo root). This is committed to source control so
+# every contributor gets the same hook on clone.
+
+set -e
+
+# Find Elixir-shaped files in the staged set. `--diff-filter=ACMR`
+# excludes deletions and unmerged paths.
+staged=$(git diff --cached --name-only --diff-filter=ACMR \
+  | grep -E '\.(ex|exs|heex)$' || true)
+
+if [ -z "$staged" ]; then
+  exit 0
+fi
+
+# Format. `mix format` is idempotent so running it on already-formatted
+# files is a no-op. We pass the file list to avoid reformatting the
+# whole project on every commit (which would be slow on large repos).
+echo "$staged" | xargs mix format
+
+# Re-stage — `mix format` may have rewritten files in place, so the
+# formatted contents need to overwrite what was previously staged.
+echo "$staged" | xargs git add
+
+exit 0

@@ -6,6 +6,13 @@ defmodule Text.Emoji do
   picks up the full emoji repertoire including newer additions
   without needing a per-release data update.
 
+  Implementation note: the `Extended_Pictographic` regex is built at
+  compile time from `Unicode.Emoji.emoji/0` rather than via PCRE2's
+  `\\p{Extended_Pictographic}` syntax. Older PCRE2 versions bundled
+  with OTP 26/27 do not always recognise the full property name, so
+  expanding to an explicit codepoint character class keeps the
+  library portable across OTP releases.
+
   Short-name conversion (`demojize/2`, `emojize/2`) uses a small
   bundled lookup of the most common emoji. It is not a complete
   CLDR annotation set; rare emoji round-trip as themselves. Users
@@ -262,9 +269,27 @@ defmodule Text.Emoji do
       []
 
   """
+  # Build the Extended_Pictographic character class at compile time
+  # from `Unicode.Emoji.emoji(:extended_pictographic)` ranges. This
+  # avoids depending on PCRE2's `\p{Extended_Pictographic}` property
+  # name, which varies in support across OTP-bundled PCRE2 versions
+  # (notably failing on some OTP 26/27 builds).
+  @extended_pictographic_class Unicode.Emoji.emoji()
+                               |> Map.get(:extended_pictographic, [])
+                               |> Enum.map_join(fn
+                                 {a, a} ->
+                                   "\\x{#{Integer.to_string(a, 16)}}"
+
+                                 {a, b} ->
+                                   "\\x{#{Integer.to_string(a, 16)}}-\\x{#{Integer.to_string(b, 16)}}"
+                               end)
+                               |> then(&("[" <> &1 <> "]"))
+
+  @extended_pictographic_regex Regex.compile!(@extended_pictographic_class, "u")
+
   @spec extract(String.t()) :: [String.t()]
   def extract(text) when is_binary(text) do
-    Regex.scan(~r/\p{Extended_Pictographic}/u, text)
+    Regex.scan(@extended_pictographic_regex, text)
     |> Enum.map(&hd/1)
   end
 
@@ -294,7 +319,7 @@ defmodule Text.Emoji do
   """
   @spec contains?(String.t()) :: boolean()
   def contains?(text) when is_binary(text) do
-    Regex.match?(~r/\p{Extended_Pictographic}/u, text)
+    Regex.match?(@extended_pictographic_regex, text)
   end
 
   @doc """
@@ -308,7 +333,7 @@ defmodule Text.Emoji do
   """
   @spec strip(String.t()) :: String.t()
   def strip(text) when is_binary(text) do
-    Regex.replace(~r/\p{Extended_Pictographic}/u, text, "")
+    Regex.replace(@extended_pictographic_regex, text, "")
   end
 
   @doc """
@@ -343,7 +368,7 @@ defmodule Text.Emoji do
     delimiter = Keyword.get(options, :delimiter, ":")
     lookup = short_names()
 
-    Regex.replace(~r/\p{Extended_Pictographic}/u, text, fn match ->
+    Regex.replace(@extended_pictographic_regex, text, fn match ->
       case Map.get(lookup, match) do
         nil -> match
         name -> delimiter <> name <> delimiter
