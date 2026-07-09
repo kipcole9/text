@@ -49,12 +49,15 @@ jobs:
           - elixir: "1.19-otp-28"
             otp: "28"
 
-          # Elixir 1.20 — supports OTP 27-28. The 1.20/28 entry doubles
-          # as the lint job (format check + dialyzer).
-          - elixir: "1.20.0-rc.4-otp-27"
+          # Elixir 1.20 — supports OTP 27-29. The 1.20.2/29 entry doubles
+          # as the lint job (format check + dialyzer) and matches the
+          # canonical local development combination.
+          - elixir: "1.20.2-otp-27"
             otp: "27"
-          - elixir: "1.20.0-rc.4-otp-28"
+          - elixir: "1.20.2-otp-28"
             otp: "28"
+          - elixir: "1.20.2-otp-29"
+            otp: "29"
             lint: true
 
           # Single "no optional deps" entry on the latest combo.
@@ -62,8 +65,8 @@ jobs:
           # `Code.ensure_loaded?(Localize.LanguageTag)` fallbacks
           # compile and behave correctly when the optional packages
           # aren't present in the host application.
-          - elixir: "1.20.0-rc.4-otp-28"
-            otp: "28"
+          - elixir: "1.20.2-otp-29"
+            otp: "29"
             no_optional_deps: true
 
     steps:
