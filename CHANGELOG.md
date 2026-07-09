@@ -2,11 +2,17 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.2] — 2026-07-09
+
+### Bug Fixes
+
+* `Text.PII` — move the detector regexes out of a module attribute into a private function so the module compiles on Erlang/OTP 28, which no longer allows compiled regexes to be persisted in module attributes. Thanks to @ju1m for the PR. Closes #4.
+
 ## [0.6.1] — 2026-05-04
 
 ### Bug Fixes
 
-* Fix CI and and `:json_polyfill` config on OTP 26.
+* Fix CI and `:json_polyfill` config on OTP 26.
 
 ## [0.6.0] — 2026-05-04
 

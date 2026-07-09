@@ -56,7 +56,7 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 ```elixir
 def deps do
   [
-    {:text, "~> 0.6.0"}
+    {:text, "~> 0.6.2"}
   ]
 end
 ```
@@ -73,7 +73,7 @@ For production environments using the optional Bumblebee-backed modules, `mix te
 
 ```elixir
 # Sentiment — multilingual, no model download by default.
-Text.Sentiment.analyze("J'adore ce livre.", language: :fr).label
+Text.Sentiment.analyze("Ce livre est excellent.", language: :fr).label
 #=> :positive
 
 # Language identification — load the fastText model once.
@@ -129,4 +129,4 @@ Every public function that takes a `:language` (or `:locale`) accepts an atom (`
 
 ## License
 
-Apache 2.0 — see [LICENSE.md](https://github.com/kipcole9/text/blob/v0.3.0/LICENSE.md).
+Apache 2.0 — see [LICENSE.md](https://github.com/kipcole9/text/blob/main/LICENSE.md).

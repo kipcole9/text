@@ -47,15 +47,18 @@ The `:compound` score is the value to map to UI elements (a polarity bar, a colo
 `Text.Sentiment.Backends.Lexicon` scores tokens against a bundled per-language lexicon, applies VADER-style adjustments for negation (`"not good"` flips polarity) and intensifiers/diminishers (`"very good"` boosts, `"slightly good"` dampens), and normalises the sum to the compound `[-1, 1]` range.
 
 * **No model download.** No optional deps. Always available.
-* **Multilingual via lexicon swap.** Bundled AFINN lexicons cover English, Danish, Finnish, French, Polish, Swedish, Turkish, plus a language-agnostic emoticon lexicon.
+* **Multilingual via lexicon swap.** Bundled AFINN lexicons cover ~100 languages — a hand-curated core (English, Danish, Finnish, French, Polish, Swedish, Turkish) plus machine-translated lexicons for the rest — alongside language-agnostic `:emoticon` and `:emoji` lexicons.
 * **Deterministic.** Same input always produces the same output.
 * **Fast.** ~10–100 µs per item on typical hardware.
 
-The bundled language tags:
+The bundled language tags — 104 in all, including `:emoji` and `:emoticon`:
 
 ```elixir
-Text.Sentiment.Lexicons.AFINN.available()
-#=> [:en, :da, :fi, :fr, :pl, :sv, :tr, :emoticon]
+length(Text.Sentiment.Lexicons.AFINN.available())
+#=> 104
+
+Enum.take(Text.Sentiment.Lexicons.AFINN.available(), 10)
+#=> [:af, :am, :ar, :az, :be, :bg, :bn, :bs, :ca, :ceb]
 ```
 
 ### Bumblebee backend *(optional, neural)*
@@ -109,9 +112,9 @@ Text.Sentiment.analyze("Ten film jest okropny.", language: :pl).label
 If the requested language isn't bundled (for the lexicon backend), the result falls back to `:en`. Override with `:fallback_language`:
 
 ```elixir
-Text.Sentiment.analyze("¡Qué increíble!",
-  language: :es,
-  fallback_language: :en  # Spanish isn't bundled — fall back to English
+Text.Sentiment.analyze("Iporãiterei",
+  language: :gn,
+  fallback_language: :en  # Guaraní isn't bundled — fall back to English
 )
 ```
 
@@ -145,7 +148,7 @@ The lexicon backend applies VADER-inspired adjustments based on tokens immediate
 
 * **Negators** flip the sign: `"not good"` → `-good`. Default English negators: `not`, `no`, `never`, `n't`-style contractions.
 * **Intensifiers** multiply: `"very good"` × 1.293. Default boosters: `very`, `extremely`, `absolutely`, …
-* **Diminishers** dampen: `"slightly good"` × 0.293. Default dampers: `slightly`, `barely`, `hardly`, …
+* **Diminishers** dampen: `"slightly good"` × 0.707. Default dampers: `slightly`, `barely`, `hardly`, …
 
 Override via options:
 

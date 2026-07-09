@@ -85,7 +85,7 @@ defmodule Text.WordCloud do
 
   * `:stem` — boolean, default `false`. When `true`, candidate terms
     are bucketed by their Snowball stem so morphological variants
-    (`demolish`, `demolished`, `demolishing`, `demolition`) collapse
+    (`demolish`, `demolished`, `demolishing`) collapse
     into a single entry. The most-frequent surface form represents
     the bucket; counts and raw scores are summed across members.
     Requires the optional `:text_stemmer` dependency. The stemmer

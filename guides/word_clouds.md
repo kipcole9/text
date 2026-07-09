@@ -176,7 +176,7 @@ Default `true`. When on, terms are lowercased before counting and rendering, so 
 
 ### `:stem`
 
-Default `false`. When `true`, candidate terms are bucketed by their Snowball stem, so morphological variants collapse into a single entry. Without it, the HHGTTG corpus's `demolish` / `demolished` / `demolishing` cluster shows up as four small entries:
+Default `false`. When `true`, candidate terms are bucketed by their Snowball stem, so morphological variants collapse into a single entry. Without it, the HHGTTG corpus's `demolish` / `demolished` / `demolishing` cluster shows up as three small entries:
 
 ![Stemming off](word_clouds_assets/stemming_off.svg)
 
@@ -188,7 +188,7 @@ Text.WordCloud.terms(text, scoring: :frequency, language: :en, stem: true)
 
 ![Stemming on](word_clouds_assets/stemming_on.svg)
 
-`demolished` jumps up the rankings because the underlying concept now has 7 evidence points instead of being split four ways. Other recurring topics like `model` / `models` and `learn` / `learning` consolidate similarly.
+`demolished` jumps up the rankings because the underlying concept now has 7 evidence points instead of being split three ways. Other recurring topics like `model` / `models` and `learn` / `learning` consolidate similarly.
 
 **When to use it.** Stemming is most valuable for long-form prose in inflected languages (English, German, Romance, Slavic, Finnish, Turkish, Arabic — Snowball covers ~30). It's mostly off-by-default because:
 
