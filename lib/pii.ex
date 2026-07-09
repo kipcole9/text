@@ -29,7 +29,7 @@ defmodule Text.PII do
 
   """
 
-  @patterns [
+  defp patterns do [
     email: ~r/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/,
     url: ~r{\bhttps?://[^\s<>"']+},
     ssn: ~r/\b\d{3}-\d{2}-\d{4}\b/,
@@ -43,14 +43,13 @@ defmodule Text.PII do
     # Always re-validated by Luhn before being reported.
     credit_card: ~r/\b(?:\d[ \-]?){12,18}\d\b/
   ]
-
-  @types Keyword.keys(@patterns)
+  end
 
   @doc """
   Returns the list of detector type atoms supported by this module.
   """
   @spec types() :: [atom()]
-  def types, do: @types
+  def types, do: Keyword.keys(patterns())
 
   @doc """
   Detects PII matches in the text.
@@ -85,9 +84,9 @@ defmodule Text.PII do
           %{type: atom(), value: String.t(), start: non_neg_integer(), length: pos_integer()}
         ]
   def detect(text, options \\ []) when is_binary(text) do
-    requested = Keyword.get(options, :types, @types)
+    requested = Keyword.get(options, :types, types())
 
-    @patterns
+    patterns()
     |> Enum.filter(fn {type, _} -> type in requested end)
     |> Enum.flat_map(fn {type, regex} ->
       Regex.scan(regex, text, return: :index)
