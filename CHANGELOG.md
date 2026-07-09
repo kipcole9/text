@@ -8,6 +8,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 * `Text.PII` — move the detector regexes out of a module attribute into a private function so the module compiles on Erlang/OTP 28, which no longer allows compiled regexes to be persisted in module attributes. Thanks to @ju1m for the PR. Closes #4.
 
+* `Text.Sentiment` lexicon backend now scores the content word inside Romance-language elisions (`j'adore` → `adore`, `l'amour` → `amour`, `dell'arte`), which UAX #29 keeps as a single token. English contractions (`won't`, `it's`) are left intact; disable with `elision: false`.
+
 ## [0.6.1] — 2026-05-04
 
 ### Bug Fixes

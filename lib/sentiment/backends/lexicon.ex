@@ -44,7 +44,8 @@ defmodule Text.Sentiment.Backends.Lexicon do
     :intensifier_boost,
     :diminisher_factor,
     :positive_threshold,
-    :negative_threshold
+    :negative_threshold,
+    :elision
   ]
 
   defp resolve_lexicon(options) do

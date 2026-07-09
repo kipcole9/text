@@ -47,6 +47,15 @@ defmodule Text.Sentiment.Lexicon do
   negation, sarcasm, or domain-specific reversals. For higher-quality
   multilingual sentiment, see the planned Bumblebee-backed adapter.
 
+  ### Elision
+
+  UAX #29 word segmentation keeps a Romance-language elision clitic and
+  its following word as a single token (`j'adore`, `l'amour`, `dell'arte`).
+  Because the lexicon keys on the bare content word, the engine strips a
+  leading elision clitic before lookup so the content word still scores.
+  English contractions (`won't`, `it's`) are left intact, so negator
+  matching is unaffected. Disable with `elision: false`.
+
   """
 
   alias Text.Segment
@@ -118,6 +127,12 @@ defmodule Text.Sentiment.Lexicon do
   * `:positive_threshold`, `:negative_threshold` — compound-score
     cutoffs for the `:label` field. Defaults to `0.05` and `-0.05`.
 
+  * `:elision` — `true` (default) scores the content word inside a
+    Romance-language elided token (`j'adore` → `adore`, `l'amour` →
+    `amour`) when the segment before the apostrophe is a known elision
+    clitic. English contractions (`won't`, `it's`) are never split.
+    Set `false` to disable.
+
   ### Returns
 
   A `t:result/0` struct with:
@@ -145,6 +160,11 @@ defmodule Text.Sentiment.Lexicon do
       iex> result.label
       :positive
 
+      iex> lexicon = %{"adore" => 3}
+      iex> result = Text.Sentiment.Lexicon.score("J'adore ce livre", lexicon)
+      iex> {result.matched, result.label}
+      {1, :positive}
+
   """
   @spec score(String.t(), lexicon(), keyword()) :: result()
   def score(text, lexicon, options \\ []) when is_binary(text) and is_map(lexicon) do
@@ -162,6 +182,7 @@ defmodule Text.Sentiment.Lexicon do
 
     pos_threshold = Keyword.get(options, :positive_threshold, 0.05)
     neg_threshold = Keyword.get(options, :negative_threshold, -0.05)
+    elision? = Keyword.get(options, :elision, true)
 
     tokens =
       text
@@ -172,7 +193,7 @@ defmodule Text.Sentiment.Lexicon do
       tokens
       |> Enum.with_index()
       |> Enum.reduce({0.0, 0}, fn {token, idx}, {sum, matched} ->
-        case Map.get(lexicon, token) do
+        case lookup(lexicon, token, elision?) do
           nil ->
             {sum, matched}
 
@@ -202,6 +223,50 @@ defmodule Text.Sentiment.Lexicon do
       tokens: length(tokens),
       matched: matched
     }
+  end
+
+  # ---- internal: lexicon lookup ------------------------------------------
+
+  # Romance-language elision clitics that attach to the following word with
+  # an apostrophe (`j'adore`, `l'amour`, `qu'il`, `dell'arte`). UAX #29 word
+  # segmentation keeps the clitic and the content word as a single token, so
+  # a direct lexicon lookup of `j'adore` misses even though `adore` is a
+  # scored term. When the segment *before* the apostrophe is one of these
+  # clitics, we score the content word *after* it instead.
+  #
+  # The whitelist is deliberately restricted to clitics so English
+  # contractions are never split: `won't`, `it's`, `can't` keep their
+  # apostrophe token intact (their leading segment — `won`, `it`, `can` —
+  # is not a clitic), preserving negator matching and avoiding false hits.
+  @elision_clitics MapSet.new(~w[
+                       c d j l m n s t un qu gl
+                       dell all nell sull dall coll
+                       quest quell sant bell grand tutt
+                       jusqu lorsqu puisqu quoiqu presqu quelqu
+                     ])
+
+  @apostrophes ["'", "’"]
+
+  defp lookup(lexicon, token, elision?) do
+    case Map.get(lexicon, token) do
+      nil -> if elision?, do: elided_score(lexicon, token), else: nil
+      score -> score
+    end
+  end
+
+  # Split off a single leading elision clitic and score the remainder.
+  defp elided_score(lexicon, token) do
+    case String.split(token, @apostrophes, parts: 2) do
+      [clitic, rest] when rest != "" ->
+        if MapSet.member?(@elision_clitics, String.downcase(clitic)) do
+          Map.get(lexicon, rest)
+        else
+          nil
+        end
+
+      _ ->
+        nil
+    end
   end
 
   # ---- internal: scoring adjustments -------------------------------------

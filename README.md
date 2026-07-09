@@ -73,7 +73,7 @@ For production environments using the optional Bumblebee-backed modules, `mix te
 
 ```elixir
 # Sentiment — multilingual, no model download by default.
-Text.Sentiment.analyze("Ce livre est excellent.", language: :fr).label
+Text.Sentiment.analyze("J'adore ce livre.", language: :fr).label
 #=> :positive
 
 # Language identification — load the fastText model once.
