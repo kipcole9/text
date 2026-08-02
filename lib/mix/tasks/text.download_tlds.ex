@@ -52,7 +52,7 @@ defmodule Mix.Tasks.Text.DownloadTlds do
         write!(target_path, upstream)
         Mix.shell().info("Wrote #{@target} (#{lines(upstream)} lines).")
 
-      File.read!(target_path) == upstream and not options[:force] ->
+      File.read!(target_path) == upstream and !options[:force] ->
         Mix.shell().info("Already up-to-date.")
 
       true ->

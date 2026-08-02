@@ -29,10 +29,10 @@ defmodule Text.Extract do
 
      * TLD lookup against `Text.Extract.Tld`'s bundled IANA list.
 
-  3. **Boundary cleanup** — `Text.Extract.Boundary` shrinks the span
-     to drop trailing punctuation and unbalanced brackets without
-     losing legitimate inner punctuation (Wikipedia-style URLs with
-     parentheses are preserved).
+  3. **Termination** — `Text.Extract.Link` decides where the span ends,
+     per UTS #58 §3.5.1. Trailing punctuation and unbalanced brackets
+     are dropped without losing legitimate inner punctuation
+     (Wikipedia-style URLs with parentheses are preserved).
 
   Each result is a map with the original Unicode form, the all-ASCII
   Punycode form, byte offsets into the source, and the parsed RFC 3986
@@ -108,7 +108,7 @@ defmodule Text.Extract do
   @spec urls(String.t(), keyword()) :: [Url.url_record()]
   def urls(text, options \\ []) when is_binary(text) do
     text
-    |> Scanner.scan()
+    |> Scanner.scan(options)
     |> Enum.flat_map(fn
       {:url, candidate, span} ->
         case Url.validate(candidate, span, options) do
@@ -156,7 +156,7 @@ defmodule Text.Extract do
   @spec emails(String.t(), keyword()) :: [Email.email_record()]
   def emails(text, options \\ []) when is_binary(text) do
     text
-    |> Scanner.scan()
+    |> Scanner.scan(options)
     |> Enum.flat_map(fn
       {:email, candidate, span} ->
         case Email.validate(candidate, span, options) do
@@ -203,7 +203,7 @@ defmodule Text.Extract do
   @spec all(String.t(), keyword()) :: [map()]
   def all(text, options \\ []) when is_binary(text) do
     text
-    |> Scanner.scan()
+    |> Scanner.scan(options)
     |> Enum.flat_map(fn
       {:url, candidate, span} ->
         case Url.validate(candidate, span, options) do
@@ -270,7 +270,7 @@ defmodule Text.Extract do
   @spec split(String.t(), keyword()) :: [String.t() | map()]
   def split(text, options \\ []) when is_binary(text) do
     text
-    |> Scanner.scan()
+    |> Scanner.scan(options)
     |> Enum.map(fn
       {:text, fragment} ->
         fragment

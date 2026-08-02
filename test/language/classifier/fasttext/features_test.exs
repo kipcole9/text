@@ -109,10 +109,12 @@ defmodule Text.Language.Classifier.Fasttext.FeaturesTest do
     setup do
       cond do
         not File.exists?(@model_path) ->
-          {:skip, "skipping; download lid.176.bin via the download_model task"}
+          raise "lid.176.bin is missing. Run `mix test --include requires_lid_176`, which " <>
+                  "downloads it, or `mix text.download_lid176`."
 
         not File.exists?(@fixture_path) ->
-          {:skip, "skipping; generate via `python3 priv/scripts/generate_features_fixtures.py`"}
+          raise "golden_features.json is missing. Regenerate it with " <>
+                  "`python3 priv/scripts/generate_features_fixtures.py`."
 
         true ->
           fixture = @fixture_path |> File.read!() |> :json.decode()

@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.0] — [Unreleased]
+
+### Breaking changes
+
+* Link detection and termination now follow [UTS #58](https://www.unicode.org/reports/tr58/) instead of the twitter-text rules. Pass `twitter_quirks: true` to `urls/2`, `emails/2`, `all/2` or `split/2` for the previous behaviour, which is still covered by the twitter-text conformance suite. Where the two disagree the UTS #58 answer wins, most visibly for brackets: `example.com/a[(b])` now ends at `b` because `]` does not match the innermost `(`, where previously each bracket type was counted independently. `Text.Extract.Boundary` is removed, superseded by `Text.Extract.Link`.
+
+### Enhancements
+
+* Adds `Text.Extract.Link`, implementing UTS #58 §3.5.1 termination against the full Unicode repertoire — 65 bracket pairs and 129 ranges of soft terminators, against the 4 pairs and 7 characters handled before.
+
+* Adds `Text.Extract.Escape`, implementing UTS #58 §4.1 minimal escaping, which rewrites a URL into its most readable form without changing where link detection ends it. `minimal/1` accepts either a serialised URL or a keyword list of already-parsed parts, the latter for when a syntax character is data rather than structure.
+
+* Adds `mix text.download_uts58` to vendor the UTS #58 conformance suites into `test/fixtures/uts58/`, with `--release`, `--into`, `--diff` and `--dry-run`. Both suites run as part of the test suite and both pass in full — 344 of 344 detection cases and 55 of 55 formatting cases.
+
+* URL detection now accepts hosts and paths that are wholly non-ASCII, all four UTS #46 label separators (so `普遍适用测试。我爱你` is a two-label host), hosts carrying an explicit root label (`foo.example.com./path`), and `mailto:` addresses. Script-internal punctuation such as the Tibetan tsheg is accepted in host labels, since UTS #46 processing validates the host afterwards.
+
+### Bug fixes
+
+* `mix text.download_tlds`, `text.download_lemma_data` and `text.download_lid176` no longer crash when run without `--force`. `not options[:force]` raised an `ArgumentError` on the `nil` the option parser supplies when a boolean switch is absent, which made the up-to-date path unreachable.
+
+* `Text.Slug.slugify/2` expectations updated for `unicode_transform` 1.1.0, which now emits a separator between Pinyin syllables as ICU does, so `北京` slugifies to `bei-jing`.
+
+
 ## [0.6.2] — 2026-07-09
 
 ### Bug Fixes

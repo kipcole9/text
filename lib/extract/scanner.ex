@@ -6,7 +6,7 @@ defmodule Text.Extract.Scanner do
   *could* be a URL or email — full structural validation, IDNA mapping,
   TLD lookup and boundary cleanup happen later in
   `Text.Extract.Url`, `Text.Extract.Email`, and
-  `Text.Extract.Boundary`.
+  `Text.Extract.Link`.
 
   ### Boundary rules
 
@@ -67,17 +67,25 @@ defmodule Text.Extract.Scanner do
   # exception is the IDN TLD list (handled separately, below).
   @cjk_scripts "\\p{Han}\\p{Hiragana}\\p{Katakana}\\p{Hangul}"
 
-  # Body class for path / query / fragment characters: anything that's
-  # not a non-pchar boundary. Specifically excluded:
+  # Body class for path / query / fragment characters.
   #
-  # * `\s` — Unicode-aware whitespace (under `u` flag).
+  # Deliberately permissive: `Text.Extract.Link` applies the UTS #58 termination algorithm to the
+  # captured span afterwards and `Text.Extract.Url` recomputes the span from what survives, so the
+  # scanner only has to capture *at least* the true link. Over-capturing is corrected; capturing too
+  # little cannot be.
   #
-  # * CJK scripts — see above; twitter-text treats them as word breaks.
+  # That is why CJK is not excluded here even though twitter-text treats it as a word break. UTS #58
+  # gives Han, Hiragana, Katakana and Hangul `Link_Term=Include`, so they belong inside a link, and
+  # `https://ja.wikipedia.org/wiki/フィンセント` is one link rather than a truncated one. Format
+  # characters are likewise `Include` — the ZWNJ inside `ویکی‌پدیا` is part of the path.
   #
-  # * `\p{Cf}` (Format characters) — RTL / LTR / isolate marks (U+202A,
-  #   U+202C, U+2066, U+2069, …) and zero-width chars. These never
-  #   belong inside a URL even though they pass `\S`.
-  @url_body "[^\\s#{@cjk_scripts}\\p{Cf}]"
+  # Only whitespace is excluded, which `Link_Term` classifies as `Hard` in every case.
+  @url_body "\\S"
+
+  # The twitter-text body class, kept for `twitter_quirks: true`. It stops at CJK and at format
+  # characters, which is where twitter-text and UTS #58 genuinely disagree: twitter-text treats a
+  # Han character following a bare host as ending the URL, UTS #58 treats it as part of the path.
+  @url_body_twitter "[^\\s#{@cjk_scripts}\\p{Cf}]"
 
   # Host label class — any Unicode letter / mark / digit / symbol, plus
   # `_` and `-`. Used inside `://`-anchored URLs where the host is
@@ -96,6 +104,24 @@ defmodule Text.Extract.Scanner do
   # handles the case where Hiragana / Han / etc. is itself a TLD.
   @host_label_safe "(?:(?![#{@cjk_scripts}])[\\p{L}\\p{M}\\p{N}_\\-])+"
 
+  # Under UTS #58 a bare host may be wholly non-ASCII — `다국어도메인이용환경테스트.한국` is a host,
+  # not prose. Excluding CJK here would lose those entirely, and the guard against matching ordinary
+  # prose is not the character class but the TLD check in `Text.Extract.Url`, which rejects anything
+  # whose rightmost label is not a real TLD.
+  #
+  # Nor is the class limited to letters, marks and digits. Several scripts use a character of
+  # another category inside a word — Tibetan writes `ཡོངས་ཁྱབ` with U+0F0B TSHEG, a `Po` — and IDNA
+  # accepts them. Since `Text.Extract.Url` runs full UTS #46 processing on whatever is captured,
+  # the class is ASCII letters, digits, `_` and `-`, plus any non-ASCII character that is not
+  # whitespace, a label separator, or a control or format character. Restricting the ASCII half
+  # matters: allowing ASCII punctuation would let `(example.com/…` start its host at the bracket.
+  @host_label_unicode "(?:[A-Za-z0-9_\\-]|" <>
+                        "[^\\x00-\\x7F\\s\\x{3002}\\x{FF0E}\\x{FF61}\\p{Cc}\\p{Cf}])+"
+
+  # UTS #46 §4.5 recognises four label separators, not just `.`. `普遍适用测试。我爱你` is a
+  # two-label host written with U+3002 IDEOGRAPHIC FULL STOP.
+  @label_separator "[.\\x{3002}\\x{FF0E}\\x{FF61}]"
+
   # Bare-host TLD alternation — only the IDN Unicode TLDs (~151
   # entries, ~3 KB). We need this in the regex for the bare-host
   # pattern because the safe-label class excludes CJK / Hiragana /
@@ -113,53 +139,62 @@ defmodule Text.Extract.Scanner do
   # `%`) to defend against this case.
   @lookbehind "(?<![A-Za-z0-9@$\\#_\\-.\\/:?&=+%])"
 
-  # Tail after the host: an optional path / query / fragment. All three
-  # introducers (`/`, `?`, `#`) are valid — `http://foo.com?#bar` is a
-  # complete URL with an empty path, empty query, and a `bar` fragment.
-  @url_tail "(?:[\\/?\\#]" <> @url_body <> "*)?"
-
   # Trailing-label boundary: the host's last label must not be followed
   # by another label-continuation byte, otherwise we're matching in the
   # middle of a longer label.
   @label_end "(?![A-Za-z0-9_\\-])"
 
+  # Both regexes are built from the same shape; only the body class differs. Bound to a compile-time
+  # closure rather than a private function, since a module cannot call its own functions while being
+  # compiled. Both are compiled at build time so neither costs anything at scan time.
+  url_pattern = fn body, safe_label, separator ->
+    # Tail after the host: an optional path / query / fragment. All three introducers (`/`, `?`,
+    # `#`) are valid — `http://foo.com?#bar` is a complete URL with an empty path, empty query and
+    # a `bar` fragment.
+    tail = "(?:[\\/?\\#]" <> body <> "*)?"
+
+    # An explicit root label: `foo.example.com./path` is a fully qualified host followed by a
+    # path, not a host followed by prose. Without this the match would stop before the dot and
+    # the path would be lost.
+    @lookbehind <>
+      "(?:" <>
+      "(?:[A-Za-z][A-Za-z0-9+.\\-]*):\\/\\/" <>
+      "(?:" <>
+      @host_label_any <>
+      "\\.)+" <>
+      @host_label_any <>
+      @label_end <>
+      separator <>
+      "?" <>
+      "(?::\\d+)?" <>
+      tail <>
+      "|" <>
+      "(?:" <>
+      safe_label <>
+      separator <>
+      ")+" <>
+      "(?:" <>
+      safe_label <>
+      "|" <>
+      @idn_tld_alts <>
+      ")" <>
+      @label_end <>
+      separator <>
+      "?" <>
+      "(?::\\d+)?" <>
+      tail <>
+      ")"
+  end
+
   @url_regex Regex.compile!(
-               # 1. scheme://(label.)+label — relaxed host class
-               #    (any IDN). TLD validation happens in the
-               #    `Text.Extract.Url` validator, which walks labels
-               #    right-to-left and truncates the host at the
-               #    rightmost valid TLD.
-               # 2. (safe_label.)+ (safe_label | idn_unicode_tld) —
-               #    restricted host class for schemeless URLs. Last
-               #    label may be a known IDN-Unicode TLD (since the
-               #    safe label class excludes CJK and would otherwise
-               #    miss `twitter.みんな`-style hosts). Validator
-               #    handles ASCII TLD validation post-match.
-               @lookbehind <>
-                 "(?:" <>
-                 "(?:[A-Za-z][A-Za-z0-9+.\\-]*):\\/\\/" <>
-                 "(?:" <>
-                 @host_label_any <>
-                 "\\.)+" <>
-                 @host_label_any <>
-                 @label_end <>
-                 "(?::\\d+)?" <>
-                 @url_tail <>
-                 "|" <>
-                 "(?:" <>
-                 @host_label_safe <>
-                 "\\.)+" <>
-                 "(?:" <>
-                 @host_label_safe <>
-                 "|" <>
-                 @idn_tld_alts <>
-                 ")" <>
-                 @label_end <>
-                 "(?::\\d+)?" <>
-                 @url_tail <>
-                 ")",
+               url_pattern.(@url_body, @host_label_unicode, @label_separator),
                "iu"
              )
+
+  @url_regex_twitter Regex.compile!(
+                       url_pattern.(@url_body_twitter, @host_label_safe, "\\."),
+                       "iu"
+                     )
 
   # Email local part: ASCII atext + dot, plus any non-ASCII char (RFC
   # 6531 / EAI). Whether non-ASCII actually validates is the email
@@ -167,8 +202,12 @@ defmodule Text.Extract.Scanner do
   # permissive so EAI candidates can be considered.
   @email_local "(?:[A-Za-z0-9._%+\\-]|[^\\x00-\\x7F])+"
 
+  # `mailto:` is matched here rather than as a URL scheme, since what follows is an email address
+  # rather than a host. UTS #58 expects `mailto:john.smith@example.com/foo/bar` to yield only the
+  # address — a mailto URL has no path — which falls out of not giving this alternative a tail.
   @email_regex Regex.compile!(
                  @lookbehind <>
+                   "(?:mailto:)?" <>
                    @email_local <>
                    "@" <>
                    "(?:" <>
@@ -176,7 +215,7 @@ defmodule Text.Extract.Scanner do
                    "(?:\\." <>
                    @host_label_safe <>
                    ")+)",
-                 "u"
+                 "iu"
                )
 
   @typedoc "Element of the scanner's interleaved output."
@@ -239,13 +278,13 @@ defmodule Text.Extract.Scanner do
 
   """
   @spec scan(String.t()) :: [element()]
-  def scan(text) when is_binary(text) do
+  def scan(text, options \\ []) when is_binary(text) and is_list(options) do
     emails = candidates(text, @email_regex, :email)
     email_set = MapSet.new(emails, fn {_kind, span} -> span end)
 
     urls =
       text
-      |> candidates(@url_regex, :url)
+      |> candidates(url_regex(options), :url)
       |> Enum.reject(fn {_kind, {start, len}} ->
         Enum.any?(email_set, fn {es, el} ->
           start >= es and start + len <= es + el
@@ -254,6 +293,11 @@ defmodule Text.Extract.Scanner do
 
     matches = Enum.sort_by(emails ++ urls, fn {_kind, {start, _}} -> start end)
     interleave(text, matches)
+  end
+
+  # `twitter_quirks: true` selects the legacy body class, where CJK and format characters end a URL.
+  defp url_regex(options) do
+    if Keyword.get(options, :twitter_quirks, false), do: @url_regex_twitter, else: @url_regex
   end
 
   # ---- candidate finding ----------------------------------------------

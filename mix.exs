@@ -102,7 +102,7 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 0.10"},
-      {:unicode, "~> 1.22"},
+      {:unicode, github: "elixir-unicode/unicode", branch: "unicode-18", override: true},
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},

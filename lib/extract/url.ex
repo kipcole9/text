@@ -20,7 +20,7 @@ defmodule Text.Extract.Url do
   Returns a `%{}` record on success or `{:error, reason}` on rejection.
   """
 
-  alias Text.Extract.{Boundary, Script, Tld, Twitter}
+  alias Text.Extract.{Link, Script, Tld, Twitter}
 
   @typedoc "Parsed URL record."
   @type url_record :: %{
@@ -103,7 +103,7 @@ defmodule Text.Extract.Url do
           {:ok, url_record()} | {:error, reason()}
   def validate(candidate, {start, _len} = _span, options \\ [])
       when is_binary(candidate) do
-    raw = Boundary.shrink(candidate)
+    raw = Link.shrink(candidate)
 
     if raw == "" do
       {:error, :empty}
@@ -153,11 +153,32 @@ defmodule Text.Extract.Url do
   # `Tld.tld?` for each. `comtest` fails, `comだよね` fails, `com`
   # succeeds — host truncates to `example.com` and the trailing
   # `.comtest/path` falls outside the URL.
+  # UTS #46 §4.5 recognises four label separators, not just `.`, so `普遍适用测试。我爱你` is a
+  # two-label host. IDNA maps them all to `.`, but the checks below run on the original host and so
+  # have to split on any of them.
+  @label_separators [".", "\u3002", "\uFF0E", "\uFF61"]
+  @label_separator_regex ~r/[.\x{3002}\x{FF0E}\x{FF61}]/u
+
+  defp split_labels(host), do: String.split(host, @label_separators)
+
+  # A fully qualified domain name may carry an explicit root label — `foo.example.com.` names the
+  # same host as `foo.example.com`. Splitting leaves a trailing empty label, which both the label
+  # rules and IDNA reject as malformed, so it is dropped before either sees the host. The original
+  # spelling is untouched in the reported URL, since only the parsed host is normalised.
+  defp strip_root_label(host) do
+    if String.length(host) > 1 and String.ends_with?(host, @label_separators) do
+      String.slice(host, 0..-2//1)
+    else
+      host
+    end
+  end
+
   defp truncate_to_tld(parsed, raw, span, tld_mode) do
-    labels = String.split(parsed.host, ".")
+    host = strip_root_label(parsed.host)
+    labels = split_labels(host)
     label_count = length(labels)
     label_pos = find_tld_position(labels, tld_mode)
-    mid_pos = find_mid_label_tld(parsed.host, tld_mode)
+    mid_pos = find_mid_label_tld(host, tld_mode)
 
     cond do
       label_pos == label_count and mid_pos == nil ->
@@ -173,8 +194,8 @@ defmodule Text.Extract.Url do
         # mid-label TLD always sits *inside* a label, so its byte
         # position is between two label-end positions; comparing on
         # byte offset gives the most-permissive choice.
-        label_byte_pos = label_byte_offset(parsed.host, label_pos)
-        truncated_host = pick_truncated_host(parsed.host, label_byte_pos, mid_pos)
+        label_byte_pos = label_byte_offset(host, label_pos)
+        truncated_host = pick_truncated_host(host, label_byte_pos, mid_pos)
 
         truncated_parsed = %{
           parsed
@@ -192,14 +213,18 @@ defmodule Text.Extract.Url do
   end
 
   defp label_byte_offset(_host, nil), do: -1
+  defp label_byte_offset(_host, 0), do: 0
 
+  # Splitting with the separators kept gives `[label, sep, label, sep, …]`, so the first
+  # `2 * count - 1` elements are exactly the labels wanted plus the separators between them. Summing
+  # their sizes is correct whatever the separators are; the previous `+ label_count - 1` assumed
+  # every separator was one byte, which `。` is not.
   defp label_byte_offset(host, label_count) do
-    host
-    |> String.split(".")
-    |> Enum.take(label_count)
+    @label_separator_regex
+    |> Regex.split(host, include_captures: true)
+    |> Enum.take(2 * label_count - 1)
     |> Enum.map(&byte_size/1)
     |> Enum.sum()
-    |> Kernel.+(label_count - 1)
   end
 
   defp pick_truncated_host(host, label_pos, nil),
@@ -405,7 +430,7 @@ defmodule Text.Extract.Url do
       use_std3_ascii_rules: strict
     ]
 
-    case Unicode.IDNA.to_ascii(host, options) do
+    case Unicode.IDNA.to_ascii(strip_root_label(host), options) do
       {:ok, ascii} -> {:ok, String.downcase(ascii)}
       {:error, _reason} -> {:error, :idna_failed}
     end
@@ -418,7 +443,7 @@ defmodule Text.Extract.Url do
   # or trailing dashes/underscores) and looser in others (allows `_`
   # in subdomain labels).
   defp check_host_labels(host) do
-    labels = String.split(host, ".")
+    labels = host |> strip_root_label() |> split_labels()
     label_count = length(labels)
 
     cond do
