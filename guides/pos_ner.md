@@ -14,7 +14,7 @@ Both modules require the optional `:bumblebee` dependency, plus the recommended 
 # mix.exs
 defp deps do
   [
-    {:text, "~> 0.3"},
+    {:text, "~> 1.0"},
     {:bumblebee, "~> 0.6", optional: true},
     {:exla, "~> 0.9", optional: true}
   ]
