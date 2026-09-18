@@ -102,7 +102,7 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 0.10"},
-      {:unicode, "~> 1.22"},
+      {:unicode, "~> 2.1"},
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},
@@ -111,7 +111,8 @@ defmodule Text.MixProject do
       {:benchee, "~> 1.0", only: :dev, runtime: false},
       {:yaml_elixir, "~> 2.9", only: [:test], runtime: false},
       {:jason, "~> 1.2"},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true}
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false, optional: true},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ] ++ maybe_json_polyfill()
   end
 

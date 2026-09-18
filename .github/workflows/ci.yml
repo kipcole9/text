@@ -132,3 +132,13 @@ jobs:
         env:
           MIX_ENV: dev
         run: mix dialyzer
+
+      - name: Check docs
+        if: matrix.lint
+        env:
+          MIX_ENV: release
+        run: mix docs --warnings-as-errors
+
+      - name: Run credo
+        if: matrix.lint
+        run: mix credo --strict
