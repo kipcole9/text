@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Text.DownloadLid176 do
     target_path = Path.join(target_dir, filename)
 
     cond do
-      File.exists?(target_path) and not options[:force] ->
+      File.exists?(target_path) and !options[:force] ->
         Mix.shell().info(
           "#{filename} already present at #{target_path}. Pass --force to re-download."
         )

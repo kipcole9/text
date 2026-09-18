@@ -183,7 +183,8 @@ defmodule Text.Language.Classifier.Fasttext.ModelLoaderTest do
       if File.exists?(@lid_path) do
         :ok
       else
-        {:skip, "skipping; download lid.176.bin via mix text.download_lid176"}
+        raise "lid.176.bin is missing. Run `mix test --include requires_lid_176`, which " <>
+                "downloads it, or `mix text.download_lid176`."
       end
     end
 

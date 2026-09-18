@@ -111,7 +111,8 @@ defmodule Text.Language.Classifier.Fasttext.SubwordsTest do
         data = @fixture_path |> File.read!() |> :json.decode()
         {:ok, fixture: data}
       else
-        {:skip, "skipping; generate via `python3 priv/scripts/generate_subword_fixtures.py`"}
+        raise "golden_subwords.json is missing. Regenerate it with " <>
+                "`python3 priv/scripts/generate_subword_fixtures.py`."
       end
     end
 

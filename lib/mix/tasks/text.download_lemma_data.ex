@@ -96,7 +96,7 @@ defmodule Mix.Tasks.Text.DownloadLemmaData do
     target_path = Text.Data.cache_path(:lemma, filename)
 
     cond do
-      File.exists?(target_path) and not options[:force] ->
+      File.exists?(target_path) and !options[:force] ->
         Mix.shell().info(
           "#{filename} already cached at #{target_path}. Pass --force to re-download."
         )

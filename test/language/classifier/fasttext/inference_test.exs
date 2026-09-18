@@ -187,10 +187,12 @@ defmodule Text.Language.Classifier.Fasttext.InferenceTest do
     setup do
       cond do
         not File.exists?(@model_path) ->
-          {:skip, "skipping; download lid.176.bin"}
+          raise "lid.176.bin is missing. Run `mix test --include requires_lid_176`, which " <>
+                  "downloads it, or `mix text.download_lid176`."
 
         not File.exists?(@predict_fixture) ->
-          {:skip, "skipping; generate via priv/scripts/generate_predict_fixtures.py"}
+          raise "golden_predictions.json is missing. Regenerate it with " <>
+                  "`python3 priv/scripts/generate_predict_fixtures.py`."
 
         true ->
           fixture = @predict_fixture |> File.read!() |> :json.decode()

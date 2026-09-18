@@ -7,11 +7,11 @@ defmodule Text.Emoji do
   without needing a per-release data update.
 
   Implementation note: the `Extended_Pictographic` regex is built at
-  compile time from the `:unicode` library's emoji property data
-  rather than via PCRE2's `\\p{Extended_Pictographic}` syntax. Older
-  PCRE2 versions bundled with OTP 26/27 do not always recognise the
-  full property name, so expanding to an explicit codepoint
-  character class keeps the library portable across OTP releases.
+  compile time from the `:unicode` library's emoji data rather than
+  via PCRE2's `\\p{Extended_Pictographic}` syntax. Older PCRE2
+  versions bundled with OTP 26/27 do not always recognise the full
+  property name, so expanding to an explicit codepoint character
+  class keeps the library portable across OTP releases.
 
   Short-name conversion (`demojize/2`, `emojize/2`) uses a small
   bundled lookup of the most common emoji. It is not a complete

@@ -14,7 +14,7 @@ defmodule Text.Extract.Email do
   rejection.
   """
 
-  alias Text.Extract.{Boundary, Tld}
+  alias Text.Extract.{Link, Tld}
 
   @typedoc "Parsed email record."
   @type email_record :: %{
@@ -23,7 +23,8 @@ defmodule Text.Extract.Email do
           span: {non_neg_integer(), non_neg_integer()},
           local: String.t(),
           host: String.t(),
-          ascii_host: String.t()
+          ascii_host: String.t(),
+          scheme: String.t()
         }
 
   @typedoc "Reasons for rejecting an email candidate."
@@ -85,7 +86,7 @@ defmodule Text.Extract.Email do
           {:ok, email_record()} | {:error, reason()}
   def validate(candidate, {start, _len} = _span, options \\ [])
       when is_binary(candidate) do
-    raw = Boundary.shrink(candidate)
+    raw = Link.shrink(candidate)
 
     if raw == "" do
       {:error, :empty}
@@ -99,7 +100,9 @@ defmodule Text.Extract.Email do
     tld_mode = Keyword.get(options, :tld_mode, :iana)
     strict = Keyword.get(options, :strict_idn, false)
 
-    with [local, host] <- split_at_at(raw),
+    {scheme, address} = split_scheme(raw)
+
+    with [local, host] <- split_at_at(address),
          :ok <- check_local(local, eai?),
          :ok <- check_host(host),
          {:ok, ascii_host} <- idna_host(host, strict),
@@ -107,15 +110,25 @@ defmodule Text.Extract.Email do
       {:ok,
        %{
          email: raw,
-         ascii: local <> "@" <> ascii_host,
+         ascii: scheme <> local <> "@" <> ascii_host,
          span: span,
          local: local,
          host: host,
-         ascii_host: ascii_host
+         ascii_host: ascii_host,
+         scheme: scheme
        }}
     else
       :error -> {:error, :no_local}
       {:error, _} = err -> err
+    end
+  end
+
+  # `mailto:` is kept in the reported text but is not part of the address, so it is split off before
+  # the local part and host are validated and put back when the ASCII form is assembled.
+  defp split_scheme(raw) do
+    case Regex.run(~r/^(mailto:)(.*)$/is, raw, capture: :all_but_first) do
+      [scheme, address] -> {scheme, address}
+      nil -> {"", raw}
     end
   end
 

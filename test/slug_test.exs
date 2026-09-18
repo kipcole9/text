@@ -47,6 +47,8 @@ defmodule Text.SlugTest do
     end
 
     test "Han ideographs (Pinyin transliteration)" do
+      # Pinyin syllables are separated, as ICU's Han-Latin transform does: 北京 gives "běi jīng",
+      # not "běijīng", so the syllable break survives into the slug.
       assert Slug.slugify("北京") == "bei-jing"
       assert Slug.slugify("北京 上海") == "bei-jing-shang-hai"
     end
