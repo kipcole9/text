@@ -56,7 +56,7 @@ A toolkit for tokenization, language identification, sentiment analysis, named-e
 ```elixir
 def deps do
   [
-    {:text, "~> 0.6.2"}
+    {:text, "~> 0.7"}
   ]
 end
 ```

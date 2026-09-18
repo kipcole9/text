@@ -2,13 +2,15 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.7.0] — [Unreleased]
+## [0.7.0] — 2026-09-18
 
 ### Breaking changes
 
 * Link detection and termination now follow [UTS #58](https://www.unicode.org/reports/tr58/) instead of the twitter-text rules. Pass `twitter_quirks: true` to `urls/2`, `emails/2`, `all/2` or `split/2` for the previous behaviour, which is still covered by the twitter-text conformance suite. Where the two disagree the UTS #58 answer wins, most visibly for brackets: `example.com/a[(b])` now ends at `b` because `]` does not match the innermost `(`, where previously each bracket type was counted independently. `Text.Extract.Boundary` is removed, superseded by `Text.Extract.Link`.
 
 ### Enhancements
+
+* The `:unicode` dependency requirement is `~> 2.1`, sourced from Hex now that Unicode 18 support has been published as `unicode` 2.1.0. Previous releases pulled the `unicode-18` branch from GitHub via an override.
 
 * Adds `Text.Extract.Link`, implementing UTS #58 §3.5.1 termination against the full Unicode repertoire — 65 bracket pairs and 129 ranges of soft terminators, against the 4 pairs and 7 characters handled before.
 

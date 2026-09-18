@@ -1,7 +1,7 @@
 defmodule Text.MixProject do
   use Mix.Project
 
-  @version "0.6.2"
+  @version "0.7.0"
 
   def project do
     [
@@ -102,7 +102,7 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 0.10"},
-      {:unicode, github: "elixir-unicode/unicode", branch: "unicode-18", override: true},
+      {:unicode, "~> 2.1"},
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},
