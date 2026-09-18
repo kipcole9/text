@@ -51,16 +51,8 @@ defmodule Text.Sentiment.Backends.Lexicon do
   defp resolve_lexicon(options) do
     {scoring_opts, control_opts} = Keyword.split(options, @scoring_keys)
 
-    cond do
-      lexicon = Keyword.get(control_opts, :lexicon) ->
-        language =
-          control_opts
-          |> Keyword.get(:language, :custom)
-          |> normalize_or_default(:custom)
-
-        {language, lexicon, with_default_negators(scoring_opts, language)}
-
-      true ->
+    case Keyword.get(control_opts, :lexicon) do
+      nil ->
         language =
           control_opts
           |> Keyword.get(:language, @default_language)
@@ -73,6 +65,14 @@ defmodule Text.Sentiment.Backends.Lexicon do
 
         {used, lexicon} = bundled_or_fallback(language, fallback)
         {used, lexicon, with_default_negators(scoring_opts, used)}
+
+      lexicon ->
+        language =
+          control_opts
+          |> Keyword.get(:language, :custom)
+          |> normalize_or_default(:custom)
+
+        {language, lexicon, with_default_negators(scoring_opts, language)}
     end
   end
 

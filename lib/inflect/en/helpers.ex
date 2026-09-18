@@ -224,7 +224,7 @@ defmodule Text.Inflect.En.Helpers do
     @a_ata
   end
 
-  def is_ides do
+  def ides_pattern do
     @is_ides
   end
 

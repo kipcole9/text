@@ -140,25 +140,23 @@ defmodule Text.WordCloud.Layout do
 
     sorted = Enum.sort_by(terms, &(-&1.weight))
 
+    canvas = %{
+      padding: padding,
+      cx: centre_x,
+      cy: centre_y,
+      width: width,
+      height: height,
+      spiral_step: spiral_step,
+      max_radius: max_radius
+    }
+
     {placed, _boxes} =
       Enum.reduce(sorted, {[], []}, fn term, {placed_acc, boxes_acc} ->
         font_size = font_size_for(term.weight, min_fs, max_fs)
         {raw_w, raw_h} = metrics.(term.term, font_size)
         rotation_pick = build_rotation_picker(term, rotations)
 
-        case find_position(
-               raw_w,
-               raw_h,
-               padding,
-               boxes_acc,
-               centre_x,
-               centre_y,
-               width,
-               height,
-               spiral_step,
-               max_radius,
-               rotation_pick
-             ) do
+        case find_position(raw_w, raw_h, boxes_acc, canvas, rotation_pick) do
           {:ok, x, y, rotation, bw, bh} ->
             placement = %{
               term: term.term,
@@ -260,54 +258,16 @@ defmodule Text.WordCloud.Layout do
   # position — fixed for hashed-list rotations, position-dependent for
   # `:radial` mode. The bounding box is recomputed per candidate so
   # radial mode's varying rotation produces correct collision tests.
-  defp find_position(
-         raw_w,
-         raw_h,
-         padding,
-         boxes,
-         cx,
-         cy,
-         canvas_w,
-         canvas_h,
-         step,
-         max_radius,
-         rotation_pick
-       ) do
-    do_spiral(
-      0.0,
-      raw_w,
-      raw_h,
-      padding,
-      boxes,
-      cx,
-      cy,
-      canvas_w,
-      canvas_h,
-      step,
-      max_radius,
-      rotation_pick
-    )
+  defp find_position(raw_w, raw_h, boxes, canvas, rotation_pick) do
+    do_spiral(0.0, raw_w, raw_h, boxes, canvas, rotation_pick)
   end
 
-  defp do_spiral(theta, _rw, _rh, _pad, _boxes, _cx, _cy, _cw, _ch, _step, max_r, _pick)
-       when theta > max_r do
+  defp do_spiral(theta, _rw, _rh, _boxes, %{max_radius: max_r}, _pick) when theta > max_r do
     :no_fit
   end
 
-  defp do_spiral(
-         theta,
-         raw_w,
-         raw_h,
-         padding,
-         boxes,
-         cx,
-         cy,
-         canvas_w,
-         canvas_h,
-         step,
-         max_radius,
-         rotation_pick
-       ) do
+  defp do_spiral(theta, raw_w, raw_h, boxes, canvas, rotation_pick) do
+    %{cx: cx, cy: cy, padding: padding, spiral_step: step} = canvas
     r = theta
     x = cx + r * :math.cos(theta)
     y = cy + r * :math.sin(theta)
@@ -316,24 +276,11 @@ defmodule Text.WordCloud.Layout do
     padded_w = bw + padding
     padded_h = bh + padding
 
-    if within_canvas?(x, y, padded_w, padded_h, canvas_w, canvas_h) and
+    if within_canvas?(x, y, padded_w, padded_h, canvas.width, canvas.height) and
          not collides?(x, y, padded_w, padded_h, boxes) do
       {:ok, x, y, rotation, bw, bh}
     else
-      do_spiral(
-        theta + step,
-        raw_w,
-        raw_h,
-        padding,
-        boxes,
-        cx,
-        cy,
-        canvas_w,
-        canvas_h,
-        step,
-        max_radius,
-        rotation_pick
-      )
+      do_spiral(theta + step, raw_w, raw_h, boxes, canvas, rotation_pick)
     end
   end
 

@@ -108,7 +108,7 @@ defmodule Text.Sentiment.Lexicons.AFINNTest do
       for tag <- [:en, :de, :es, :fr, :it, :pt, :nl, :ru, :ja, :zh] do
         negators = AFINN.negators(tag)
         assert is_list(negators)
-        assert length(negators) > 0, "negators for #{inspect(tag)} is empty"
+        refute Enum.empty?(negators), "negators for #{inspect(tag)} is empty"
         Enum.each(negators, &assert(is_binary(&1)))
       end
     end

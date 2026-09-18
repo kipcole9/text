@@ -25,7 +25,7 @@ defmodule Text.NERTest do
     test "extracts a person and a location" do
       entities = NER.extract("Barack Obama visited Berlin in 2013.")
       assert is_list(entities)
-      assert length(entities) >= 1
+      assert entities != []
 
       Enum.each(entities, fn %Entity{} = e ->
         assert is_binary(e.text)

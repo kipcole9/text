@@ -111,32 +111,31 @@ defmodule Text.WordCloud.Tokens do
 
   defp resolve_stopword_set(options) do
     case Keyword.get(options, :stopwords, :auto) do
-      :none ->
-        MapSet.new()
+      :none -> MapSet.new()
+      :auto -> auto_stopwords(options)
+      {:extend, extras} -> extend_stopwords(options, extras)
+      %MapSet{} = set -> set
+      list when is_list(list) -> MapSet.new(list)
+    end
+  end
 
-      :auto ->
-        language = Keyword.get(options, :language)
+  defp auto_stopwords(options) do
+    language = Keyword.get(options, :language)
 
-        cond do
-          is_nil(language) -> MapSet.new()
-          Text.Stopwords.available?(language) -> Text.Stopwords.for(language)
-          true -> MapSet.new()
-        end
+    if language && Text.Stopwords.available?(language) do
+      Text.Stopwords.for(language)
+    else
+      MapSet.new()
+    end
+  end
 
-      {:extend, extras} ->
-        language = Keyword.get(options, :language)
+  defp extend_stopwords(options, extras) do
+    language = Keyword.get(options, :language)
 
-        if language && Text.Stopwords.available?(language) do
-          Text.Stopwords.extend(language, extras)
-        else
-          MapSet.new(extras)
-        end
-
-      %MapSet{} = set ->
-        set
-
-      list when is_list(list) ->
-        MapSet.new(list)
+    if language && Text.Stopwords.available?(language) do
+      Text.Stopwords.extend(language, extras)
+    else
+      MapSet.new(extras)
     end
   end
 

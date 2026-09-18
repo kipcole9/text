@@ -228,26 +228,24 @@ defmodule Text.Language.Classifier.Fasttext.ModelLoader do
          tensor_type,
          mismatch_tag
        ) do
-    cond do
-      m != expected_m or n != expected_n ->
-        {:error, {mismatch_tag, %{expected: {expected_m, expected_n}, actual: {m, n}}}}
+    if m != expected_m or n != expected_n do
+      {:error, {mismatch_tag, %{expected: {expected_m, expected_n}, actual: {m, n}}}}
+    else
+      byte_count = m * n * 4
 
-      true ->
-        byte_count = m * n * 4
+      case rest do
+        <<data::binary-size(^byte_count), trailing::binary>> ->
+          tensor =
+            data
+            |> Nx.from_binary({:f, 32})
+            |> Nx.reshape({m, n})
+            |> maybe_convert_type(tensor_type)
 
-        case rest do
-          <<data::binary-size(^byte_count), trailing::binary>> ->
-            tensor =
-              data
-              |> Nx.from_binary({:f, 32})
-              |> Nx.reshape({m, n})
-              |> maybe_convert_type(tensor_type)
+          {:ok, tensor, trailing}
 
-            {:ok, tensor, trailing}
-
-          _ ->
-            {:error, :truncated_matrix_data}
-        end
+        _ ->
+          {:error, :truncated_matrix_data}
+      end
     end
   end
 

@@ -112,32 +112,31 @@ defmodule Text.WordCloud.Backends.YAKE do
 
   defp resolve_stopwords(options) do
     case Keyword.get(options, :stopwords, :auto) do
-      :none ->
-        MapSet.new()
+      :none -> MapSet.new()
+      :auto -> auto_stopwords(options)
+      {:extend, extras} -> extend_stopwords(options, extras)
+      %MapSet{} = set -> set
+      list when is_list(list) -> MapSet.new(list)
+    end
+  end
 
-      :auto ->
-        language = Keyword.get(options, :language)
+  defp auto_stopwords(options) do
+    language = Keyword.get(options, :language)
 
-        cond do
-          is_nil(language) -> MapSet.new()
-          Text.Stopwords.available?(language) -> Text.Stopwords.for(language)
-          true -> MapSet.new()
-        end
+    if language && Text.Stopwords.available?(language) do
+      Text.Stopwords.for(language)
+    else
+      MapSet.new()
+    end
+  end
 
-      {:extend, extras} ->
-        language = Keyword.get(options, :language)
+  defp extend_stopwords(options, extras) do
+    language = Keyword.get(options, :language)
 
-        if language && Text.Stopwords.available?(language) do
-          Text.Stopwords.extend(language, extras)
-        else
-          MapSet.new(extras)
-        end
-
-      %MapSet{} = set ->
-        set
-
-      list when is_list(list) ->
-        MapSet.new(list)
+    if language && Text.Stopwords.available?(language) do
+      Text.Stopwords.extend(language, extras)
+    else
+      MapSet.new(extras)
     end
   end
 
@@ -357,9 +356,7 @@ defmodule Text.WordCloud.Backends.YAKE do
         if case_fold? do
           Enum.join(tokens, " ")
         else
-          tokens
-          |> Enum.map(&Map.get(surface_forms, &1, &1))
-          |> Enum.join(" ")
+          Enum.map_join(tokens, " ", &Map.get(surface_forms, &1, &1))
         end
 
       higher_better = 1.0 / (raw + 1.0e-9)

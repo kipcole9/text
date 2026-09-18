@@ -119,11 +119,8 @@ defmodule Text.Sentiment.Backends.Bumblebee do
     # ---- internal: serving cache ----------------------------------------
 
     defp resolve_serving(options) do
-      cond do
-        serving = Keyword.get(options, :serving) ->
-          serving
-
-        true ->
+      case Keyword.get(options, :serving) do
+        nil ->
           model = model_id(options)
           cache_key = {__MODULE__, :serving, model}
 
@@ -136,6 +133,9 @@ defmodule Text.Sentiment.Backends.Bumblebee do
             serving ->
               serving
           end
+
+        serving ->
+          serving
       end
     end
 

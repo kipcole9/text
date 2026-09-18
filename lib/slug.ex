@@ -142,25 +142,22 @@ defmodule Text.Slug do
     text
     |> :unicode.characters_to_list(:utf8)
     |> Enum.chunk_by(&codepoint_script/1)
-    |> Enum.map(&transliterate_run/1)
-    |> Enum.join()
+    |> Enum.map_join("", &transliterate_run/1)
   end
 
   defp transliterate_run(codepoints) do
     script = codepoints |> hd() |> codepoint_script()
     string = List.to_string(codepoints)
 
-    cond do
-      script in [:latin, :common, :inherited, :unknown] ->
-        string
+    if script in [:latin, :common, :inherited, :unknown] do
+      string
+    else
+      transform_id = script_to_transform_id(script)
 
-      true ->
-        transform_id = script_to_transform_id(script)
-
-        case Unicode.Transform.transform(string, transform: transform_id) do
-          {:ok, result} -> result
-          _ -> string
-        end
+      case Unicode.Transform.transform(string, transform: transform_id) do
+        {:ok, result} -> result
+        _ -> string
+      end
     end
   end
 

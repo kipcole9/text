@@ -1,4 +1,6 @@
 defmodule Text.Plurals.Helper do
+  @moduledoc false
+
   def irregular_plurals do
     parse("test/support/irregular_plurals.csv")
   end

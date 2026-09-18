@@ -60,22 +60,20 @@ defmodule Mix.Tasks.Text.GenAfinnLexicons do
       tag = json_path |> Path.basename(".json") |> String.replace_prefix("AFINN-", "")
       tsv_path = Path.join(@priv_root, "afinn-#{tag}.tsv")
 
-      cond do
-        not overwrite? and File.exists?(tsv_path) ->
-          Mix.shell().info("  keeping curated #{tsv_path}")
-          acc
+      if not overwrite? and File.exists?(tsv_path) do
+        Mix.shell().info("  keeping curated #{tsv_path}")
+        acc
+      else
+        case json_to_tsv(json_path) do
+          :empty ->
+            Mix.shell().info("  skipping #{json_path} (upstream JSON is empty)")
+            acc
 
-        true ->
-          case json_to_tsv(json_path) do
-            :empty ->
-              Mix.shell().info("  skipping #{json_path} (upstream JSON is empty)")
-              acc
-
-            tsv ->
-              File.write!(tsv_path, tsv)
-              Mix.shell().info("  wrote #{tsv_path}")
-              [tag | acc]
-          end
+          tsv ->
+            File.write!(tsv_path, tsv)
+            Mix.shell().info("  wrote #{tsv_path}")
+            [tag | acc]
+        end
       end
     end)
   end

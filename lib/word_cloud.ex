@@ -321,8 +321,7 @@ defmodule Text.WordCloud do
   defp stem_key(term, language) do
     term
     |> String.split(" ", trim: true)
-    |> Enum.map(&Text.Stemmer.stem(&1, language))
-    |> Enum.join("")
+    |> Enum.map_join("", &Text.Stemmer.stem(&1, language))
   end
 
   # `:stem_language` falls back to `:language`. We require Text.Stemmer

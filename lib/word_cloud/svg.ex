@@ -181,20 +181,18 @@ defmodule Text.WordCloud.SVG do
   end
 
   defp resolve_palette(%{__struct__: module} = theme, direction) do
-    cond do
-      theme_struct?(module) ->
-        # Use the primary scale's stops.
-        primary = Map.get(theme, :primary)
+    if theme_struct?(module) do
+      # Use the primary scale's stops.
+      primary = Map.get(theme, :primary)
 
-        if primary && Map.has_key?(primary, :stops) do
-          stops_to_colors(primary.stops, direction)
-        else
-          raise ArgumentError,
-                "Color.Palette.Theme is missing a :primary tonal scale: #{inspect(module)}"
-        end
-
-      true ->
-        raise ArgumentError, "unsupported palette struct: #{inspect(module)}"
+      if primary && Map.has_key?(primary, :stops) do
+        stops_to_colors(primary.stops, direction)
+      else
+        raise ArgumentError,
+              "Color.Palette.Theme is missing a :primary tonal scale: #{inspect(module)}"
+      end
+    else
+      raise ArgumentError, "unsupported palette struct: #{inspect(module)}"
     end
   end
 

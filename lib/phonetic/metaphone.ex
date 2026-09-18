@@ -134,13 +134,14 @@ defmodule Text.Phonetic.Metaphone do
 
   # Words starting with "AE", "GN", "KN", "PN", "WR" have a silent
   # first letter (e.g. "knight" → "night", "wright" → "right").
-  defp drop_silent_initial(<<first, second, _rest::binary>> = word)
-       when (first == ?A and second == ?E) or
-              (first == ?G and second == ?N) or
-              (first == ?K and second == ?N) or
-              (first == ?P and second == ?N) or
-              (first == ?W and second == ?R) do
-    binary_part(word, 1, byte_size(word) - 1)
+  @silent_initial_digraphs [{?A, ?E}, {?G, ?N}, {?K, ?N}, {?P, ?N}, {?W, ?R}]
+
+  defp drop_silent_initial(<<first, second, _rest::binary>> = word) do
+    if {first, second} in @silent_initial_digraphs do
+      binary_part(word, 1, byte_size(word) - 1)
+    else
+      word
+    end
   end
 
   defp drop_silent_initial(word), do: word

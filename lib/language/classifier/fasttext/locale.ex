@@ -183,9 +183,10 @@ defmodule Text.Language.Classifier.Fasttext.Locale do
     # multi-script languages — Serbian (Latn vs Cyrl), Uzbek, Azerbaijani,
     # etc. — the script does matter and gets forwarded.
     script =
-      cond do
-        script_override != nil -> script_override
-        true -> meaningful_script(detection.script)
+      if script_override != nil do
+        script_override
+      else
+        meaningful_script(detection.script)
       end
 
     if Code.ensure_loaded?(Localize) do

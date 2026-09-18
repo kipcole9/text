@@ -48,19 +48,17 @@ defmodule Mix.Tasks.Text.DownloadLid176 do
     target_dir = Path.join([File.cwd!(), "priv", "lid_176"])
     target_path = Path.join(target_dir, filename)
 
-    cond do
-      File.exists?(target_path) and !options[:force] ->
-        Mix.shell().info(
-          "#{filename} already present at #{target_path}. Pass --force to re-download."
-        )
-
-      true ->
-        File.mkdir_p!(target_dir)
-        Mix.shell().info("Downloading #{url}")
-        Mix.shell().info("→ #{target_path}")
-        download!(url, target_path)
-        bytes = File.stat!(target_path).size
-        Mix.shell().info("Done. #{format_bytes(bytes)} written.")
+    if File.exists?(target_path) and !options[:force] do
+      Mix.shell().info(
+        "#{filename} already present at #{target_path}. Pass --force to re-download."
+      )
+    else
+      File.mkdir_p!(target_dir)
+      Mix.shell().info("Downloading #{url}")
+      Mix.shell().info("→ #{target_path}")
+      download!(url, target_path)
+      bytes = File.stat!(target_path).size
+      Mix.shell().info("Done. #{format_bytes(bytes)} written.")
     end
 
     :ok

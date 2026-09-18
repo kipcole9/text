@@ -38,8 +38,7 @@ defmodule Text.Hyphenation.Parser do
   defp strip_comments(content) do
     content
     |> String.split("\n")
-    |> Enum.map(&String.replace(&1, ~r/%.*$/, ""))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &String.replace(&1, ~r/%.*$/, ""))
   end
 
   defp extract_block(content, opener) do

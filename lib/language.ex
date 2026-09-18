@@ -147,8 +147,7 @@ defmodule Text.Language do
         when is_atom(lang) and not is_nil(lang) do
       [tag.language, tag.script, tag.territory]
       |> Enum.reject(&(&1 in [nil, :"", ""]))
-      |> Enum.map(&to_string/1)
-      |> Enum.join("-")
+      |> Enum.map_join("-", &to_string/1)
       |> normalize_locale_string()
     end
   end

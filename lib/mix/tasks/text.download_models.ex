@@ -152,29 +152,24 @@ defmodule Mix.Tasks.Text.DownloadModels do
     any_explicit? = Enum.any?(explicit_flags, &Keyword.get(options, &1, false))
 
     if any_explicit? do
+      all? = Keyword.get(options, :all, false)
+      bumblebee? = Keyword.get(options, :bumblebee, false)
+
       %{
-        lid176: Keyword.get(options, :lid176, false) or Keyword.get(options, :all, false),
-        sentiment:
-          Keyword.get(options, :sentiment, false) or
-            Keyword.get(options, :bumblebee, false) or
-            Keyword.get(options, :all, false),
-        pos:
-          Keyword.get(options, :pos, false) or
-            Keyword.get(options, :bumblebee, false) or
-            Keyword.get(options, :all, false),
-        ner:
-          Keyword.get(options, :ner, false) or
-            Keyword.get(options, :bumblebee, false) or
-            Keyword.get(options, :all, false),
-        keybert:
-          Keyword.get(options, :keybert, false) or
-            Keyword.get(options, :bumblebee, false) or
-            Keyword.get(options, :all, false)
+        lid176: Keyword.get(options, :lid176, false) or all?,
+        sentiment: bumblebee_stack_selected?(options, :sentiment, bumblebee?, all?),
+        pos: bumblebee_stack_selected?(options, :pos, bumblebee?, all?),
+        ner: bumblebee_stack_selected?(options, :ner, bumblebee?, all?),
+        keybert: bumblebee_stack_selected?(options, :keybert, bumblebee?, all?)
       }
     else
       # No selection flags → download everything.
       %{lid176: true, sentiment: true, pos: true, ner: true, keybert: true}
     end
+  end
+
+  defp bumblebee_stack_selected?(options, key, bumblebee?, all?) do
+    Keyword.get(options, key, false) or bumblebee? or all?
   end
 
   # ---- lid.176 -----------------------------------------------------------
@@ -204,22 +199,20 @@ defmodule Mix.Tasks.Text.DownloadModels do
     spec = resolve_stack_spec(stack, options)
     Mix.shell().info([:cyan, "→ #{label_for(stack)} (#{spec.model})", :reset])
 
-    cond do
-      not Code.ensure_loaded?(Bumblebee) ->
-        Mix.shell().info([
-          :yellow,
-          "  skipped: :bumblebee dependency is not installed.\n",
-          "  Add `{:bumblebee, \"~> 0.6\"}` (and `{:exla, \"~> 0.9\"}`) to mix.exs\n",
-          "  to enable the #{label_for(stack)} stack.",
-          :reset
-        ])
+    if Code.ensure_loaded?(Bumblebee) do
+      # Make sure the HTTP/Finch stack used by Bumblebee is up.
+      Application.ensure_all_started(:bumblebee)
 
-      true ->
-        # Make sure the HTTP/Finch stack used by Bumblebee is up.
-        Application.ensure_all_started(:bumblebee)
-
-        download_bumblebee_artefact(:model, spec.model, options)
-        download_bumblebee_artefact(:tokenizer, spec.tokenizer, options)
+      download_bumblebee_artefact(:model, spec.model, options)
+      download_bumblebee_artefact(:tokenizer, spec.tokenizer, options)
+    else
+      Mix.shell().info([
+        :yellow,
+        "  skipped: :bumblebee dependency is not installed.\n",
+        "  Add `{:bumblebee, \"~> 0.6\"}` (and `{:exla, \"~> 0.9\"}`) to mix.exs\n",
+        "  to enable the #{label_for(stack)} stack.",
+        :reset
+      ])
     end
   end
 

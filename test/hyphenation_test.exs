@@ -120,7 +120,7 @@ defmodule Text.HyphenationTest do
           ] do
         points = Hyphenation.points(word, language: lang)
         assert is_list(points)
-        assert length(points) >= 1, "expected #{lang}: #{word} to have break points"
+        assert points != [], "expected #{lang}: #{word} to have break points"
       end
     end
   end

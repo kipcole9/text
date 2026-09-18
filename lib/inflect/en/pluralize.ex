@@ -22,7 +22,7 @@ defmodule Text.Inflect.En.Pluralize do
   #         or suffix(-itis) or category(-,-),
   #                 return the original noun
 
-  def is_non_inflecting(word, mode) when is_binary(word) do
+  def non_inflecting?(word, mode) when is_binary(word) do
     cond do
       category?(word, "herd", mode) ->
         word
@@ -46,13 +46,9 @@ defmodule Text.Inflect.En.Pluralize do
   #         if the word is of the form: "<preposition> <pronoun>",
   #                 return "<preposition> <specified plural of pronoun>"
 
-  def is_pronoun(word, mode) do
-    cond do
-      category?(word, "pronoun", mode) ->
-        pronoun(word, mode)
-
-      true ->
-        nil
+  def pronoun?(word, mode) do
+    if category?(word, "pronoun", mode) do
+      pronoun(word, mode)
     end
   end
 
@@ -60,13 +56,9 @@ defmodule Text.Inflect.En.Pluralize do
   #         if the word has an irregular plural,
   #                 return the specified plural
 
-  def is_irregular_noun(word, mode) do
-    cond do
-      category?(word, "irregular_noun", mode) ->
-        irregular_noun(word, mode)
-
-      true ->
-        nil
+  def irregular_noun?(word, mode) do
+    if category?(word, "irregular_noun", mode) do
+      irregular_noun(word, mode)
     end
   end
 
@@ -79,41 +71,23 @@ defmodule Text.Inflect.En.Pluralize do
   #         if suffix(-zoon),     return inflection(-zoon,-zoa)
   #         if suffix(-[csx]is),  return inflection(-is,-es)
 
-  def is_irregular_suffix(word, _mode) do
-    cond do
-      suffix?(word, "man") ->
-        replace_suffix(word, "man", "men")
+  @irregular_suffix_rules [
+    {"man", "men"},
+    {"louse", "lice"},
+    {"mouse", "mice"},
+    {"tooth", "teeth"},
+    {"goose", "geese"},
+    {"foot", "feet"},
+    {"zoon", "zoa"},
+    {"cis", "ces"},
+    {"sis", "ses"},
+    {"xis", "xes"}
+  ]
 
-      suffix?(word, "louse") ->
-        replace_suffix(word, "louse", "lice")
-
-      suffix?(word, "mouse") ->
-        replace_suffix(word, "mouse", "mice")
-
-      suffix?(word, "tooth") ->
-        replace_suffix(word, "tooth", "teeth")
-
-      suffix?(word, "goose") ->
-        replace_suffix(word, "goose", "geese")
-
-      suffix?(word, "foot") ->
-        replace_suffix(word, "foot", "feet")
-
-      suffix?(word, "zoon") ->
-        replace_suffix(word, "zoon", "zoa")
-
-      suffix?(word, "cis") ->
-        replace_suffix(word, "cis", "ces")
-
-      suffix?(word, "sis") ->
-        replace_suffix(word, "sis", "ses")
-
-      suffix?(word, "xis") ->
-        replace_suffix(word, "xis", "xes")
-
-      true ->
-        nil
-    end
+  def irregular_suffix?(word, _mode) do
+    Enum.find_value(@irregular_suffix_rules, fn {from, to} ->
+      if suffix?(word, from), do: replace_suffix(word, from, to)
+    end)
   end
 
   # Handle fully assimilated classical inflections (vertebrae, codices, etc. - see tables A.10,
@@ -123,7 +97,7 @@ defmodule Text.Inflect.En.Pluralize do
   #         if category(-on,-a),    return inflection(-on,-a)
   #         if category(-a,-ae),    return inflection(-a,-ae)
 
-  def is_assimilated_classical(word, mode) do
+  def assimilated_classical?(word, mode) do
     cond do
       category?(word, "-ex", "-ices", mode) ->
         replace_suffix(word, "ex", "ices")
@@ -158,7 +132,18 @@ defmodule Text.Inflect.En.Pluralize do
   #                 if category(-,-i),      return inflection(-,-i)
   #                 if category(-,-im),     return inflection(-,-im)
 
-  def is_classical(word, :classical = mode) do
+  def classical?(word, :classical = mode) do
+    classical_by_suffix(word) || classical_by_category(word, mode)
+  end
+
+  def classical?(word, :modern = mode) do
+    if category?(word, "-us", "-i", mode) do
+      replace_suffix(word, "us", "uses")
+    end
+  end
+
+  # Classical rules driven by the raw word suffix (trix, eau, ieu, -nx).
+  defp classical_by_suffix(word) do
     cond do
       suffix?(word, "trix") ->
         replace_suffix(word, "trix", "trices")
@@ -169,59 +154,43 @@ defmodule Text.Inflect.En.Pluralize do
       suffix?(word, "ieu") ->
         word <> "x"
 
-      suffix?(word, "inx") ->
+      suffix?(word, "inx") or suffix?(word, "anx") or suffix?(word, "ynx") ->
         replace_suffix(word, "nx", "nges")
-
-      suffix?(word, "anx") ->
-        replace_suffix(word, "nx", "nges")
-
-      suffix?(word, "ynx") ->
-        replace_suffix(word, "nx", "nges")
-
-      category?(word, "-en", "-ina", mode) ->
-        replace_suffix(word, "en", "ina")
-
-      category?(word, "-a", "-ata", mode) ->
-        word <> "ta"
-
-      category?(word, "-is", "-ides", mode) ->
-        replace_suffix(word, "is", "ides")
-
-      category?(word, "-us", "-i", mode) ->
-        replace_suffix(word, "us", "i")
-
-      category?(word, "-us", "-us", mode) ->
-        word
-
-      category?(word, "-o", "-i", mode) ->
-        replace_suffix(word, "o", "i")
-
-      category?(word, "-", "-i", mode) ->
-        word <> "i"
-
-      category?(word, "-", "-im", mode) ->
-        word <> "im"
 
       true ->
         nil
     end
   end
 
-  def is_classical(word, :modern = mode) do
-    cond do
-      category?(word, "-us", "-i", mode) ->
-        replace_suffix(word, "us", "uses")
+  # Category-driven classical plurals: each rule is `{from, to,
+  # action}`. Actions are `:keep` (return the word), `{:replace, from,
+  # to}`, or `{:append, chars}`.
+  @classical_category_rules [
+    {"-en", "-ina", {:replace, "en", "ina"}},
+    {"-a", "-ata", {:append, "ta"}},
+    {"-is", "-ides", {:replace, "is", "ides"}},
+    {"-us", "-i", {:replace, "us", "i"}},
+    {"-us", "-us", :keep},
+    {"-o", "-i", {:replace, "o", "i"}},
+    {"-", "-i", {:append, "i"}},
+    {"-", "-im", {:append, "im"}}
+  ]
 
-      true ->
-        nil
-    end
+  defp classical_by_category(word, mode) do
+    Enum.find_value(@classical_category_rules, fn {from, to, action} ->
+      if category?(word, from, to, mode), do: apply_classical_action(word, action)
+    end)
   end
+
+  defp apply_classical_action(word, :keep), do: word
+  defp apply_classical_action(word, {:replace, from, to}), do: replace_suffix(word, from, to)
+  defp apply_classical_action(word, {:append, chars}), do: word <> chars
 
   # The suffixes -ch, -sh, and -ss all take -es in the plural (churches, classes, etc)...
   #         if suffix(-[cs]h), return inflection(-h,-hes)
   #         if suffix(-ss),    return inflection(-ss,-sses)
 
-  def is_compound_plural(word, _mode) do
+  def compound_plural?(word, _mode) do
     cond do
       suffix?(word, "ch") ->
         replace_suffix(word, "h", "hes")
@@ -244,27 +213,15 @@ defmodule Text.Inflect.En.Pluralize do
   #         if suffix(-[nlw]ife),
   #                 return inflection(-fe,-ves)
 
-  def is_ves_plural(word, _mode) do
+  @ves_f_suffixes ~w(alf elf olf arf)
+  @ves_fe_suffixes ~w(nife life wife)
+
+  def ves_plural?(word, _mode) do
     cond do
-      suffix?(word, "alf") ->
+      Enum.any?(@ves_f_suffixes, &suffix?(word, &1)) ->
         replace_suffix(word, "f", "ves")
 
-      suffix?(word, "elf") ->
-        replace_suffix(word, "f", "ves")
-
-      suffix?(word, "olf") ->
-        replace_suffix(word, "f", "ves")
-
-      suffix?(word, "arf") ->
-        replace_suffix(word, "f", "ves")
-
-      suffix?(word, "nife") ->
-        replace_suffix(word, "fe", "ves")
-
-      suffix?(word, "life") ->
-        replace_suffix(word, "fe", "ves")
-
-      suffix?(word, "wife") ->
+      Enum.any?(@ves_fe_suffixes, &suffix?(word, &1)) ->
         replace_suffix(word, "fe", "ves")
 
       suffix?(word, "deaf") ->
@@ -284,7 +241,7 @@ defmodule Text.Inflect.En.Pluralize do
   #         if suffix(-[A-Z].*y), return inflection(-y,-ys)
   #         if suffix(-y),        return inflection(-y,-ies)
 
-  def is_word_ending_in_y(word, _mode) do
+  def word_ending_in_y?(word, _mode) do
     cond do
       suffix?(word, "y") && vowel?(word, -2) ->
         word <> "s"
@@ -308,7 +265,7 @@ defmodule Text.Inflect.En.Pluralize do
   #
   #         if suffix(-o), return inflection(-o,-oes)
 
-  def is_o_suffix(word, :modern = mode) do
+  def o_suffix?(word, :modern = mode) do
     cond do
       category?(word, "-o", "-os", mode) ->
         word <> "s"
@@ -324,7 +281,7 @@ defmodule Text.Inflect.En.Pluralize do
     end
   end
 
-  def is_o_suffix(word, :classical = mode) do
+  def o_suffix?(word, :classical = mode) do
     cond do
       category?(word, "-o", "-os", mode) ->
         replace_suffix(word, "o", "i")
@@ -352,31 +309,24 @@ defmodule Text.Inflect.En.Pluralize do
             |> Map.get("a26")
 
   for general <- @generals do
-    def is_general(unquote(general) <> suffix, _mode) do
-      cond do
-        suffix?(suffix, "l") -> unquote(general) <> suffix <> "s"
-        true -> nil
-      end
+    def general?(unquote(general) <> suffix, _mode) do
+      if suffix?(suffix, "l"), do: unquote(general) <> suffix <> "s"
     end
   end
 
-  def is_general(_word, _mode) do
+  def general?(_word, _mode) do
     nil
   end
 
   # Otherwise, assume that the plural just adds -s (cats, programmes, trees, etc.)...
   #         otherwise, return inflection(-,-s)
-  def is_regular(word, _mode) do
+  def regular?(word, _mode) do
     word <> "s"
   end
 
-  def is_non_inflecting_verb(word) do
-    cond do
-      category?(word, "non_inflecting_verb") ->
-        word
-
-      true ->
-        nil
+  def non_inflecting_verb?(word) do
+    if category?(word, "non_inflecting_verb") do
+      word
     end
   end
 
@@ -392,13 +342,9 @@ defmodule Text.Inflect.En.Pluralize do
 
   # Combine the both cases in this simpler execution
 
-  def is_irregular_verb(word) do
-    cond do
-      category?(word, "irregular_verb") ->
-        irregular_verb(word)
-
-      true ->
-        nil
+  def irregular_verb?(word) do
+    if category?(word, "irregular_verb") do
+      irregular_verb(word)
     end
   end
 
@@ -410,7 +356,7 @@ defmodule Text.Inflect.En.Pluralize do
   #         if suffix(-ies),     return inflection(-ies,-y)
   #         if suffix(-oes),     return inflection(-oes,-o)
 
-  def is_third_person_singular(word) do
+  def third_person_singular?(word) do
     cond do
       suffix?(word, "ches") ->
         replace_suffix(word, "hes", "h")
@@ -441,7 +387,7 @@ defmodule Text.Inflect.En.Pluralize do
   # Other 3rd person singular verbs ending in -s (but not -ss) also lose their suffix...
   #         if suffix(-[^s]s), return inflection(-s,-)
 
-  def is_third_person_singular_s(word) do
+  def third_person_singular_s?(word) do
     cond do
       suffix?(word, "ss") ->
         nil
@@ -459,13 +405,9 @@ defmodule Text.Inflect.En.Pluralize do
   #         if the word is in the ambiguous category,
   #                 return the specified plural form
 
-  def is_ambiguous(word) do
-    cond do
-      category?(word, "ambiguous") ->
-        En.pluralize_noun(word)
-
-      true ->
-        nil
+  def ambiguous?(word) do
+    if category?(word, "ambiguous") do
+      En.pluralize_noun(word)
     end
   end
 
@@ -499,9 +441,9 @@ defmodule Text.Inflect.En.Pluralize do
   def pluralize_adjective(word) do
     # In all other cases no inflection is required...
     #         otherwise, return the adjective uninflected
-    is_indefinite_article(word) ||
-      is_possessive_pronoun(word) ||
-      is_genetive(word) ||
+    indefinite_article?(word) ||
+      possessive_pronoun?(word) ||
+      genetive?(word) ||
       word
   end
 
@@ -510,7 +452,7 @@ defmodule Text.Inflect.En.Pluralize do
   #         if the word is "this",      return "these"
   #         if the word is "that",      return "those"
 
-  def is_indefinite_article(word) do
+  def indefinite_article?(word) do
     cond do
       word in ["a", "an"] ->
         "some"
@@ -530,13 +472,9 @@ defmodule Text.Inflect.En.Pluralize do
   #         if the word is a personal possessive,
   #                 return the specified plural form
 
-  def is_possessive_pronoun(word) do
-    cond do
-      category?(word, "personal_possessive") ->
-        personal_possessive(word)
-
-      true ->
-        nil
+  def possessive_pronoun?(word) do
+    if category?(word, "personal_possessive") do
+      personal_possessive(word)
     end
   end
 
@@ -549,7 +487,7 @@ defmodule Text.Inflect.En.Pluralize do
   #                 let the noun <owners> be the noun plural of <owner>
   #                 if <owners> ends in -s, return "<owners>'"
   #                 otherwise,              return "<owners>'s"
-  def is_genetive(word) do
+  def genetive?(word) do
     cond do
       suffix?(word, "'s") ->
         do_genetive(word, "'s")
@@ -659,7 +597,7 @@ defmodule Text.Inflect.En.Pluralize do
   end
 
   def category?(word, "-is", "-ides", _mode) do
-    word in is_ides()
+    word in ides_pattern()
   end
 
   def category?(word, "-us", "-i", _mode) do

@@ -182,22 +182,42 @@ defmodule Text.POS do
     # "NNS", "VB", "VBD", ...). Map to coarser atoms for ergonomics;
     # callers needing the fine-grained tag can use the model's raw
     # label by reaching into the underlying serving directly.
+    # Prefix rules: leading substring → coarse POS atom.
+    @label_prefix_rules [
+      {"NN", :noun},
+      {"VB", :verb},
+      {"JJ", :adj},
+      {"RB", :adv},
+      {"PRP", :pron},
+      {"DT", :det}
+    ]
+
+    # Exact-match rules: whole label → coarse POS atom.
+    @label_exact_rules %{
+      "IN" => :prep,
+      "TO" => :prep,
+      "CC" => :conj,
+      "UH" => :interj,
+      "CD" => :num,
+      "MD" => :modal,
+      "." => :punct,
+      "," => :punct,
+      ":" => :punct,
+      "(" => :punct,
+      ")" => :punct,
+      "``" => :punct,
+      "''" => :punct
+    }
+
     defp label_to_atom(label) when is_binary(label) do
-      cond do
-        String.starts_with?(label, "NN") -> :noun
-        String.starts_with?(label, "VB") -> :verb
-        String.starts_with?(label, "JJ") -> :adj
-        String.starts_with?(label, "RB") -> :adv
-        String.starts_with?(label, "PRP") -> :pron
-        String.starts_with?(label, "DT") -> :det
-        label in ["IN", "TO"] -> :prep
-        label in ["CC"] -> :conj
-        label in ["UH"] -> :interj
-        label in ["CD"] -> :num
-        label in ["MD"] -> :modal
-        label in [".", ",", ":", "(", ")", "``", "''"] -> :punct
-        true -> label |> String.downcase() |> String.to_atom()
-      end
+      match_label_prefix(label) || Map.get(@label_exact_rules, label) ||
+        label |> String.downcase() |> String.to_atom()
+    end
+
+    defp match_label_prefix(label) do
+      Enum.find_value(@label_prefix_rules, fn {prefix, atom} ->
+        if String.starts_with?(label, prefix), do: atom
+      end)
     end
   else
     def tag(_text, _options \\ []) do

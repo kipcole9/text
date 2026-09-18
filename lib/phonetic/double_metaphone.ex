@@ -258,23 +258,52 @@ defmodule Text.Phonetic.DoubleMetaphone do
   end
 
   # Simple consonant cluster: characters with no context-sensitive
-  # rewrites in Philips' algorithm.
+  # rewrites in Philips' algorithm. The dispatch is split into three
+  # small helpers to keep each within the cyclomatic budget.
   defp consonant(state) do
-    case at(state, state.position) do
+    char = at(state, state.position)
+    consonant_bf_or_next(state, char)
+  end
+
+  # Letters B–F.
+  defp consonant_bf_or_next(state, char) do
+    case char do
       ?B -> rule_b(state)
       ?C -> rule_c(state)
       ?D -> rule_d(state)
       ?F -> rule_f(state)
+      other -> consonant_gm_or_next(state, other)
+    end
+  end
+
+  # Letters G–M.
+  defp consonant_gm_or_next(state, char) do
+    case char do
       ?G -> rule_g(state)
       ?H -> rule_h(state)
       ?J -> rule_j(state)
       ?K -> rule_k(state)
       ?L -> rule_l(state)
       ?M -> rule_m(state)
+      other -> consonant_nr_or_next(state, other)
+    end
+  end
+
+  # Letters N–R.
+  defp consonant_nr_or_next(state, char) do
+    case char do
       ?N -> rule_n(state)
       ?P -> rule_p(state)
       ?Q -> rule_q(state)
       ?R -> rule_r(state)
+      other -> consonant_sz_or_default(state, other)
+    end
+  end
+
+  # Letters S–Z, with `rule_default/2` as the fallback for anything
+  # this table doesn't cover.
+  defp consonant_sz_or_default(state, char) do
+    case char do
       ?S -> rule_s(state)
       ?T -> rule_t(state)
       ?V -> rule_v(state)
@@ -362,15 +391,16 @@ defmodule Text.Phonetic.DoubleMetaphone do
     last_index = state.length - 1
     skip = if at(state, pos + 1) == ?R, do: 2, else: 1
 
-    cond do
+    drop_final_r? =
       pos == last_index and not state.slavo_germanic? and
         at(state, pos - 1) == ?E and at(state, pos - 2) == ?I and
-          at(state, pos - 3) not in [?M, ?E] ->
-        # Drop primary, emit on alternate so French / English coexist
-        %{state | alternate: [?R | state.alternate]} |> advance(skip)
+        at(state, pos - 3) not in [?M, ?E]
 
-      true ->
-        emit(state, ~c"R") |> advance(skip)
+    if drop_final_r? do
+      # Drop primary, emit on alternate so French / English coexist
+      %{state | alternate: [?R | state.alternate]} |> advance(skip)
+    else
+      emit(state, ~c"R") |> advance(skip)
     end
   end
 
@@ -396,7 +426,6 @@ defmodule Text.Phonetic.DoubleMetaphone do
   defp rule_s(state) do
     pos = state.position
     next = at(state, pos + 1)
-    next2 = at(state, pos + 2)
     prev = at(state, pos - 1)
 
     cond do
@@ -409,32 +438,44 @@ defmodule Text.Phonetic.DoubleMetaphone do
         %{state | primary: [?X | state.primary], alternate: [?S | state.alternate]}
         |> advance(1)
 
-      # SH → X (with S alternate for some German/Slavic)
+      # SH cluster
       next == ?H ->
-        if slice(state, pos, 4) in [~c"SHEI", ~c"SHEI", ~c"SHOL"] or
-             slice(state, pos, 5) in [~c"SHEIM", ~c"SHOEK", ~c"SHOLM"] do
-          emit(state, ~c"S") |> advance(2)
-        else
-          emit(state, ~c"X") |> advance(2)
-        end
+        rule_s_h(state)
 
+      # SC cluster
+      next == ?C ->
+        rule_sc(state)
+
+      true ->
+        rule_s_other(state, pos, next)
+    end
+  end
+
+  # SH → X (with S alternate for some German/Slavic borrowings).
+  defp rule_s_h(state) do
+    pos = state.position
+
+    if slice(state, pos, 4) in [~c"SHEI", ~c"SHOL"] or
+         slice(state, pos, 5) in [~c"SHEIM", ~c"SHOEK", ~c"SHOLM"] do
+      emit(state, ~c"S") |> advance(2)
+    else
+      emit(state, ~c"X") |> advance(2)
+    end
+  end
+
+  # Remaining S rules: SIO/SIA, SZ at start, SM at start, SS, plain S.
+  defp rule_s_other(state, pos, next) do
+    next2 = at(state, pos + 2)
+
+    cond do
       # SIO/SIA → S (primary), X (alternate). E.g. "tension", "fusion"
       next == ?I and next2 in [?O, ?A] ->
-        if state.slavo_germanic? do
-          emit(state, ~c"S") |> advance(3)
-        else
-          %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
-          |> advance(3)
-        end
+        rule_s_sio(state)
 
       # SZ at start (Slavic) → S (primary), X (alternate)
       pos == 0 and next == ?Z ->
         %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
         |> advance(2)
-
-      # SC clusters
-      next == ?C ->
-        rule_sc(state)
 
       # SM at start (Slavic-ish) — primary S, alternate X
       pos == 0 and next in [?M, ?N, ?L, ?W] ->
@@ -452,6 +493,17 @@ defmodule Text.Phonetic.DoubleMetaphone do
     end
   end
 
+  # SIO / SIA: S in Slavo-Germanic names, S primary + X alternate
+  # elsewhere.
+  defp rule_s_sio(state) do
+    if state.slavo_germanic? do
+      emit(state, ~c"S") |> advance(3)
+    else
+      %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
+      |> advance(3)
+    end
+  end
+
   # German names like SCHWARTZ, SCHMIDT, SCHNEIDER must NOT match the
   # Greek-pattern branch (which would emit SK both). They start with
   # SCH followed by an immediate Germanic-cluster consonant.
@@ -462,37 +514,11 @@ defmodule Text.Phonetic.DoubleMetaphone do
   defp rule_sc(state) do
     pos = state.position
     next2 = at(state, pos + 2)
-    next3 = at(state, pos + 3)
-    next4 = at(state, pos + 4)
 
     cond do
+      # SCH cluster — Greek, Germanic and generic variants.
       next2 == ?H ->
-        next5 = at(state, pos + 5)
-
-        cond do
-          # Greek roots: SCHO + (vowel) + (R|L|N|M|T) → SK (school,
-          # scholar, scheme, schema, schizo).
-          next3 in [?O, ?E, ?A, ?U] and
-            (next4 in [?R, ?L, ?N, ?M, ?T] or
-               next5 in [?R, ?L, ?N, ?M, ?T]) and
-              german_sch_exception?(state) == false ->
-            emit(state, ~c"SK") |> advance(3)
-
-          # SCH at start followed by a Germanic consonant cluster
-          # ("Schmidt", "Schneider", "Schwartz") → X primary, S alternate.
-          pos == 0 and next3 in [?M, ?N, ?B, ?Z, ?W, ?L, ?R] ->
-            %{state | primary: [?X | state.primary], alternate: [?S | state.alternate]}
-            |> advance(3)
-
-          # SCHE / SCHI elsewhere typically X primary, SK alternate
-          next3 in [?E, ?I] ->
-            %{state | primary: [?X | state.primary], alternate: [?S, ?K | state.alternate]}
-            |> advance(3)
-
-          true ->
-            %{state | primary: [?X | state.primary], alternate: [?S, ?K | state.alternate]}
-            |> advance(3)
-        end
+        rule_sch(state)
 
       # SCI / SCE / SCY → S
       next2 in [?I, ?E, ?Y] ->
@@ -500,6 +526,37 @@ defmodule Text.Phonetic.DoubleMetaphone do
 
       true ->
         emit(state, ~c"SK") |> advance(2)
+    end
+  end
+
+  # SCH branch: Greek root, Germanic consonant cluster, or generic
+  # SCHE/SCHI (all resolve to X primary, S / SK alternate).
+  defp rule_sch(state) do
+    pos = state.position
+    next3 = at(state, pos + 3)
+    next4 = at(state, pos + 4)
+    next5 = at(state, pos + 5)
+
+    cond do
+      # Greek roots: SCHO + (vowel) + (R|L|N|M|T) → SK (school,
+      # scholar, scheme, schema, schizo).
+      next3 in [?O, ?E, ?A, ?U] and
+        (next4 in [?R, ?L, ?N, ?M, ?T] or
+           next5 in [?R, ?L, ?N, ?M, ?T]) and
+          not german_sch_exception?(state) ->
+        emit(state, ~c"SK") |> advance(3)
+
+      # SCH at start followed by a Germanic consonant cluster
+      # ("Schmidt", "Schneider", "Schwartz") → X primary, S alternate.
+      pos == 0 and next3 in [?M, ?N, ?B, ?Z, ?W, ?L, ?R] ->
+        %{state | primary: [?X | state.primary], alternate: [?S | state.alternate]}
+        |> advance(3)
+
+      # Everything else (including SCHE / SCHI) → X primary, SK
+      # alternate.
+      true ->
+        %{state | primary: [?X | state.primary], alternate: [?S, ?K | state.alternate]}
+        |> advance(3)
     end
   end
 
@@ -651,21 +708,21 @@ defmodule Text.Phonetic.DoubleMetaphone do
   end
 
   defp rule_c(state) do
+    rule_c_ch(state) || rule_c_special(state) || rule_c_cluster(state) ||
+      rule_c_soft_or_default(state)
+  end
+
+  # Word-internal CHIA/CKIA/similar Germanic patterns, and the CH
+  # branches (initial and anywhere else). Returns nil when nothing
+  # matched.
+  defp rule_c_ch(state) do
     pos = state.position
     next = at(state, pos + 1)
-    next2 = at(state, pos + 2)
-    next3 = at(state, pos + 3)
-    prev = at(state, pos - 1)
 
     cond do
       # Various Germanic patterns: -CKEN- (Bicker), -CHIA-/-CKIA- (Sicilian)
-      pos > 1 and prev not in [?A, ?E, ?I, ?O, ?U, ?Y] and
-        next == ?H and next2 == ?I and next3 != 0 and next3 not in [?A, ?O] ->
+      germanic_chi?(state) ->
         emit(state, ~c"K") |> advance(2)
-
-      # Special-case "CAESAR"
-      pos == 0 and next == ?A and next2 == ?E and next3 == ?S ->
-        emit(state, ~c"S") |> advance(2)
 
       # CH at start
       pos == 0 and next == ?H ->
@@ -675,11 +732,51 @@ defmodule Text.Phonetic.DoubleMetaphone do
       next == ?H ->
         rule_ch(state)
 
-      # CZ → S/X (Slavic)
+      true ->
+        nil
+    end
+  end
+
+  # -CHI- preceded by a consonant, not followed by A or O — the
+  # Germanic/Sicilian "hard C" pattern.
+  defp germanic_chi?(state) do
+    pos = state.position
+    prev = at(state, pos - 1)
+    next = at(state, pos + 1)
+    next2 = at(state, pos + 2)
+    next3 = at(state, pos + 3)
+
+    pos > 1 and prev not in [?A, ?E, ?I, ?O, ?U, ?Y] and
+      next == ?H and next2 == ?I and next3 != 0 and next3 not in [?A, ?O]
+  end
+
+  # Special-case CAESAR and CZ (Slavic).
+  defp rule_c_special(state) do
+    pos = state.position
+    next = at(state, pos + 1)
+    next2 = at(state, pos + 2)
+    next3 = at(state, pos + 3)
+
+    cond do
+      pos == 0 and next == ?A and next2 == ?E and next3 == ?S ->
+        emit(state, ~c"S") |> advance(2)
+
       next == ?Z and at(state, pos - 2) != ?W ->
         %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
         |> advance(2)
 
+      true ->
+        nil
+    end
+  end
+
+  # Consonant clusters: CIA (Italian), CC, and CK/CG/CQ.
+  defp rule_c_cluster(state) do
+    pos = state.position
+    next = at(state, pos + 1)
+    next2 = at(state, pos + 2)
+
+    cond do
       # CIA → X (Italian, "Garcia", "Marcia")
       next == ?I and next2 == ?A ->
         emit(state, ~c"X") |> advance(3)
@@ -692,27 +789,49 @@ defmodule Text.Phonetic.DoubleMetaphone do
       next in [?K, ?G, ?Q] ->
         emit(state, ~c"K") |> advance(2)
 
-      # CI / CE / CY → S, with X alternate for some Italianate cases
-      next in [?I, ?E, ?Y] ->
-        if next2 in [?A, ?O] or (next == ?E and next2 == ?A and next3 == ?U) do
-          %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
-          |> advance(2)
-        else
-          emit(state, ~c"S") |> advance(2)
-        end
-
       true ->
-        # Drop a final "C" after MA, ME, MI, MO, MU (Scottish); else emit K.
-        last_index = state.length - 1
+        nil
+    end
+  end
 
-        if pos == last_index and prev in [?A, ?E, ?I, ?O, ?U] and
-             at(state, pos - 2) == ?M do
-          advance(state, 1)
-        else
-          # Skip a following C, K, or Q to avoid double-emission.
-          skip = if next in [?C, ?K, ?Q] and next2 not in [?I, ?E], do: 2, else: 1
-          emit(state, ~c"K") |> advance(skip)
-        end
+  # Soft-C (CI / CE / CY) or the default plain C.
+  defp rule_c_soft_or_default(state) do
+    pos = state.position
+    next = at(state, pos + 1)
+    next2 = at(state, pos + 2)
+    next3 = at(state, pos + 3)
+
+    if next in [?I, ?E, ?Y] do
+      rule_c_soft(state, next, next2, next3)
+    else
+      rule_c_default(state)
+    end
+  end
+
+  defp rule_c_soft(state, next, next2, next3) do
+    if next2 in [?A, ?O] or (next == ?E and next2 == ?A and next3 == ?U) do
+      %{state | primary: [?S | state.primary], alternate: [?X | state.alternate]}
+      |> advance(2)
+    else
+      emit(state, ~c"S") |> advance(2)
+    end
+  end
+
+  # Default C: drop after Scottish -M[AEIOU]C, else emit K (skipping a
+  # following C/K/Q to avoid double-emission).
+  defp rule_c_default(state) do
+    pos = state.position
+    prev = at(state, pos - 1)
+    last_index = state.length - 1
+    next = at(state, pos + 1)
+    next2 = at(state, pos + 2)
+
+    if pos == last_index and prev in [?A, ?E, ?I, ?O, ?U] and
+         at(state, pos - 2) == ?M do
+      advance(state, 1)
+    else
+      skip = if next in [?C, ?K, ?Q] and next2 not in [?I, ?E], do: 2, else: 1
+      emit(state, ~c"K") |> advance(skip)
     end
   end
 
@@ -766,18 +885,16 @@ defmodule Text.Phonetic.DoubleMetaphone do
     next2 = at(state, pos + 2)
     next3 = at(state, pos + 3)
 
-    cond do
-      # CC followed by I, E, Y → KS (Italian "succeed" pattern)
-      next2 in [?I, ?E, ?Y] and not (next2 == ?E and next3 == ?E) ->
-        # CCIA → X (Italian "Boccaccio" handled later)
-        if next2 == ?I and next3 == ?A do
-          emit(state, ~c"X") |> advance(3)
-        else
-          emit(state, ~c"KS") |> advance(2)
-        end
-
-      true ->
-        emit(state, ~c"K") |> advance(2)
+    # CC followed by I, E, Y → KS (Italian "succeed" pattern)
+    if next2 in [?I, ?E, ?Y] and not (next2 == ?E and next3 == ?E) do
+      # CCIA → X (Italian "Boccaccio" handled later)
+      if next2 == ?I and next3 == ?A do
+        emit(state, ~c"X") |> advance(3)
+      else
+        emit(state, ~c"KS") |> advance(2)
+      end
+    else
+      emit(state, ~c"K") |> advance(2)
     end
   end
 
@@ -799,15 +916,31 @@ defmodule Text.Phonetic.DoubleMetaphone do
   end
 
   defp classical_ch_pattern?(_state, next2, next3, next4) do
-    cond do
-      next2 == ?A and next3 == ?R and next4 == ?A -> true
-      next2 in [?H, ?R, ?L, ?M, ?N, ?Y] -> true
-      next2 == ?O and next3 == ?R and next4 not in [?I, ?E] -> true
-      next2 == ?A and next3 == ?O and next4 == ?S -> true
-      next2 == ?I and next3 in [?A, ?O] -> true
-      true -> false
-    end
+    ch_consonant_follow?(next2) or
+      ch_ara_pattern?(next2, next3, next4) or
+      ch_or_pattern?(next2, next3, next4) or
+      ch_aos_pattern?(next2, next3, next4) or
+      ch_io_ia_pattern?(next2, next3)
   end
+
+  # CH followed by another consonant (or Y): CHRIST, CHYLE, CHLORINE, ...
+  defp ch_consonant_follow?(next2), do: next2 in [?H, ?R, ?L, ?M, ?N, ?Y]
+
+  # CHARA... (CHARACTER, CHARADE)
+  defp ch_ara_pattern?(?A, ?R, ?A), do: true
+  defp ch_ara_pattern?(_, _, _), do: false
+
+  # CHOR + not (I|E): CHOREO, CHORUS
+  defp ch_or_pattern?(?O, ?R, next4), do: next4 not in [?I, ?E]
+  defp ch_or_pattern?(_, _, _), do: false
+
+  # CHAOS
+  defp ch_aos_pattern?(?A, ?O, ?S), do: true
+  defp ch_aos_pattern?(_, _, _), do: false
+
+  # CHIA / CHIO: Italian and Greek roots
+  defp ch_io_ia_pattern?(?I, third), do: third in [?A, ?O]
+  defp ch_io_ia_pattern?(_, _), do: false
 
   # ARCH or ORCH at the start, where the CH is hard.
   defp arch_orch?(state) do
@@ -835,55 +968,92 @@ defmodule Text.Phonetic.DoubleMetaphone do
   defp rule_g(state) do
     pos = state.position
     next = at(state, pos + 1)
-    next2 = at(state, pos + 2)
-    prev = at(state, pos - 1)
 
     cond do
       # GH
-      next == ?H ->
-        rule_gh(state)
+      next == ?H -> rule_gh(state)
+      # GN cluster (with word-start and Slavo-Germanic variants)
+      next == ?N -> rule_g_gn(state)
+      true -> rule_g_other(state, next)
+    end
+  end
 
-      # GN at start of name → N (Norse-style "gnome")
-      pos == 0 and next == ?N ->
+  # GN cluster at start (Norse "gnome" → N) or non-Slavo-Germanic GN
+  # elsewhere (KN primary, N alternate). Falls back to a plain K when
+  # neither pattern applies.
+  defp rule_g_gn(state) do
+    pos = state.position
+
+    cond do
+      pos == 0 ->
         emit(state, ~c"N") |> advance(2)
 
-      # Slavo-Germanic GN → KN
-      next == ?N and not state.slavo_germanic? ->
-        # primary KN, alternate N
+      not state.slavo_germanic? ->
         %{state | primary: [?N, ?K | state.primary], alternate: [?N | state.alternate]}
         |> advance(2)
 
-      # GLI in Italian → L (alternate KL for Anglicized pronunciation)
-      next == ?L and next2 == ?I and italian_gli?(state) ->
+      true ->
+        emit(state, ~c"K") |> advance(1)
+    end
+  end
+
+  # GLI / hard-G / -GIER / GE-GI-GY / GG / default G handling.
+  defp rule_g_other(state, next) do
+    rule_g_special(state, next) || rule_g_soft_or_default(state, next)
+  end
+
+  # GLI, initial hard G, and -GIER — each returns a state or nil.
+  defp rule_g_special(state, next) do
+    cond do
+      italian_gli_here?(state, next) ->
         %{state | primary: [?L | state.primary], alternate: [?L, ?K | state.alternate]}
         |> advance(2)
 
-      # GES, GEP, GEB, GEL, GEY, GIB, GIL, GIN, GIE, GEI, GER → hard G
-      pos == 0 and hard_g_initial?(at(state, pos + 1), at(state, pos + 2)) ->
+      initial_hard_g?(state, next) ->
         emit(state, ~c"K") |> advance(2)
 
-      # -GIER ending — hard G primary, J alternate
-      next == ?I and next2 == ?E and at(state, pos + 3) == ?R ->
+      gier_ending?(state, next) ->
         %{state | primary: [?K | state.primary], alternate: [?J | state.alternate]}
         |> advance(2)
 
-      # GE / GI / GY → J (with K alternate for Slavo-Germanic forms)
-      next in [?E, ?I, ?Y] ->
-        if state.slavo_germanic? do
-          emit(state, ~c"K") |> advance(2)
-        else
-          %{state | primary: [?J | state.primary], alternate: [?K | state.alternate]}
-          |> advance(2)
-        end
-
-      # GG → K (one)
-      next == ?G ->
-        emit(state, ~c"K") |> advance(2)
-
-      # default G → K
       true ->
-        _ = prev
-        emit(state, ~c"K") |> advance(1)
+        nil
+    end
+  end
+
+  # GLI in Italian → L (alternate KL for Anglicized pronunciation).
+  defp italian_gli_here?(state, next) do
+    next == ?L and at(state, state.position + 2) == ?I and italian_gli?(state)
+  end
+
+  # GES/GEP/... word-initial hard G triggers.
+  defp initial_hard_g?(state, next) do
+    state.position == 0 and hard_g_initial?(next, at(state, state.position + 2))
+  end
+
+  # -GIER ending — hard G primary, J alternate.
+  defp gier_ending?(state, next) do
+    pos = state.position
+    next == ?I and at(state, pos + 2) == ?E and at(state, pos + 3) == ?R
+  end
+
+  # Soft-G, GG double, or default single G.
+  defp rule_g_soft_or_default(state, next) do
+    cond do
+      next in [?E, ?I, ?Y] -> rule_g_soft(state)
+      next == ?G -> emit(state, ~c"K") |> advance(2)
+      true -> emit(state, ~c"K") |> advance(1)
+    end
+  end
+
+  # Soft-G (GE / GI / GY): Slavo-Germanic → K, otherwise J primary, K
+  # alternate.
+  defp rule_g_soft(state) do
+    if state.slavo_germanic? do
+      emit(state, ~c"K") |> advance(2)
+    else
+      %{state | primary: [?J | state.primary], alternate: [?K | state.alternate]}
+      |> advance(2)
     end
   end
 

@@ -25,7 +25,7 @@ defmodule Text.POSTest do
       results = POS.tag("The cat sat on the mat.")
 
       assert is_list(results)
-      assert length(results) > 0
+      assert results != []
 
       Enum.each(results, fn {token, tag, score} ->
         assert is_binary(token)

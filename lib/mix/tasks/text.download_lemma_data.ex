@@ -95,19 +95,17 @@ defmodule Mix.Tasks.Text.DownloadLemmaData do
     url = @url_base <> filename
     target_path = Text.Data.cache_path(:lemma, filename)
 
-    cond do
-      File.exists?(target_path) and !options[:force] ->
-        Mix.shell().info(
-          "#{filename} already cached at #{target_path}. Pass --force to re-download."
-        )
-
-      true ->
-        File.mkdir_p!(Path.dirname(target_path))
-        Mix.shell().info("Downloading #{url}")
-        Mix.shell().info("→ #{target_path}")
-        download!(url, target_path)
-        bytes = File.stat!(target_path).size
-        Mix.shell().info("Done. #{format_bytes(bytes)} written.")
+    if File.exists?(target_path) and !options[:force] do
+      Mix.shell().info(
+        "#{filename} already cached at #{target_path}. Pass --force to re-download."
+      )
+    else
+      File.mkdir_p!(Path.dirname(target_path))
+      Mix.shell().info("Downloading #{url}")
+      Mix.shell().info("→ #{target_path}")
+      download!(url, target_path)
+      bytes = File.stat!(target_path).size
+      Mix.shell().info("Done. #{format_bytes(bytes)} written.")
     end
   catch
     :skip -> :ok

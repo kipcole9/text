@@ -94,7 +94,7 @@ defmodule Text.WordCloud.StemmingTest do
         )
 
       # No crash and result is non-empty.
-      assert length(result) > 0
+      assert result != []
       [top | _] = result
       assert top.weight == 1.0
     end
@@ -108,7 +108,7 @@ defmodule Text.WordCloud.StemmingTest do
           max_terms: 5
         )
 
-      assert length(result) > 0
+      assert result != []
     end
 
     test ":stem_language overrides :language for bucketing" do
@@ -124,7 +124,7 @@ defmodule Text.WordCloud.StemmingTest do
           max_terms: 5
         )
 
-      assert length(result) > 0
+      assert result != []
     end
   end
 
@@ -166,7 +166,7 @@ defmodule Text.WordCloud.StemmingTest do
         )
 
       # The phrase should appear with consolidated count.
-      assert length(result) > 0
+      assert result != []
       [top | _] = result
       assert top.kind == :phrase
       # Three sentences each have a 3-gram phrase about

@@ -124,10 +124,9 @@ defmodule Text.Extract.Url do
          {:ok, parsed, raw, span} <- truncate_to_tld(parsed, raw, span, tld_mode),
          {:ok, ascii_host} <- idna_host(parsed.host, strict),
          :ok <- check_host_labels(parsed.host),
-         :ok <- check_script(parsed.host, strict),
-         {:ok, record} <- {:ok, build_record(raw, span, parsed, ascii_host)},
-         {:ok, record} <- maybe_twitter_quirks(record, raw, quirks?) do
-      {:ok, record}
+         :ok <- check_script(parsed.host, strict) do
+      record = build_record(raw, span, parsed, ascii_host)
+      maybe_twitter_quirks(record, raw, quirks?)
     end
   end
 
@@ -273,25 +272,26 @@ defmodule Text.Extract.Url do
     else
       ~r/[A-Za-z0-9_\-]+/u
       |> Regex.scan(host, return: :index)
-      |> Enum.flat_map(fn [{start, len}] ->
-        # Must be preceded by `.` (so it's a fresh "label-ish" run, not
-        # part of an earlier sub-label) and followed by a non-ASCII
-        # character (otherwise it's just a full ASCII label, already
-        # handled by `find_tld_position`).
-        prev = if start == 0, do: nil, else: :binary.at(host, start - 1)
-        next = if start + len < byte_size(host), do: :binary.at(host, start + len), else: nil
-
-        if prev == ?. and next != nil and next >= 0x80 do
-          ascii_run = binary_part(host, start, len)
-          if known_tld?(ascii_run, tld_mode), do: [start + len], else: []
-        else
-          []
-        end
-      end)
+      |> Enum.flat_map(&tld_end_position(&1, host, tld_mode))
       |> case do
         [] -> nil
         positions -> Enum.max(positions)
       end
+    end
+  end
+
+  # Given one regex match `[{start, len}]` inside `host`, return `[end]`
+  # if the match is an ASCII label preceded by `.` and followed by a
+  # non-ASCII codepoint that resolves to a known TLD; otherwise `[]`.
+  defp tld_end_position([{start, len}], host, tld_mode) do
+    prev = if start == 0, do: nil, else: :binary.at(host, start - 1)
+    next = if start + len < byte_size(host), do: :binary.at(host, start + len), else: nil
+
+    if prev == ?. and next != nil and next >= 0x80 do
+      ascii_run = binary_part(host, start, len)
+      if known_tld?(ascii_run, tld_mode), do: [start + len], else: []
+    else
+      []
     end
   end
 
@@ -305,15 +305,13 @@ defmodule Text.Extract.Url do
   # label, which is fine because the IANA list is in lowercase ASCII /
   # `xn--` Punycode and a non-IDNA-convertible label can't match it.
   defp known_tld?(label, mode) do
-    cond do
-      Tld.tld?(label, mode) ->
-        true
-
-      true ->
-        case Unicode.IDNA.to_ascii(label) do
-          {:ok, ascii} -> Tld.tld?(ascii, mode)
-          _ -> false
-        end
+    if Tld.tld?(label, mode) do
+      true
+    else
+      case Unicode.IDNA.to_ascii(label) do
+        {:ok, ascii} -> Tld.tld?(ascii, mode)
+        _ -> false
+      end
     end
   end
 
@@ -340,69 +338,70 @@ defmodule Text.Extract.Url do
   # Schemeless inputs (where `raw` does not contain `://`) are accepted
   # — `:scheme` will be `nil` on the parsed result.
   defp parse(raw) do
-    {scheme, rest} =
-      case String.split(raw, "://", parts: 2) do
-        [s, r] ->
-          if Regex.match?(~r/\A[A-Za-z][A-Za-z0-9+.\-]*\z/, s) do
-            {String.downcase(s), r}
-          else
-            {nil, raw}
-          end
+    {scheme, rest} = split_scheme(raw)
+    {body, fragment} = split_trailing(rest, "#")
+    {body, query} = split_trailing(body, "?")
+    {authority, path} = split_path(body)
+    {userinfo, host_port} = split_userinfo(authority)
+    {host, port} = split_port(host_port)
 
-        _ ->
+    if host == "" do
+      {:error, :no_host}
+    else
+      {:ok,
+       %{
+         scheme: scheme,
+         userinfo: userinfo,
+         host: host,
+         port: port,
+         path: path,
+         query: query,
+         fragment: fragment
+       }}
+    end
+  end
+
+  defp split_scheme(raw) do
+    case String.split(raw, "://", parts: 2) do
+      [s, r] ->
+        if Regex.match?(~r/\A[A-Za-z][A-Za-z0-9+.\-]*\z/, s) do
+          {String.downcase(s), r}
+        else
           {nil, raw}
-      end
+        end
 
-    # Split fragment.
-    {body, fragment} =
-      case String.split(rest, "#", parts: 2) do
-        [b, f] -> {b, f}
-        [b] -> {b, nil}
-      end
+      _ ->
+        {nil, raw}
+    end
+  end
 
-    # Split query.
-    {body, query} =
-      case String.split(body, "?", parts: 2) do
-        [b, q] -> {b, q}
-        [b] -> {b, nil}
-      end
+  # Split off the tail of `body` at the first `separator`. Returns
+  # `{body_without_tail, tail_or_nil}`.
+  defp split_trailing(body, separator) do
+    case String.split(body, separator, parts: 2) do
+      [b, tail] -> {b, tail}
+      [b] -> {b, nil}
+    end
+  end
 
-    # Split path.
-    {authority, path} =
-      case String.split(body, "/", parts: 2) do
-        [a, p] -> {a, "/" <> p}
-        [a] -> {a, nil}
-      end
+  defp split_path(body) do
+    case String.split(body, "/", parts: 2) do
+      [a, p] -> {a, "/" <> p}
+      [a] -> {a, nil}
+    end
+  end
 
-    # Split userinfo.
-    {userinfo, host_port} =
-      case String.split(authority, "@", parts: 2) do
-        [u, hp] -> {u, hp}
-        [hp] -> {nil, hp}
-      end
+  defp split_userinfo(authority) do
+    case String.split(authority, "@", parts: 2) do
+      [u, hp] -> {u, hp}
+      [hp] -> {nil, hp}
+    end
+  end
 
-    # Split port.
-    {host, port} =
-      case Regex.run(~r/\A(.+?):(\d+)\z/, host_port) do
-        [_, h, p] -> {h, String.to_integer(p)}
-        _ -> {host_port, nil}
-      end
-
-    cond do
-      host == "" ->
-        {:error, :no_host}
-
-      true ->
-        {:ok,
-         %{
-           scheme: scheme,
-           userinfo: userinfo,
-           host: host,
-           port: port,
-           path: path,
-           query: query,
-           fragment: fragment
-         }}
+  defp split_port(host_port) do
+    case Regex.run(~r/\A(.+?):(\d+)\z/, host_port) do
+      [_, h, p] -> {h, String.to_integer(p)}
+      _ -> {host_port, nil}
     end
   end
 
@@ -471,17 +470,24 @@ defmodule Text.Extract.Url do
   end
 
   defp valid_label?(label, tld?, registrable?, _subdomain?) do
-    cond do
-      label == "" -> false
-      String.length(label) > 63 -> false
-      String.starts_with?(label, "-") -> false
-      String.ends_with?(label, "-") -> false
-      String.starts_with?(label, "_") -> false
-      String.ends_with?(label, "_") -> false
-      tld? and contains_underscore?(label) -> false
-      registrable? and contains_underscore?(label) -> false
-      true -> true
-    end
+    label_shape_valid?(label) and not label_forbids_underscore?(label, tld?, registrable?)
+  end
+
+  # Length / hyphen / underscore boundary rules — the DNS label rules
+  # that apply regardless of position in the hostname.
+  defp label_shape_valid?(label) do
+    label != "" and
+      String.length(label) <= 63 and
+      not String.starts_with?(label, "-") and
+      not String.ends_with?(label, "-") and
+      not String.starts_with?(label, "_") and
+      not String.ends_with?(label, "_")
+  end
+
+  # TLD and registrable labels additionally forbid underscores anywhere
+  # in the label (subdomain labels may still contain them).
+  defp label_forbids_underscore?(label, tld?, registrable?) do
+    (tld? or registrable?) and contains_underscore?(label)
   end
 
   defp contains_underscore?(label), do: String.contains?(label, "_")
