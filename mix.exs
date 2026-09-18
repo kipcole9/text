@@ -164,8 +164,8 @@ defmodule Text.MixProject do
   def links do
     %{
       "GitHub" => "https://github.com/kipcole9/text",
-      "Readme" => "https://github.com/kipcole9/text/blob/v#{@version}/README.md",
-      "Changelog" => "https://github.com/kipcole9/text/blob/v#{@version}/CHANGELOG.md"
+      "Readme" => "https://hexdocs.pm/text/readme.html",
+      "Changelog" => "https://hexdocs.pm/text/changelog.html"
     }
   end
 
