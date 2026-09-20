@@ -36,6 +36,7 @@ defmodule Text.Phonetic.DoubleMetaphone do
   This implementation is a port of the canonical algorithm and
   validates against the test vectors published with the original
   paper.
+
   """
 
   alias Text.Clean

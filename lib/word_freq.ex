@@ -288,6 +288,16 @@ defmodule Text.WordFreq do
 
   * `:ok` on success.
 
+  ### Examples
+
+  ```elixir
+  Text.WordFreq.load_language(:pl)
+  #=> :ok
+
+  Text.WordFreq.load_language(:pl, "/path/to/pl.tsv")
+  #=> :ok
+  ```
+
   """
   @spec load_language(atom() | String.t() | struct()) :: :ok
   def load_language(language) do

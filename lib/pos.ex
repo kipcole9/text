@@ -99,6 +99,16 @@ defmodule Text.POS do
 
     * A list of `{token, tag, score}` triples.
 
+    ### Examples
+
+    ```elixir
+    Text.POS.tag("the cat sat")
+    #=> [{"the", :det, 0.99}, {"cat", :noun, 0.98}, {"sat", :verb, 0.97}]
+
+    Text.POS.tag("the cat sat", serving: MyApp.POS)
+    #=> [{"the", :det, 0.99}, {"cat", :noun, 0.98}, {"sat", :verb, 0.97}]
+    ```
+
     """
     @spec tag(String.t(), keyword()) :: [tagged_token()]
     def tag(text, options \\ []) when is_binary(text) do
@@ -112,6 +122,30 @@ defmodule Text.POS do
 
     @doc """
     Drops the cached `Nx.Serving` for the given model (or all models).
+
+    ### Arguments
+
+    * `model` is the Hugging Face model id whose cached serving should
+      be dropped, or `:all` to drop every cached serving. Defaults to
+      the default model `"#{@default_model}"`.
+
+    ### Returns
+
+    * `:ok`.
+
+    ### Examples
+
+    ```elixir
+    Text.POS.reset()
+    #=> :ok
+
+    Text.POS.reset("QCRI/bert-base-multilingual-cased-pos-english")
+    #=> :ok
+
+    Text.POS.reset(:all)
+    #=> :ok
+    ```
+
     """
     @spec reset(String.t() | :all) :: :ok
     def reset(model \\ @default_model)
@@ -211,7 +245,15 @@ defmodule Text.POS do
 
     defp label_to_atom(label) when is_binary(label) do
       match_label_prefix(label) || Map.get(@label_exact_rules, label) ||
-        label |> String.downcase() |> String.to_atom()
+        safe_label_atom(label)
+    end
+
+    # Never mint a new atom from a model-supplied label. An unrecognised
+    # tag that has no existing atom collapses to `:unknown`.
+    defp safe_label_atom(label) do
+      label |> String.downcase() |> String.to_existing_atom()
+    rescue
+      ArgumentError -> :unknown
     end
 
     defp match_label_prefix(label) do

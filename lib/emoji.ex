@@ -296,6 +296,14 @@ defmodule Text.Emoji do
   @doc """
   Returns the number of emoji in the text.
 
+  ### Arguments
+
+  * `text` is the input string.
+
+  ### Returns
+
+  * A non-negative integer count of the emoji found in `text`.
+
   ### Examples
 
       iex> Text.Emoji.count("Hello 😀 world 🎉")
@@ -307,6 +315,14 @@ defmodule Text.Emoji do
 
   @doc """
   Returns true when the text contains at least one emoji.
+
+  ### Arguments
+
+  * `text` is the input string.
+
+  ### Returns
+
+  * `true` when `text` contains at least one emoji, otherwise `false`.
 
   ### Examples
 
@@ -324,6 +340,16 @@ defmodule Text.Emoji do
 
   @doc """
   Removes every emoji from the text.
+
+  ### Arguments
+
+  * `text` is the input string.
+
+  ### Returns
+
+  * The input string with every emoji removed. Surrounding
+    whitespace is preserved, so removing an emoji can leave a
+    double space where it stood.
 
   ### Examples
 
@@ -520,6 +546,15 @@ defmodule Text.Emoji do
   ### Returns
 
   * `:ok` on success.
+
+  ### Examples
+
+      ```elixir
+      iex> Text.Emoji.add_emoji(%{"🫎" => "moose"})
+      :ok
+      iex> Text.Emoji.demojize("look a 🫎")
+      "look a :moose:"
+      ```
 
   """
   @spec add_emoji(map() | keyword()) :: :ok

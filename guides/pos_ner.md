@@ -226,7 +226,7 @@ POS and NER answer different questions and frequently complement each other:
 
 * **NER alone** is enough when you only care about *who/where/what* — building knowledge graphs, populating CRM records, anonymising text.
 
-* **POS alone** is enough when you need linguistic structure but not entity identity — search-time stemming masks, syntactic features for downstream classifiers, content-word filtering for word clouds (`:pos_filter` in `Text.WordCloud`).
+* **POS alone** is enough when you need linguistic structure but not entity identity — search-time stemming masks, syntactic features for downstream classifiers, content-word filtering for word clouds.
 
 * **Both together** matter when the question is "what is this *person* *doing*?" — pair `:per` entities from NER with `:verb` neighbours from POS for relation extraction, or filter NER `:misc` entities by POS to keep only those that are nouns.
 

@@ -30,6 +30,7 @@ defmodule Text.Phonetic.NYSIIS do
 
   https://www.archives.gov/research/census/soundex/ describes the
   Soundex / NYSIIS lineage.
+
   """
 
   alias Text.Clean

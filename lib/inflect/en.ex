@@ -1,7 +1,13 @@
 defmodule Text.Inflect.En do
   @moduledoc """
-  Pluralisation for the English language based on the paper
+  English inflection based on the paper
   [An Algorithmic Approach to English Pluralization](http://users.monash.edu/~damian/papers/HTML/Plurals.html).
+
+  The primary public API is `pluralize/2` and `singularize/2`, which
+  inflect a word in either `:modern` or `:classical` mode. Part-of-speech
+  variants — `pluralize_noun/2`, `singularize_noun/2`, `pluralize_verb/1`,
+  and `pluralize_adjective/1` — are available when the caller already
+  knows the word's category.
 
   """
   @saved_data_path "priv/inflection/en/en.etf"
@@ -944,6 +950,7 @@ defmodule Text.Inflect.En do
   #         if the word is "this",      return "these"
   #         if the word is "that",      return "those"
 
+  @doc false
   def indefinite_article?(word) do
     cond do
       word in ["a", "an"] ->
@@ -964,6 +971,7 @@ defmodule Text.Inflect.En do
   #         if the word is a personal possessive,
   #                 return the specified plural form
 
+  @doc false
   def possessive_pronoun?(word) do
     if category?(word, "personal_possessive") do
       personal_possessive(word)
@@ -979,6 +987,7 @@ defmodule Text.Inflect.En do
   #                 let the noun <owners> be the noun plural of <owner>
   #                 if <owners> ends in -s, return "<owners>'"
   #                 otherwise,              return "<owners>'s"
+  @doc false
   def genetive?(word) do
     cond do
       suffix?(word, "'s") -> do_genetive(word, "'s")
@@ -987,6 +996,7 @@ defmodule Text.Inflect.En do
     end
   end
 
+  @doc false
   def do_genetive(word, suffix) do
     plural_noun =
       word

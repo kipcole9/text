@@ -361,7 +361,7 @@ Putting `:radial` rotations, a tonal blue scale, generous padding, and a square 
 
 ![Showcase](word_clouds_assets/showcase.svg)
 
-The full source for every example in this guide is in [`priv/scripts/gen_word_cloud_examples.exs`](https://github.com/kipcole9/text/blob/master/priv/scripts/gen_word_cloud_examples.exs). Re-run it any time the underlying algorithms or defaults shift to keep the rendered docs in sync:
+The full source for every example in this guide is in [`priv/scripts/gen_word_cloud_examples.exs`](https://github.com/kipcole9/text/blob/main/priv/scripts/gen_word_cloud_examples.exs). Re-run it any time the underlying algorithms or defaults shift to keep the rendered docs in sync:
 
 ```sh
 mix run priv/scripts/gen_word_cloud_examples.exs

@@ -87,6 +87,34 @@ defmodule Text.Summarize do
   format the output (bullets, numbered lists) rather than receive
   pre-joined prose.
 
+  ### Arguments
+
+  * `text` is the document as a string.
+
+  ### Options
+
+  * `:sentences` is the number of sentences to return. Default `3`.
+    If the document has fewer sentences than this, every sentence
+    is returned.
+
+  * `:algorithm` is `:textrank` (default) or `:lexrank`.
+
+  * `:language` is the language atom used for sentence segmentation
+    and stopword removal. Default `:en`.
+
+  * `:damping` is the PageRank damping factor. Default `0.85`.
+
+  * `:iterations` is the number of PageRank iterations. Default `30`.
+
+  * `:threshold` is the LexRank similarity cutoff. Edges with
+    similarity below this value are dropped. Only used by `:lexrank`.
+    Default `0.1`.
+
+  ### Returns
+
+  * A list of selected sentences as strings, in original document
+    order.
+
   ### Examples
 
       iex> text = "First sentence. Second sentence. Third sentence. Fourth sentence."
@@ -132,9 +160,36 @@ defmodule Text.Summarize do
   importance, or implement their own selection policy on top of
   the raw scores.
 
+  ### Arguments
+
+  * `text` is the document as a string.
+
+  ### Options
+
+  * `:algorithm` is `:textrank` (default) or `:lexrank`.
+
+  * `:language` is the language atom used for sentence segmentation
+    and stopword removal. Default `:en`.
+
+  * `:damping` is the PageRank damping factor. Default `0.85`.
+
+  * `:iterations` is the number of PageRank iterations. Default `30`.
+
+  * `:threshold` is the LexRank similarity cutoff. Edges with
+    similarity below this value are dropped. Only used by `:lexrank`.
+    Default `0.1`.
+
   ### Returns
 
   * A list of floats, one per sentence in the input, in document order.
+
+  ### Examples
+
+      ```elixir
+      iex> text = "Cats are lovely pets. Dogs are loyal animals. Goldfish swim quietly."
+      iex> Text.Summarize.scores(text) |> length()
+      3
+      ```
 
   """
   @spec scores(String.t(), keyword()) :: [float()]

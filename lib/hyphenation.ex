@@ -343,6 +343,22 @@ defmodule Text.Hyphenation do
 
   * `:ok` on success.
 
+  ### Examples
+
+  ```elixir
+  Text.Hyphenation.load_language(:ru)
+  #=> :ok
+
+  Text.Hyphenation.load_language(:ru, left_min: 2, right_min: 2)
+  #=> :ok
+
+  Text.Hyphenation.load_language(:my_custom, "/path/to/hyph-my-custom.tex")
+  #=> :ok
+
+  Text.Hyphenation.load_language(:my_custom, "/path/to/hyph-my-custom.tex", left_min: 1)
+  #=> :ok
+  ```
+
   """
   @spec load_language(atom()) :: :ok
   def load_language(language) when is_atom(language) do

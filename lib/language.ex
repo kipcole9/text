@@ -66,6 +66,11 @@ defmodule Text.Language do
   * An atom — the language subtag of the input (e.g. `:fr` for
     `"fr-CA"` or a `LanguageTag` whose language is `:fr`).
 
+  * `:und` (BCP-47 "undetermined") when the subtag is blank or is not
+    a recognised language. The subtag is resolved with
+    `String.to_existing_atom/1`, so arbitrary user input cannot create
+    new atoms.
+
   ### Examples
 
       iex> Text.Language.normalize(:fr)
@@ -77,19 +82,22 @@ defmodule Text.Language do
       iex> Text.Language.normalize("FR")
       :fr
 
+      iex> Text.Language.normalize("")
+      :und
+
   """
   @spec normalize(input()) :: atom()
   def normalize(atom) when is_atom(atom) do
     atom
     |> Atom.to_string()
     |> language_subtag_from_string()
-    |> String.to_atom()
+    |> to_language_atom()
   end
 
   def normalize(string) when is_binary(string) do
     string
     |> language_subtag_from_string()
-    |> String.to_atom()
+    |> to_language_atom()
   end
 
   if Code.ensure_loaded?(Localize.LanguageTag) do
@@ -159,6 +167,18 @@ defmodule Text.Language do
     |> String.split(~r/[-_]/)
     |> hd()
     |> String.downcase()
+  end
+
+  # Resolve a subtag to an atom without minting new atoms from untrusted
+  # input. Unknown or blank subtags collapse to `:und` (BCP-47
+  # "undetermined"); downstream lexicon/stopword lookups already treat an
+  # unrecognised language as a fall back to their own default.
+  defp to_language_atom(""), do: :und
+
+  defp to_language_atom(subtag) when is_binary(subtag) do
+    String.to_existing_atom(subtag)
+  rescue
+    ArgumentError -> :und
   end
 
   defp normalize_locale_string(string) do

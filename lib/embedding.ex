@@ -96,6 +96,18 @@ defmodule Text.Embedding do
 
   * `{:error, reason}` if the file is missing or malformed.
 
+  ### Examples
+
+  ```elixir
+  {:ok, embeddings} = Text.Embedding.load("path/to/cc.en.300.vec")
+
+  {:ok, embeddings} =
+    Text.Embedding.load("path/to/cc.en.300.vec", max_tokens: 50_000)
+
+  {:ok, embeddings} =
+    Text.Embedding.load("path/to/cc.en.300.vec", filter: ["king", "queen", "man", "woman"])
+  ```
+
   """
   @spec load(Path.t(), keyword()) :: {:ok, t()} | {:error, term()}
   def load(path, options \\ []) do
@@ -124,6 +136,18 @@ defmodule Text.Embedding do
   Returns the vector for `token`, or `nil` if the token is not in the
   vocabulary.
 
+  ### Arguments
+
+  * `embeddings` is a loaded `t:Text.Embedding.t/0` struct.
+
+  * `token` is the token whose vector to return.
+
+  ### Returns
+
+  * An `Nx.Tensor` of shape `{dim}` for a token in the vocabulary.
+
+  * `nil` if the token is not in the vocabulary.
+
   ### Examples
 
       vector = Text.Embedding.vector(embeddings, "king")
@@ -146,6 +170,12 @@ defmodule Text.Embedding do
 
   @doc """
   Returns the cosine similarity between two tokens.
+
+  ### Arguments
+
+  * `embeddings` is a loaded `t:Text.Embedding.t/0` struct.
+
+  * `a` and `b` are the two tokens to compare.
 
   ### Returns
 
@@ -263,6 +293,22 @@ defmodule Text.Embedding do
 
   @doc """
   Returns the size of the loaded vocabulary.
+
+  ### Arguments
+
+  * `embeddings` is a loaded `t:Text.Embedding.t/0` struct.
+
+  ### Returns
+
+  * A non-negative integer — the number of tokens in the vocabulary.
+
+  ### Examples
+
+  ```elixir
+  Text.Embedding.size(embeddings)
+  #=> 2_000_000
+  ```
+
   """
   @spec size(t()) :: non_neg_integer()
   def size(%__MODULE__{n: n}), do: n

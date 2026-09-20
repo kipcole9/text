@@ -192,6 +192,16 @@ defmodule Text.Lemma do
 
   * `:ok` on success.
 
+  ### Examples
+
+  ```elixir
+  Text.Lemma.load_language(:de)
+  #=> :ok
+
+  Text.Lemma.load_language(:nl, "/path/to/lemmatization-nl.txt")
+  #=> :ok
+  ```
+
   """
   @spec load_language(atom() | String.t() | struct()) :: :ok
   def load_language(language) do

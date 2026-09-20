@@ -56,7 +56,7 @@ The `:width` option pads the left context to a fixed width so the term column al
 
 ```elixir
 %Text.KWIC.Match{
-  position: 1,           # zero-based token index in the input
+  position: 1,           # one-based token index in the input
   left: ["The"],         # tokens preceding the match
   term: "Earth",         # the matched token, in its ORIGINAL casing
   right: ["was", "demolished", "to", "make"]

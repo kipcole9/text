@@ -2,15 +2,15 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.0.0] — 2026-09-19
+## [1.0.0] — 2026-09-20
 
 First stable release. No functional change from the unreleased 0.7 series; the version bump signals API stability across the surface documented in the README and guides.
 
 ### Breaking changes
 
-* Link detection and termination now follow [UTS #58](https://www.unicode.org/reports/tr58/) instead of the twitter-text rules. Pass `twitter_quirks: true` to `urls/2`, `emails/2`, `all/2` or `split/2` for the previous behaviour, which is still covered by the twitter-text conformance suite. Where the two disagree the UTS #58 answer wins, most visibly for brackets: `example.com/a[(b])` now ends at `b` because `]` does not match the innermost `(`, where previously each bracket type was counted independently. `Text.Extract.Boundary` is removed, superseded by `Text.Extract.Link`.
+* Link detection now follows [UTS #58](https://www.unicode.org/reports/tr58/) instead of the twitter-text rules; pass `twitter_quirks: true` to `urls/2`, `emails/2`, `all/2` or `split/2` for the previous behaviour. `Text.Extract.Boundary` is removed, superseded by `Text.Extract.Link`.
 
-* Predicate helpers in `Text.Inflect.En`, `Text.Inflect.En.Pluralize`, and `Text.Inflect.En.Singularize` are renamed from `is_foo/n` to `foo?/n` to align with Elixir's `?/1`-suffix convention (e.g. `is_pronoun/2` → `pronoun?/2`, `is_classical/2` → `classical?/2`, `is_third_person_singular/1` → `third_person_singular?/1`). Erlang/Elixir stdlib guards (`is_binary`, `is_list`, …) are untouched. The data-returning `Text.Inflect.En.Helpers.is_ides/0` is renamed to `ides_pattern/0` — it returns a list, not a boolean.
+* Predicate helpers in `Text.Inflect.En`, `.Pluralize` and `.Singularize` are renamed from `is_foo/n` to `foo?/n` (e.g. `is_pronoun/2` → `pronoun?/2`); stdlib guards are untouched. The data-returning `Text.Inflect.En.Helpers.is_ides/0` becomes `ides_pattern/0`.
 
 ### Enhancements
 
@@ -20,7 +20,7 @@ First stable release. No functional change from the unreleased 0.7 series; the v
 
 * Adds `Text.Extract.Escape`, implementing UTS #58 §4.1 minimal escaping, which rewrites a URL into its most readable form without changing where link detection ends it. `minimal/1` accepts either a serialised URL or a keyword list of already-parsed parts, the latter for when a syntax character is data rather than structure.
 
-* Adds `mix text.download_uts58` to vendor the UTS #58 conformance suites into `test/fixtures/uts58/`, with `--release`, `--into`, `--diff` and `--dry-run`. Both suites run as part of the test suite and both pass in full — 344 of 344 detection cases and 55 of 55 formatting cases.
+* Adds `mix text.download_uts58` to vendor the UTS #58 conformance suites into `test/fixtures/uts58/`, with `--release`, `--into`, `--diff` and `--dry-run`. Both suites run as part of the test suite and pass in full.
 
 * URL detection now accepts hosts and paths that are wholly non-ASCII, all four UTS #46 label separators (so `普遍适用测试。我爱你` is a two-label host), hosts carrying an explicit root label (`foo.example.com./path`), and `mailto:` addresses. Script-internal punctuation such as the Tibetan tsheg is accepted in host labels, since UTS #46 processing validates the host afterwards.
 

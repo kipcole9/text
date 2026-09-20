@@ -126,6 +126,19 @@ defmodule Text.NER do
 
     * A list of `Text.NER.Entity` structs in document order.
 
+    ### Examples
+
+    ```elixir
+    Text.NER.extract("Barack Obama visited Berlin.")
+    #=> [
+    #     %Text.NER.Entity{text: "Barack Obama", type: :per, start: 0, end: 12, score: 0.99},
+    #     %Text.NER.Entity{text: "Berlin", type: :loc, start: 21, end: 27, score: 0.98}
+    #   ]
+
+    Text.NER.extract(text, min_score: 0.9, serving: MyApp.NER)
+    #=> [%Text.NER.Entity{...}]
+    ```
+
     """
     @spec extract(String.t(), keyword()) :: [Entity.t()]
     def extract(text, options \\ []) when is_binary(text) do
@@ -141,6 +154,30 @@ defmodule Text.NER do
 
     @doc """
     Drops the cached `Nx.Serving` for the given model (or all models).
+
+    ### Arguments
+
+    * `model` is the Hugging Face model id whose cached serving should
+      be dropped, or `:all` to drop every cached serving. Defaults to
+      the default model `"#{@default_model}"`.
+
+    ### Returns
+
+    * `:ok`.
+
+    ### Examples
+
+    ```elixir
+    Text.NER.reset()
+    #=> :ok
+
+    Text.NER.reset("dslim/bert-base-NER")
+    #=> :ok
+
+    Text.NER.reset(:all)
+    #=> :ok
+    ```
+
     """
     @spec reset(String.t() | :all) :: :ok
     def reset(model \\ @default_model)
@@ -221,7 +258,10 @@ defmodule Text.NER do
     # often prefixed with B-/I- for span boundaries (handled by
     # Bumblebee's `aggregation: :same`). Normalise to lowercase atoms.
     defp type_to_atom(label) when is_binary(label) do
-      label |> String.downcase() |> String.to_atom()
+      label |> String.downcase() |> String.to_existing_atom()
+    rescue
+      # Never mint a new atom from a model-supplied label.
+      ArgumentError -> :unknown
     end
   else
     def extract(_text, _options \\ []) do

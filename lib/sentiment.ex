@@ -69,7 +69,7 @@ defmodule Text.Sentiment do
 
       {:ok, model} = Text.Language.Classifier.Fasttext.ModelLoader.load(path)
       {:ok, detection} = Text.Language.Classifier.Fasttext.detect(text, model)
-      lang = String.to_atom(detection.language)
+      lang = Text.Language.normalize(detection.language)
       Text.Sentiment.analyze(text, language: lang)
 
   Falls back gracefully when the detected language is not bundled —

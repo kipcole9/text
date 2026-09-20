@@ -27,6 +27,7 @@ defmodule Text.Ngram do
     |> ngram(n, %{})
   end
 
+  @doc false
   def ngram("", _n, acc) do
     acc
   end

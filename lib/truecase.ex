@@ -287,6 +287,15 @@ defmodule Text.Truecase do
 
   * `:ok` on success.
 
+  ### Examples
+
+      ```elixir
+      iex> Text.Truecase.add_terms(%{"acme" => "ACME"})
+      :ok
+      iex> Text.Truecase.truecase("we shipped acme today.")
+      "We shipped ACME today."
+      ```
+
   """
   @spec add_terms(map() | keyword()) :: :ok
   def add_terms(terms) do

@@ -70,6 +70,7 @@ defmodule Text.Phonetic.Cologne do
   Postel, H. J. (1969). *Die Kölner Phonetik: Ein Verfahren zur
   Identifizierung von Personennamen auf der Grundlage der
   Gestaltanalyse*. IBM-Nachrichten 19, 925–931.
+
   """
 
   alias Text.Clean

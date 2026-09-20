@@ -101,7 +101,7 @@ defmodule Text.MixProject do
   defp base do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
-      {:nx, "~> 0.9 or ~> 0.10"},
+      {:nx, "~> 0.9 or ~> 1.0"},
       {:unicode, "~> 2.1"},
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
@@ -150,9 +150,9 @@ defmodule Text.MixProject do
       []
     else
       [
-        {:exla, "~> 0.9 or ~> 0.10", optional: true, skip: "TEXT_SKIP_EXLA"},
-        {:bumblebee, "~> 0.6", optional: true, skip: "TEXT_SKIP_BUMBLEBEE"},
-        {:localize, "~> 0.23", optional: true, skip: "TEXT_SKIP_LOCALIZE"},
+        {:exla, "~> 0.10 or ~> 1.0", optional: true, skip: "TEXT_SKIP_EXLA"},
+        {:bumblebee, "~> 0.6 or ~> 1.0", optional: true, skip: "TEXT_SKIP_BUMBLEBEE"},
+        {:localize, "~> 1.2", optional: true, skip: "TEXT_SKIP_LOCALIZE"},
         {:color, "~> 0.12", optional: true, skip: "TEXT_SKIP_COLOR"},
         {:text_stemmer, "~> 0.1", optional: true, skip: "TEXT_SKIP_TEXT_STEMMER"}
       ]
@@ -164,8 +164,8 @@ defmodule Text.MixProject do
   def links do
     %{
       "GitHub" => "https://github.com/kipcole9/text",
-      "Readme" => "https://hexdocs.pm/text/readme.html",
-      "Changelog" => "https://hexdocs.pm/text/changelog.html"
+      "Readme" => "https://github.com/kipcole9/text/blob/v#{@version}/README.md",
+      "Changelog" => "https://github.com/kipcole9/text/blob/v#{@version}/CHANGELOG.md"
     }
   end
 

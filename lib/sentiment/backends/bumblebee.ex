@@ -188,7 +188,13 @@ defmodule Text.Sentiment.Backends.Bumblebee do
     defp label_to_atom("LABEL_0"), do: :negative
     defp label_to_atom("LABEL_1"), do: :neutral
     defp label_to_atom("LABEL_2"), do: :positive
-    defp label_to_atom(other) when is_binary(other), do: String.to_atom(String.downcase(other))
+
+    defp label_to_atom(other) when is_binary(other) do
+      other |> String.downcase() |> String.to_existing_atom()
+    rescue
+      # Never mint a new atom from a model-supplied label.
+      ArgumentError -> :neutral
+    end
 
     # The model's argmax label and the compound-score-derived label can
     # disagree near the threshold — when the top-scoring class is

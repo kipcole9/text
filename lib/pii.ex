@@ -48,6 +48,18 @@ defmodule Text.PII do
 
   @doc """
   Returns the list of detector type atoms supported by this module.
+
+  ### Returns
+
+  * A list of atoms, one per detector (e.g. `:email`, `:phone`,
+    `:credit_card`), usable as the `:types` option to `detect/2` and
+    `redact/2`.
+
+  ### Examples
+
+      iex> :email in Text.PII.types()
+      true
+
   """
   @spec types() :: [atom()]
   def types, do: Keyword.keys(patterns())
