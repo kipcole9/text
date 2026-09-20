@@ -14,7 +14,7 @@ First stable release. No functional change from the unreleased 0.7 series; the v
 
 ### Enhancements
 
-* The `:unicode` dependency requirement is `~> 2.1`, based upon Unicode 18.
+* The `:unicode` dependency requirement is `~> 2.2`, based upon Unicode 18.
 
 * Adds `Text.Extract.Link`, implementing UTS #58 §3.5.1 termination against the full Unicode repertoire — 65 bracket pairs and 129 ranges of soft terminators, against the 4 pairs and 7 characters handled before.
 

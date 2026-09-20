@@ -102,7 +102,7 @@ defmodule Text.MixProject do
     [
       {:flow, "~> 0.14 or ~> 1.0"},
       {:nx, "~> 0.9 or ~> 1.0"},
-      {:unicode, "~> 2.1"},
+      {:unicode, "~> 2.2"},
       {:unicode_idna, "~> 0.1"},
       {:unicode_transform, "~> 1.0"},
       {:unicode_string, "~> 2.1"},
